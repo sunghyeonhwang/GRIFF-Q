@@ -60,7 +60,7 @@
 | **P2** 대시보드 | shadcn-ui, vercel-react-best-practices |
 | **P3** 회의록 관리 | shadcn-ui, coding-standards |
 | **P4** 입금/결제 요청 | shadcn-ui, coding-standards |
-| **P5** 견적서 실시간 편집 | supabase-nextjs (Realtime), shadcn-ui, coding-standards |
+| **P5** 견적서 순차 편집 + 퍼블리시 | shadcn-ui, coding-standards |
 | **P6** 아바타 예측 채팅 | gemini-api-dev, shadcn-ui |
 | **P7** 설정 + 백업 | coding-standards, docker-deployment |
 | **QA** 테스트 | playwright-e2e-testing |
