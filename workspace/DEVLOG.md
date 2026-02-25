@@ -170,16 +170,83 @@
 
 ## P5 — 견적서 공동 작업
 
-**상태**: ⬜ 대기
+**상태**: ✅ 완료
+**날짜**: 2026-02-26
+
+### 작업 내역
+- DB 마이그레이션
+  - `supabase/migrations/005_estimates.sql` — estimates, estimate_items 테이블, estimate_status enum, RLS 정책
+- 견적서 목록 `/estimates`
+  - 요약 카드 3종: 작성중 / 확정 / 발송완료 건수
+  - 테이블 뷰 (프로젝트명, 클라이언트, 견적일, 상태, 편집 잠금, 작성자)
+- 견적서 생성 `/estimates/new`
+  - 기본 정보: 프로젝트명, 클라이언트명, 견적일, 유효기간, 비고
+  - 항목 테이블: 동적 추가/삭제, 수량/단가/금액 자동계산, 하이라이트 색상
+  - 소계/부가세(10%)/총액 자동 계산
+- 견적서 상세 `/estimates/[id]`
+  - 기본 정보 + 항목 테이블 (읽기 전용, 하이라이트 색상 표시)
+  - 견적 비교 버튼
+- 견적서 수정 `/estimates/[id]/edit`
+  - 편집 잠금: locked_by + 5분 타임아웃 체크
+- 작년 견적 비교 `/estimates/[id]/compare`
+  - 동일 프로젝트 이전 견적 좌우 비교
+  - 가격 차이 빨강/초록 색상 코딩
+- 컴포넌트
+  - `src/components/estimates/estimate-form.tsx` — 견적서 폼 (클라이언트)
+  - `src/lib/estimate-constants.ts` — 상태 라벨/색상, VAT_RATE
 
 ---
 
 ## P6 — 클라이언트 반응 예측
 
-**상태**: ⬜ 대기
+**상태**: ✅ 완료
+**날짜**: 2026-02-26
+
+### 작업 내역
+- DB 마이그레이션
+  - `supabase/migrations/006_predict.sql` — avatars, chat_sessions, chat_messages 테이블, RLS 정책
+- 아바타 목록 `/predict/avatars`
+  - 카드 그리드 (아이콘, 이름, 소속, 성격 키워드 배지)
+  - 설정/채팅 바로가기
+- 아바타 생성 `/predict/avatars/new`
+  - 기본 정보: 이름, 소속, 직급, 아이콘 선택 (8종)
+  - 인격 프로필: 말투, 성격 키워드(태그 입력), 의사결정 패턴, 민감 주제(태그), 메모
+- 아바타 설정 `/predict/avatars/[id]/settings`
+  - 기존 프로필 수정
+- 예측 채팅 `/predict/chat/[avatarId]`
+  - 2패널 레이아웃: 세션 목록(좌) + 채팅(우)
+  - Gemini 2.0 Flash API 연동
+  - 시스템 프롬프트에 인격 프로필 자동 주입
+  - 대화 이력 저장/불러오기
+- API Route
+  - `src/app/api/predict/chat/route.ts` — Gemini API 프록시 + 세션/메시지 관리
+- 컴포넌트
+  - `src/components/predict/avatar-form.tsx` — 아바타 폼
+  - `src/components/predict/chat-interface.tsx` — 채팅 UI
+  - `src/lib/predict-constants.ts` — 말투/패턴/아이콘 상수
 
 ---
 
 ## P7 — 설정 + 감사 로그
 
-**상태**: ⬜ 대기
+**상태**: ✅ 완료
+**날짜**: 2026-02-26
+
+### 작업 내역
+- DB 마이그레이션
+  - `supabase/migrations/007_audit_logs.sql` — audit_logs 테이블, log_audit() 트리거 함수, 6개 테이블에 감사 트리거 적용
+- 설정 레이아웃 `/settings`
+  - 탭 네비게이션: 계정 관리 / 변경 이력
+  - boss 이상 접근 제한
+- 계정/권한 관리 `/settings/users`
+  - 팀원 목록 테이블 (이름, 이메일, 권한, 활성 상태, 최종 접속일)
+  - super 전용: 역할 변경 드롭다운 + 확인 다이얼로그
+- 변경 이력 `/settings/logs`
+  - 최근 100건 감사 로그 타임라인
+  - 테이블별 필터링 (클라이언트 사이드)
+  - 액션 배지: 생성(green)/수정(blue)/삭제(red)
+  - 상세 다이얼로그: 변경 전/후 JSON diff
+- 컴포넌트
+  - `src/components/settings/settings-nav.tsx` — 탭 네비게이션
+  - `src/components/settings/user-role-actions.tsx` — 역할 변경
+  - `src/components/settings/audit-log-viewer.tsx` — 감사 로그 뷰어
