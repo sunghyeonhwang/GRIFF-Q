@@ -1,9 +1,21 @@
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { requireAuth } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
-import { MeetingForm } from "@/components/meetings/meeting-form";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { ArrowLeft, Pencil } from "lucide-react";
 
-export default async function EditMeetingPage({
+export default async function MeetingDetailPage({
   params,
 }: {
   params: Promise<{ id: string }>;
@@ -14,7 +26,7 @@ export default async function EditMeetingPage({
 
   const { data: meeting } = await supabase
     .from("meetings")
-    .select("*")
+    .select("*, users!meetings_created_by_fkey(name)")
     .eq("id", id)
     .single();
 
@@ -22,27 +34,156 @@ export default async function EditMeetingPage({
 
   const { data: actionItems } = await supabase
     .from("action_items")
-    .select("*")
+    .select("*, users!action_items_assignee_id_fkey(name)")
     .eq("meeting_id", id)
     .order("created_at");
 
-  const { data: users } = await supabase
+  const { data: allUsers } = await supabase
     .from("users")
     .select("id, name")
-    .eq("is_active", true)
-    .order("name");
+    .eq("is_active", true);
+
+  const userMap = new Map((allUsers ?? []).map((u) => [u.id, u.name]));
+
+  const attendeeNames = (meeting.attendees as string[])
+    ?.map((uid) => userMap.get(uid))
+    .filter(Boolean);
+
+  const statusLabel: Record<string, string> = {
+    pending: "대기",
+    in_progress: "진행중",
+    completed: "완료",
+  };
+
+  const statusVariant: Record<string, "outline" | "default" | "secondary"> = {
+    pending: "outline",
+    in_progress: "secondary",
+    completed: "default",
+  };
+
+  const items = actionItems ?? [];
+  const completedCount = items.filter((a) => a.status === "completed").length;
 
   return (
-    <div className="mx-auto max-w-3xl space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold">회의록 수정</h1>
+    <div className="space-y-6">
+      {/* 헤더 */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <Link href="/meetings">
+            <Button variant="ghost" size="icon">
+              <ArrowLeft className="size-4" />
+            </Button>
+          </Link>
+          <div>
+            <h1 className="text-2xl font-bold">{meeting.title}</h1>
+            <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
+              <span>{new Date(meeting.meeting_date).toLocaleDateString("ko-KR")}</span>
+              <span>·</span>
+              <span>작성자: {(meeting as any).users?.name ?? "-"}</span>
+            </div>
+          </div>
+        </div>
+        <Link href={`/meetings/${id}/edit`}>
+          <Button variant="outline">
+            <Pencil className="mr-2 size-4" />
+            수정
+          </Button>
+        </Link>
       </div>
-      <MeetingForm
-        userId={user.id}
-        users={users ?? []}
-        initialData={meeting}
-        initialActionItems={actionItems ?? []}
-      />
+
+      {/* 참석자 */}
+      {attendeeNames && attendeeNames.length > 0 && (
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              참석자
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex flex-wrap gap-2">
+              {attendeeNames.map((name) => (
+                <Badge key={name} variant="secondary">
+                  {name}
+                </Badge>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* 회의 내용 */}
+      <Card>
+        <CardHeader>
+          <CardTitle>회의 내용</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {meeting.content ? (
+            <p className="text-sm whitespace-pre-wrap leading-relaxed">
+              {meeting.content}
+            </p>
+          ) : (
+            <p className="text-sm text-muted-foreground">내용 없음</p>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* 액션아이템 */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <CardTitle>액션아이템</CardTitle>
+            {items.length > 0 && (
+              <Badge variant={completedCount === items.length ? "default" : "outline"}>
+                {completedCount}/{items.length} 완료
+              </Badge>
+            )}
+          </div>
+        </CardHeader>
+        <CardContent>
+          {items.length > 0 ? (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>항목</TableHead>
+                  <TableHead>담당자</TableHead>
+                  <TableHead>마감일</TableHead>
+                  <TableHead>상태</TableHead>
+                  <TableHead>비고</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {items.map((ai) => (
+                  <TableRow key={ai.id}>
+                    <TableCell className="font-medium text-sm">
+                      {ai.title}
+                    </TableCell>
+                    <TableCell className="text-sm">
+                      {(ai as any).users?.name ?? "-"}
+                    </TableCell>
+                    <TableCell className="text-sm">
+                      {ai.due_date
+                        ? new Date(ai.due_date).toLocaleDateString("ko-KR")
+                        : "-"}
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant={statusVariant[ai.status] ?? "outline"} className="text-xs">
+                        {statusLabel[ai.status] ?? ai.status}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-sm text-muted-foreground whitespace-pre-wrap">
+                      {ai.note || "-"}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          ) : (
+            <p className="text-sm text-muted-foreground text-center py-4">
+              액션아이템 없음
+            </p>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }

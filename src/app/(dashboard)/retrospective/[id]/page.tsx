@@ -31,7 +31,7 @@ export default async function EditRetrospectivePage({
     .order("name");
 
   return (
-    <div className="mx-auto max-w-3xl space-y-6">
+    <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold">
           {canEdit ? "회고 수정" : "회고 상세"}

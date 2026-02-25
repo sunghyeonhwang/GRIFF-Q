@@ -138,57 +138,125 @@ export default async function SummaryPage({
         </TabsContent>
 
         {/* 통합 인사이트 */}
-        <TabsContent value="insights">
-          <div className="grid gap-4 md:grid-cols-3">
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-green-700">
-                  Keep / Continue
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ul className="list-disc space-y-1 pl-4 text-sm">
-                  {[...allKeep, ...allContinue].map((item, i) => (
-                    <li key={i}>{item}</li>
-                  ))}
-                  {allKeep.length + allContinue.length === 0 && (
-                    <li className="text-muted-foreground">아직 데이터 없음</li>
-                  )}
-                </ul>
-              </CardContent>
-            </Card>
+        <TabsContent value="insights" className="space-y-6">
+          {/* KPT */}
+          <div>
+            <h3 className="text-sm font-semibold text-muted-foreground mb-3">KPT</h3>
+            <div className="grid gap-4 md:grid-cols-3">
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-base text-green-700 dark:text-green-400">
+                    Keep (유지할 것)
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <ul className="list-disc space-y-1 pl-4 text-sm">
+                    {allKeep.map((item, i) => (
+                      <li key={i}>{item}</li>
+                    ))}
+                    {allKeep.length === 0 && (
+                      <li className="text-muted-foreground">아직 데이터 없음</li>
+                    )}
+                  </ul>
+                </CardContent>
+              </Card>
 
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-red-700">Problem / Stop</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ul className="list-disc space-y-1 pl-4 text-sm">
-                  {[...allProblem, ...allStop].map((item, i) => (
-                    <li key={i}>{item}</li>
-                  ))}
-                  {allProblem.length + allStop.length === 0 && (
-                    <li className="text-muted-foreground">아직 데이터 없음</li>
-                  )}
-                </ul>
-              </CardContent>
-            </Card>
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-base text-red-700 dark:text-red-400">
+                    Problem (문제점)
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <ul className="list-disc space-y-1 pl-4 text-sm">
+                    {allProblem.map((item, i) => (
+                      <li key={i}>{item}</li>
+                    ))}
+                    {allProblem.length === 0 && (
+                      <li className="text-muted-foreground">아직 데이터 없음</li>
+                    )}
+                  </ul>
+                </CardContent>
+              </Card>
 
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-blue-700">Try / Start</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ul className="list-disc space-y-1 pl-4 text-sm">
-                  {[...allTry, ...allStart].map((item, i) => (
-                    <li key={i}>{item}</li>
-                  ))}
-                  {allTry.length + allStart.length === 0 && (
-                    <li className="text-muted-foreground">아직 데이터 없음</li>
-                  )}
-                </ul>
-              </CardContent>
-            </Card>
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-base text-blue-700 dark:text-blue-400">
+                    Try (시도할 것)
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <ul className="list-disc space-y-1 pl-4 text-sm">
+                    {allTry.map((item, i) => (
+                      <li key={i}>{item}</li>
+                    ))}
+                    {allTry.length === 0 && (
+                      <li className="text-muted-foreground">아직 데이터 없음</li>
+                    )}
+                  </ul>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+
+          {/* SSC */}
+          <div>
+            <h3 className="text-sm font-semibold text-muted-foreground mb-3">SSC</h3>
+            <div className="grid gap-4 md:grid-cols-3">
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-base text-blue-700 dark:text-blue-400">
+                    Start (시작할 것)
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <ul className="list-disc space-y-1 pl-4 text-sm">
+                    {allStart.map((item, i) => (
+                      <li key={i}>{item}</li>
+                    ))}
+                    {allStart.length === 0 && (
+                      <li className="text-muted-foreground">아직 데이터 없음</li>
+                    )}
+                  </ul>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-base text-red-700 dark:text-red-400">
+                    Stop (중단할 것)
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <ul className="list-disc space-y-1 pl-4 text-sm">
+                    {allStop.map((item, i) => (
+                      <li key={i}>{item}</li>
+                    ))}
+                    {allStop.length === 0 && (
+                      <li className="text-muted-foreground">아직 데이터 없음</li>
+                    )}
+                  </ul>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-base text-green-700 dark:text-green-400">
+                    Continue (계속할 것)
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <ul className="list-disc space-y-1 pl-4 text-sm">
+                    {allContinue.map((item, i) => (
+                      <li key={i}>{item}</li>
+                    ))}
+                    {allContinue.length === 0 && (
+                      <li className="text-muted-foreground">아직 데이터 없음</li>
+                    )}
+                  </ul>
+                </CardContent>
+              </Card>
+            </div>
           </div>
         </TabsContent>
 

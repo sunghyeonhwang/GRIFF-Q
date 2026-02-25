@@ -11,7 +11,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Plus } from "lucide-react";
+import { Plus, FileSpreadsheet } from "lucide-react";
 
 export default async function MeetingsPage() {
   const user = await requireAuth();
@@ -55,12 +55,20 @@ export default async function MeetingsPage() {
             회의록을 작성하고 액션아이템을 관리합니다.
           </p>
         </div>
-        <Link href="/meetings/new">
-          <Button>
-            <Plus className="mr-2 size-4" />
-            회의록 작성
-          </Button>
-        </Link>
+        <div className="flex gap-2">
+          <Link href="/meetings/import">
+            <Button variant="outline">
+              <FileSpreadsheet className="mr-2 size-4" />
+              Sheets 가져오기
+            </Button>
+          </Link>
+          <Link href="/meetings/new">
+            <Button>
+              <Plus className="mr-2 size-4" />
+              회의록 작성
+            </Button>
+          </Link>
+        </div>
       </div>
 
       <div className="rounded-lg border">
