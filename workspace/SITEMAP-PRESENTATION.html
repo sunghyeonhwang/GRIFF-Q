@@ -1,0 +1,1144 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1920">
+<title>GRIFF-Q 0.1 — 사이트맵 & 상세 기획</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --bg: #0a0a0b;
+    --surface: #141416;
+    --surface-2: #1c1c20;
+    --border: #2a2a30;
+    --text: #e4e4e7;
+    --text-dim: #71717a;
+    --accent: #6366f1;
+    --accent-light: #818cf8;
+    --green: #22c55e;
+    --yellow: #eab308;
+    --red: #ef4444;
+    --cyan: #06b6d4;
+    --orange: #f97316;
+  }
+
+  body {
+    font-family: 'Noto Sans KR', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    overflow: hidden;
+    width: 1920px;
+    height: 1080px;
+  }
+
+  .slide {
+    display: none;
+    width: 1920px;
+    height: 1080px;
+    padding: 60px 80px;
+    position: absolute;
+    top: 0; left: 0;
+    opacity: 0;
+    transition: opacity 0.4s ease;
+  }
+
+  .slide.active {
+    display: flex;
+    flex-direction: column;
+    opacity: 1;
+  }
+
+  /* Navigation */
+  .nav {
+    position: fixed;
+    bottom: 30px;
+    right: 40px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    z-index: 100;
+  }
+
+  .nav button {
+    width: 44px; height: 44px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text);
+    font-size: 18px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+  }
+
+  .nav button:hover { background: var(--surface-2); border-color: var(--accent); }
+
+  .nav .counter {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14px;
+    color: var(--text-dim);
+    min-width: 60px;
+    text-align: center;
+  }
+
+  /* Progress bar */
+  .progress-bar {
+    position: fixed;
+    top: 0; left: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--accent), var(--cyan));
+    transition: width 0.4s ease;
+    z-index: 100;
+  }
+
+  /* Slide index sidebar */
+  .slide-index {
+    position: fixed;
+    left: 20px;
+    top: 50%;
+    transform: translateY(-50%);
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    z-index: 100;
+  }
+
+  .slide-index .dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--border);
+    cursor: pointer;
+    transition: all 0.3s;
+  }
+
+  .slide-index .dot.active {
+    background: var(--accent);
+    box-shadow: 0 0 8px var(--accent);
+    transform: scale(1.4);
+  }
+
+  .slide-index .dot:hover { background: var(--accent-light); }
+
+  /* Typography */
+  h1 { font-size: 48px; font-weight: 700; line-height: 1.2; }
+  h2 { font-size: 32px; font-weight: 600; margin-bottom: 24px; color: var(--accent-light); }
+  h3 { font-size: 22px; font-weight: 600; margin-bottom: 12px; color: var(--text); }
+  h4 { font-size: 17px; font-weight: 500; margin-bottom: 8px; color: var(--cyan); }
+
+  .subtitle { font-size: 20px; color: var(--text-dim); margin-top: 12px; font-weight: 300; }
+
+  /* Code block */
+  pre {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14px;
+    line-height: 1.7;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px 28px;
+    overflow: auto;
+    color: var(--text-dim);
+  }
+
+  code {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14px;
+    background: var(--surface-2);
+    padding: 2px 8px;
+    border-radius: 4px;
+    color: var(--cyan);
+  }
+
+  /* Tables */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 15px;
+  }
+
+  th {
+    text-align: left;
+    padding: 10px 14px;
+    background: var(--surface);
+    border-bottom: 2px solid var(--accent);
+    font-weight: 600;
+    font-size: 14px;
+    color: var(--accent-light);
+    white-space: nowrap;
+  }
+
+  td {
+    padding: 9px 14px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+    line-height: 1.5;
+  }
+
+  tr:hover td { background: var(--surface); }
+
+  /* Cards */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px;
+  }
+
+  .card-grid {
+    display: grid;
+    gap: 20px;
+  }
+
+  .card-grid-2 { grid-template-columns: 1fr 1fr; }
+  .card-grid-3 { grid-template-columns: 1fr 1fr 1fr; }
+
+  /* Tags */
+  .tag {
+    display: inline-block;
+    font-size: 12px;
+    font-family: 'JetBrains Mono', monospace;
+    padding: 3px 10px;
+    border-radius: 6px;
+    margin: 2px 4px 2px 0;
+  }
+
+  .tag-accent { background: rgba(99,102,241,0.15); color: var(--accent-light); border: 1px solid rgba(99,102,241,0.3); }
+  .tag-green { background: rgba(34,197,94,0.12); color: var(--green); border: 1px solid rgba(34,197,94,0.25); }
+  .tag-yellow { background: rgba(234,179,8,0.12); color: var(--yellow); border: 1px solid rgba(234,179,8,0.25); }
+  .tag-red { background: rgba(239,68,68,0.12); color: var(--red); border: 1px solid rgba(239,68,68,0.25); }
+  .tag-cyan { background: rgba(6,182,212,0.12); color: var(--cyan); border: 1px solid rgba(6,182,212,0.25); }
+  .tag-orange { background: rgba(249,115,22,0.12); color: var(--orange); border: 1px solid rgba(249,115,22,0.25); }
+
+  /* Lists */
+  ul { list-style: none; padding-left: 0; }
+  ul li {
+    position: relative;
+    padding-left: 20px;
+    margin-bottom: 6px;
+    font-size: 16px;
+    line-height: 1.6;
+  }
+  ul li::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 10px;
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--accent);
+  }
+
+  .list-compact li { margin-bottom: 3px; font-size: 14px; }
+  .list-compact li::before { top: 8px; width: 5px; height: 5px; }
+
+  /* Flex helpers */
+  .flex-grow { flex: 1; min-height: 0; overflow: auto; }
+  .flex-col { display: flex; flex-direction: column; }
+  .gap-12 { gap: 12px; }
+  .gap-20 { gap: 20px; }
+  .gap-24 { gap: 24px; }
+  .gap-32 { gap: 32px; }
+  .mt-auto { margin-top: auto; }
+  .mt-16 { margin-top: 16px; }
+  .mt-20 { margin-top: 20px; }
+  .mb-8 { margin-bottom: 8px; }
+  .mb-16 { margin-bottom: 16px; }
+
+  /* Diagram boxes */
+  .diagram-box {
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px 20px;
+    background: var(--surface);
+    text-align: center;
+    font-size: 14px;
+  }
+
+  .diagram-box.highlight {
+    border-color: var(--accent);
+    box-shadow: 0 0 16px rgba(99,102,241,0.15);
+  }
+
+  /* Flow arrow */
+  .flow-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  .flow-arrow {
+    color: var(--text-dim);
+    font-size: 18px;
+  }
+
+  .flow-box {
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-family: 'JetBrains Mono', monospace;
+    white-space: nowrap;
+  }
+
+  .flow-dev { background: rgba(99,102,241,0.15); border: 1px solid rgba(99,102,241,0.3); color: var(--accent-light); }
+  .flow-qa { background: rgba(234,179,8,0.12); border: 1px solid rgba(234,179,8,0.25); color: var(--yellow); }
+  .flow-git { background: rgba(34,197,94,0.12); border: 1px solid rgba(34,197,94,0.25); color: var(--green); }
+  .flow-parallel { background: rgba(6,182,212,0.08); border: 1px dashed rgba(6,182,212,0.3); color: var(--cyan); padding: 8px 14px; }
+
+  /* Section label */
+  .section-label {
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: var(--text-dim);
+    margin-bottom: 8px;
+  }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+  /* Keyboard hint */
+  .key-hint {
+    position: fixed;
+    bottom: 34px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 12px;
+    color: var(--text-dim);
+    opacity: 0.5;
+  }
+</style>
+</head>
+<body>
+
+<div class="progress-bar" id="progressBar"></div>
+<div class="slide-index" id="slideIndex"></div>
+
+<!-- ==================== SLIDE 1: Title ==================== -->
+<div class="slide active" data-title="Title">
+  <div style="flex:1; display:flex; flex-direction:column; justify-content:center; align-items:center; text-align:center;">
+    <div class="section-label" style="margin-bottom:20px;">Internal Project Specification</div>
+    <h1 style="font-size:56px; letter-spacing:-1px;">GRIFF-Q 0.1</h1>
+    <p class="subtitle" style="font-size:24px; margin-top:20px;">사내 업무 관리 시스템</p>
+    <p style="color:var(--text-dim); margin-top:40px; font-size:15px;">
+      Next.js + Supabase + shadcn/ui + Tailwind CSS
+    </p>
+    <div style="display:flex; gap:12px; margin-top:32px;">
+      <span class="tag tag-accent">7명 팀</span>
+      <span class="tag tag-green">Vultr 배포</span>
+      <span class="tag tag-cyan">Docker Compose</span>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== SLIDE 2: Sitemap ==================== -->
+<div class="slide" data-title="Sitemap">
+  <h2>사이트맵</h2>
+  <div class="flex-grow">
+    <pre style="font-size:15px; line-height:1.8;">/
+├── <span style="color:var(--accent-light)">/login</span>                          <span style="color:var(--text-dim)"># 로그인</span>
+├── <span style="color:var(--accent-light)">/dashboard</span>                      <span style="color:var(--text-dim)"># 대시보드 (로그인 후 랜딩)</span>
+│
+├── <span style="color:var(--cyan)">/retrospective</span>                  <span style="color:var(--text-dim)"># 회고 시스템</span>
+│   ├── /retrospective/<span style="color:var(--yellow)">new</span>
+│   ├── /retrospective/<span style="color:var(--yellow)">[id]</span>
+│   └── /retrospective/summary/<span style="color:var(--yellow)">[projectId]</span>
+│
+├── <span style="color:var(--cyan)">/meetings</span>                       <span style="color:var(--text-dim)"># 회의록 관리</span>
+│   ├── /meetings/<span style="color:var(--yellow)">new</span>
+│   ├── /meetings/<span style="color:var(--yellow)">[id]</span>
+│   └── /meetings/<span style="color:var(--yellow)">import</span>              <span style="color:var(--text-dim)"># Google Sheets 파싱</span>
+│
+├── <span style="color:var(--cyan)">/payments</span>                       <span style="color:var(--text-dim)"># 입금/결제 요청</span>
+│   ├── /payments/<span style="color:var(--yellow)">new</span>
+│   └── /payments/<span style="color:var(--yellow)">[id]</span>
+│
+├── <span style="color:var(--cyan)">/estimates</span>                      <span style="color:var(--text-dim)"># 견적서 공동 작업</span>
+│   ├── /estimates/<span style="color:var(--yellow)">new</span>
+│   ├── /estimates/<span style="color:var(--yellow)">[id]</span>             <span style="color:var(--text-dim)"># 실시간 동시 편집</span>
+│   └── /estimates/[id]/<span style="color:var(--yellow)">compare</span>
+│
+├── <span style="color:var(--cyan)">/predict</span>                        <span style="color:var(--text-dim)"># 클라이언트 반응 예측</span>
+│   ├── /predict/clients
+│   ├── /predict/clients/<span style="color:var(--yellow)">[id]</span>
+│   └── /predict/chat/<span style="color:var(--yellow)">[clientId]</span>
+│
+└── <span style="color:var(--cyan)">/settings</span>                       <span style="color:var(--text-dim)"># 설정 (super/boss)</span>
+    ├── /settings/users
+    └── /settings/logs</pre>
+  </div>
+</div>
+
+<!-- ==================== SLIDE 3: Permission Matrix ==================== -->
+<div class="slide" data-title="Permission">
+  <h2>권한별 접근 매트릭스</h2>
+  <div style="display:flex; gap:24px; margin-bottom:24px;">
+    <span class="tag tag-red">super</span>
+    <span class="tag tag-orange">boss</span>
+    <span class="tag tag-yellow">manager</span>
+    <span class="tag tag-accent">normal</span>
+  </div>
+  <div class="flex-grow">
+    <table style="font-size:16px;">
+      <thead>
+        <tr><th style="width:30%">페이지</th><th style="text-align:center">super</th><th style="text-align:center">boss</th><th style="text-align:center">manager</th><th style="text-align:center">normal</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>대시보드</td><td style="text-align:center; color:var(--green)">Full</td><td style="text-align:center; color:var(--green)">Full</td><td style="text-align:center; color:var(--green)">Full</td><td style="text-align:center; color:var(--green)">Full</td></tr>
+        <tr><td>회고 - 개인 작성</td><td style="text-align:center; color:var(--green)">Full</td><td style="text-align:center; color:var(--green)">Full</td><td style="text-align:center; color:var(--green)">Full</td><td style="text-align:center; color:var(--green)">Full</td></tr>
+        <tr><td>회고 - 취합 뷰</td><td style="text-align:center; color:var(--green)">Full</td><td style="text-align:center; color:var(--green)">Full</td><td style="text-align:center; color:var(--green)">Full</td><td style="text-align:center; color:var(--yellow)">Read</td></tr>
+        <tr><td>회의록</td><td style="text-align:center; color:var(--green)">Full</td><td style="text-align:center; color:var(--green)">Full</td><td style="text-align:center; color:var(--green)">Full</td><td style="text-align:center; color:var(--yellow)">Read</td></tr>
+        <tr><td>입금/결제 요청</td><td style="text-align:center; color:var(--green)">Full</td><td style="text-align:center; color:var(--green)">Full</td><td style="text-align:center; color:var(--green)">Full</td><td style="text-align:center; color:var(--yellow)">Read</td></tr>
+        <tr><td>견적서</td><td style="text-align:center; color:var(--green)">Full</td><td style="text-align:center; color:var(--green)">Full</td><td style="text-align:center; color:var(--green)">Full</td><td style="text-align:center; color:var(--yellow)">Read</td></tr>
+        <tr><td>클라이언트 예측</td><td style="text-align:center; color:var(--green)">Full</td><td style="text-align:center; color:var(--green)">Full</td><td style="text-align:center; color:var(--green)">Full</td><td style="text-align:center; color:var(--red)">None</td></tr>
+        <tr><td>설정 - 계정 관리</td><td style="text-align:center; color:var(--green)">Full</td><td style="text-align:center; color:var(--green)">Full</td><td style="text-align:center; color:var(--red)">None</td><td style="text-align:center; color:var(--red)">None</td></tr>
+        <tr><td>설정 - 변경 이력/롤백</td><td style="text-align:center; color:var(--green)">Full</td><td style="text-align:center; color:var(--green)">Full</td><td style="text-align:center; color:var(--yellow)">Read</td><td style="text-align:center; color:var(--red)">None</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ==================== SLIDE 4: Login + Dashboard ==================== -->
+<div class="slide" data-title="Login & Dashboard">
+  <h2>1. 로그인 & 2. 대시보드</h2>
+  <div class="card-grid card-grid-2 flex-grow">
+    <div class="card flex-col gap-20">
+      <h3>/login</h3>
+      <ul>
+        <li>이메일 + 비밀번호 입력</li>
+        <li>Supabase Auth 연동</li>
+        <li>로그인 실패 시 에러 메시지</li>
+        <li>세션 만료 시 자동 리다이렉트</li>
+      </ul>
+      <div class="mt-auto">
+        <div class="section-label">shadcn/ui</div>
+        <div><span class="tag tag-accent">Card</span><span class="tag tag-accent">Input</span><span class="tag tag-accent">Button</span><span class="tag tag-accent">Label</span></div>
+      </div>
+    </div>
+    <div class="card flex-col gap-20">
+      <h3>/dashboard</h3>
+      <ul>
+        <li>다가오는 마감일 위젯 (액션아이템 + 입금)</li>
+        <li>최근 입금/결제 요청 건수 위젯</li>
+        <li>최근 변경 로그 타임라인 (최신 10건)</li>
+        <li>진행 중인 견적서 목록</li>
+        <li>회고 제출 현황 (프로젝트별)</li>
+      </ul>
+      <div class="mt-auto">
+        <div class="section-label">shadcn/ui</div>
+        <div><span class="tag tag-accent">Card</span><span class="tag tag-accent">Table</span><span class="tag tag-accent">Badge</span><span class="tag tag-accent">ScrollArea</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== SLIDE 5: Retrospective ==================== -->
+<div class="slide" data-title="Retrospective">
+  <h2>3. 회고 시스템 <code>/retrospective</code></h2>
+  <div class="card-grid card-grid-2 flex-grow">
+    <div class="card flex-col gap-12">
+      <h3>개인 회고 작성 <span style="color:var(--text-dim); font-weight:400;">/new</span></h3>
+      <h4>입력 필드</h4>
+      <ul class="list-compact">
+        <li>프로젝트명 (Select / 직접 입력)</li>
+        <li>회고 기간 (DateRangePicker)</li>
+        <li>작성자 이름 (자동 채움)</li>
+        <li>역할 (복수 Checkbox): 디자인, 인쇄, 웹사이트 제작, 브랜딩, 촬영, 중계, 라이브 중계, 사진촬영, 진행, 홍보, PR</li>
+        <li>KPT: Keep / Problem / Try (Textarea, 항목 추가)</li>
+        <li>SSC: Start / Stop / Continue (Textarea, 항목 추가)</li>
+        <li>공유 메모 (선택)</li>
+      </ul>
+      <h4>동작</h4>
+      <ul class="list-compact">
+        <li>임시 저장 (Draft) 지원</li>
+        <li>제출 후 수정 불가 (super/boss만 허용)</li>
+      </ul>
+    </div>
+    <div class="card flex-col gap-12">
+      <h3>취합 뷰 <span style="color:var(--text-dim); font-weight:400;">/summary/[projectId]</span></h3>
+      <h4>기능</h4>
+      <ul>
+        <li>프로젝트 선택 &rarr; 회고 전체 조회</li>
+        <li>역할별 참여 현황 테이블</li>
+        <li>통합 인사이트 자동 묶기</li>
+        <li>역할별 핵심 요약 테이블</li>
+        <li>최종 합의 사항 편집 (manager+)</li>
+      </ul>
+      <div style="margin-top:20px;">
+        <h4>통합 인사이트 그룹핑</h4>
+        <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:8px;">
+          <span class="tag tag-green">Keep + Continue = 강점 유지</span>
+          <span class="tag tag-red">Problem + Stop = 개선 필요</span>
+          <span class="tag tag-cyan">Try + Start = 다음 액션</span>
+        </div>
+      </div>
+      <div class="mt-auto">
+        <div class="section-label">shadcn/ui</div>
+        <div><span class="tag tag-accent">Table</span><span class="tag tag-accent">Tabs</span><span class="tag tag-accent">Card</span><span class="tag tag-accent">Badge</span><span class="tag tag-accent">Textarea</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== SLIDE 6: Meetings ==================== -->
+<div class="slide" data-title="Meetings">
+  <h2>4. 회의록 관리 <code>/meetings</code></h2>
+  <div class="card-grid card-grid-3 flex-grow">
+    <div class="card flex-col gap-12">
+      <h3>목록</h3>
+      <ul class="list-compact">
+        <li>테이블 뷰 (날짜, 제목, 참석자, 액션아이템 수, 완료율)</li>
+        <li>검색 + 날짜 범위 필터</li>
+        <li>정렬: 날짜순 / 미완료 우선</li>
+      </ul>
+    </div>
+    <div class="card flex-col gap-12">
+      <h3>작성/수정</h3>
+      <h4>입력 필드</h4>
+      <ul class="list-compact">
+        <li>회의 제목</li>
+        <li>회의 날짜 (DatePicker)</li>
+        <li>참석자 (MultiSelect)</li>
+        <li>회의 내용 (Textarea)</li>
+      </ul>
+      <h4>액션아이템 (인라인)</h4>
+      <ul class="list-compact">
+        <li>항목명 / 담당자 / 마감일</li>
+        <li>상태: 대기 / 진행중 / 완료</li>
+        <li>행 추가/삭제</li>
+        <li>상태 변경 시 이력 자동 기록</li>
+      </ul>
+    </div>
+    <div class="card flex-col gap-12">
+      <h3>Sheets 파싱 <span style="color:var(--text-dim); font-weight:400;">/import</span></h3>
+      <ul class="list-compact">
+        <li>Google Sheets 내용 붙여넣기</li>
+        <li>탭/줄바꿈 자동 파싱</li>
+        <li>미리보기 테이블</li>
+        <li>확인 후 회의록 저장</li>
+      </ul>
+      <div style="margin-top:16px; padding:12px; border-radius:8px; background:rgba(6,182,212,0.08); border:1px solid rgba(6,182,212,0.2);">
+        <div style="font-size:13px; color:var(--cyan);">Google Sheets 퍼블리시 기능도 포함</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== SLIDE 7: Payments ==================== -->
+<div class="slide" data-title="Payments">
+  <h2>5. 입금/결제 요청 <code>/payments</code></h2>
+  <div class="card-grid card-grid-2 flex-grow">
+    <div class="card flex-col gap-12">
+      <h3>요청 목록</h3>
+      <ul>
+        <li>은행명 기준 그룹핑 리스트 (기본 뷰)</li>
+        <li>전체 리스트 뷰 (테이블)</li>
+        <li>뷰 전환 토글</li>
+        <li>상태 필터: 전체 / 대기 / 완료</li>
+        <li>마감일 임박순 정렬</li>
+      </ul>
+    </div>
+    <div class="card flex-col gap-12">
+      <h3>요청 등록/수정</h3>
+      <h4>입력 필드</h4>
+      <table style="font-size:14px;">
+        <tbody>
+          <tr><td style="color:var(--cyan); width:120px;">이름</td><td>Input</td></tr>
+          <tr><td style="color:var(--cyan);">금액</td><td>Input (천단위 콤마 자동)</td></tr>
+          <tr><td style="color:var(--cyan);">은행</td><td>Select (주요 은행 프리셋)</td></tr>
+          <tr><td style="color:var(--cyan);">계좌번호</td><td>Input</td></tr>
+          <tr><td style="color:var(--cyan);">입금자명</td><td>Input</td></tr>
+          <tr><td style="color:var(--cyan);">마감일</td><td>DatePicker</td></tr>
+          <tr><td style="color:var(--cyan);">비고</td><td>Textarea</td></tr>
+        </tbody>
+      </table>
+      <div style="margin-top:12px;">
+        <span class="tag tag-green">등록 후 즉시 반영</span>
+        <span class="tag tag-yellow">완료 처리 버튼</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== SLIDE 8: Estimates ==================== -->
+<div class="slide" data-title="Estimates">
+  <h2>6. 견적서 공동 작업 <code>/estimates</code></h2>
+  <div class="card-grid card-grid-3 flex-grow">
+    <div class="card flex-col gap-12">
+      <h3>목록</h3>
+      <ul class="list-compact">
+        <li>프로젝트별 견적서 목록</li>
+        <li>상태: 작성중 / 확정 / 발송완료</li>
+        <li>편집 중인 사용자 아바타 (Presence)</li>
+      </ul>
+    </div>
+    <div class="card flex-col gap-12">
+      <h3>편집 <span class="tag tag-orange" style="font-size:11px;">실시간 동시 편집</span></h3>
+      <ul class="list-compact">
+        <li>기본 정보: 프로젝트, 클라이언트, 견적일, 유효기간</li>
+        <li>항목 테이블: 항목명, 수량, 단가, 금액(자동), 비고</li>
+        <li>소계 / 부가세 / 총액 자동 계산</li>
+        <li>셀 단위 하이라이트 (배경색)</li>
+        <li>접속자 커서 표시 (Presence)</li>
+      </ul>
+      <div style="margin-top:12px;">
+        <div class="section-label">퍼블리시</div>
+        <span class="tag tag-red">PDF</span>
+        <span class="tag tag-green">Google Sheets</span>
+        <span class="tag tag-cyan">Excel</span>
+      </div>
+    </div>
+    <div class="card flex-col gap-12">
+      <h3>작년 비교 <span style="color:var(--text-dim); font-weight:400;">/compare</span></h3>
+      <ul class="list-compact">
+        <li>좌우 분할 비교 뷰 (현재 vs 작년)</li>
+        <li>항목별 금액 차이 자동 표시</li>
+        <li>새로 추가/삭제 항목 하이라이트</li>
+      </ul>
+      <div style="margin-top:16px; display:flex; gap:8px;">
+        <div style="flex:1; padding:8px; border-radius:6px; text-align:center; font-size:12px; background:rgba(34,197,94,0.08); border:1px solid rgba(34,197,94,0.2); color:var(--green);">+12% 증가</div>
+        <div style="flex:1; padding:8px; border-radius:6px; text-align:center; font-size:12px; background:rgba(239,68,68,0.08); border:1px solid rgba(239,68,68,0.2); color:var(--red);">-5% 감소</div>
+      </div>
+      <div style="margin-top:12px;">
+        <div class="section-label">기술</div>
+        <span class="tag tag-accent">Supabase Realtime</span>
+        <span class="tag tag-accent">Presence</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== SLIDE 9: Predict - Avatar System ==================== -->
+<div class="slide" data-title="Predict: Avatar">
+  <h2>7. 클라이언트 반응 예측 <code>/predict</code> <span class="tag tag-cyan" style="font-size:13px;">Gemini API</span></h2>
+  <p style="color:var(--text-dim); margin-bottom:20px; font-size:15px;">실제 대화 데이터 기반으로 AI 아바타를 생성하고, 예상 반응을 시뮬레이션</p>
+  <div class="card-grid card-grid-3 flex-grow">
+    <div class="card flex-col gap-12">
+      <h3>아바타 목록 <span style="color:var(--text-dim); font-weight:400;">/avatars</span></h3>
+      <ul class="list-compact">
+        <li>아바타 카드 그리드</li>
+        <li>이름, 소속, 학습 상태 표시</li>
+        <li>1인당 여러 아바타 생성 가능</li>
+      </ul>
+      <div style="margin-top:12px;">
+        <div class="section-label">학습 상태</div>
+        <div style="display:flex; flex-direction:column; gap:4px; margin-top:6px;">
+          <span class="tag tag-accent" style="width:fit-content;">미학습</span>
+          <span class="tag tag-yellow" style="width:fit-content;">학습중</span>
+          <span class="tag tag-green" style="width:fit-content;">학습완료</span>
+          <span class="tag tag-orange" style="width:fit-content;">업데이트 필요</span>
+        </div>
+      </div>
+    </div>
+    <div class="card flex-col gap-12">
+      <h3>아바타 생성 <span style="color:var(--text-dim); font-weight:400;">/new</span></h3>
+      <h4>Step 1: 기본 정보</h4>
+      <ul class="list-compact">
+        <li>이름 (예: 김과장)</li>
+        <li>소속/회사명, 직급/역할</li>
+        <li>아바타 이미지</li>
+      </ul>
+      <h4>Step 2: 대화 데이터 학습</h4>
+      <ul class="list-compact">
+        <li>카톡/메신저 내보내기 업로드</li>
+        <li>이메일 스레드 붙여넣기</li>
+        <li>회의 메모/통화 기록 직접 입력</li>
+        <li>기존 회의록에서 발언 자동 추출</li>
+      </ul>
+      <div style="margin-top:8px; padding:8px 12px; border-radius:6px; background:rgba(6,182,212,0.08); border:1px solid rgba(6,182,212,0.2); font-size:12px; color:var(--cyan);">
+        파싱 미리보기 &rarr; 발화자별 분리 확인 &rarr; 학습 실행
+      </div>
+    </div>
+    <div class="card flex-col gap-12">
+      <h3>인격 프로필 <span style="color:var(--text-dim); font-weight:400;">/settings</span></h3>
+      <h4>AI 자동 추출 + 수동 보정</h4>
+      <ul class="list-compact">
+        <li>말투: 격식/비격식, 직설/완곡, 간결/장문</li>
+        <li>성격 키워드 (꼼꼼, 가격민감 등)</li>
+        <li>관심사/자주 언급 주제</li>
+        <li>의사결정 패턴 (즉답/검토/상사확인)</li>
+        <li>민감 주제 (예산, 일정 지연)</li>
+      </ul>
+      <h4>Step 4: 테스트 대화</h4>
+      <ul class="list-compact">
+        <li>설정 완료 후 바로 테스트</li>
+        <li>불만족 시 Step 2~3 반복</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== SLIDE 10: Predict Chat + Settings ==================== -->
+<div class="slide" data-title="Predict Chat & Settings">
+  <h2>7. 예측 채팅 & 8. 설정</h2>
+  <div class="card-grid card-grid-2 flex-grow">
+    <div class="card flex-col gap-12">
+      <h3>예측 채팅 <span style="color:var(--text-dim); font-weight:400;">/chat/[avatarId]</span></h3>
+      <div style="display:flex; gap:16px; margin:8px 0;">
+        <div style="flex:1; padding:12px; border-radius:8px; background:var(--surface-2); border:1px solid var(--border);">
+          <div style="font-size:12px; color:var(--text-dim); margin-bottom:6px;">사용자 (우리 측)</div>
+          <div style="font-size:13px;">"견적서 금액이 좀 높다고 하실 것 같은데, 어떻게 접근하면 좋을까요?"</div>
+        </div>
+        <div style="flex:1; padding:12px; border-radius:8px; background:rgba(6,182,212,0.06); border:1px solid rgba(6,182,212,0.2);">
+          <div style="font-size:12px; color:var(--cyan); margin-bottom:6px;">김과장 (아바타)</div>
+          <div style="font-size:13px;">"음... 총액보다는 항목별로 쪼개서 설명해주시면 이해가 빠를 것 같습니다."</div>
+        </div>
+      </div>
+      <h4>대화 모드</h4>
+      <ul class="list-compact">
+        <li><strong>자유 대화</strong> — 자유롭게 질문/제안</li>
+        <li><strong>상황 시뮬레이션</strong> — "견적 네고 시" 등 프리셋</li>
+      </ul>
+      <h4>반응 분석 패널 (사이드바)</h4>
+      <ul class="list-compact">
+        <li>예상 감정 게이지 (긍정/중립/부정)</li>
+        <li>민감 주제 경고 하이라이트</li>
+        <li>대안 제안: "이렇게 말하면 더 긍정적"</li>
+        <li>대화 내보내기 (팀 공유용 요약)</li>
+      </ul>
+    </div>
+    <div class="card flex-col gap-12">
+      <h3>/settings <span class="tag tag-red" style="font-size:11px;">super/boss</span></h3>
+      <h4>계정/권한 관리</h4>
+      <ul class="list-compact">
+        <li>팀원 목록 (이메일, 이름, 권한, 최종 접속일)</li>
+        <li>권한 변경 (super만)</li>
+        <li>계정 추가/비활성화</li>
+      </ul>
+      <h4>변경 이력</h4>
+      <ul class="list-compact">
+        <li>전체 로그 타임라인</li>
+        <li>필터: 페이지별 / 작업자별 / 날짜별</li>
+        <li>상세 diff (변경 전/후)</li>
+        <li>롤백 (super/boss만)</li>
+      </ul>
+      <div style="margin-top:auto;">
+        <h4>아바타 데이터 관리</h4>
+        <ul class="list-compact">
+          <li>새 대화 데이터 추가 학습 (누적)</li>
+          <li>학습 데이터 이력 관리</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== SLIDE 11: Layout + DB ==================== -->
+<div class="slide" data-title="Layout & DB">
+  <h2>공통 레이아웃 & DB 테이블</h2>
+  <div class="card-grid card-grid-2 flex-grow">
+    <div class="card flex-col gap-12">
+      <h3>레이아웃</h3>
+      <pre style="font-size:14px; line-height:1.6; margin-bottom:12px;">
+┌─────────────────────────────────────────┐
+│  Logo    [Nav Links]     [User Avatar] │  Header
+├────────┬────────────────────────────────┤
+│        │                                │
+│ Sidebar│         Main Content           │
+│  Nav   │                                │
+│        │                                │
+├────────┴────────────────────────────────┤
+│              Footer (optional)          │
+└─────────────────────────────────────────┘</pre>
+      <ul class="list-compact">
+        <li>사이드바 접기/펼치기</li>
+        <li>현재 페이지 하이라이트</li>
+        <li>권한별 메뉴 자동 필터링</li>
+      </ul>
+    </div>
+    <div class="card flex-col" style="overflow:auto;">
+      <h3>DB 테이블 (14개)</h3>
+      <table style="font-size:13px;">
+        <thead><tr><th>테이블</th><th>설명</th></tr></thead>
+        <tbody>
+          <tr><td><code>users</code></td><td>Auth 확장 - 이름, 권한(role)</td></tr>
+          <tr><td><code>retrospectives</code></td><td>개인 회고 (KPT, SSC, 메모)</td></tr>
+          <tr><td><code>retrospective_summaries</code></td><td>취합 뷰 합의 사항</td></tr>
+          <tr><td><code>meetings</code></td><td>회의록 (제목, 날짜, 내용)</td></tr>
+          <tr><td><code>action_items</code></td><td>액션아이템 (담당, 마감, 상태)</td></tr>
+          <tr><td><code>payments</code></td><td>입금/결제 (금액, 은행, 마감)</td></tr>
+          <tr><td><code>estimates</code></td><td>견적서 헤더 (프로젝트, 상태)</td></tr>
+          <tr><td><code>estimate_items</code></td><td>견적 항목 (수량, 단가, 비고)</td></tr>
+          <tr><td><code>avatars</code></td><td>아바타 (이름, 소속, 학습 상태)</td></tr>
+          <tr><td><code>avatar_profiles</code></td><td>인격 프로필 (말투, 성격, 패턴)</td></tr>
+          <tr><td><code>avatar_training_data</code></td><td>학습 데이터 이력</td></tr>
+          <tr><td><code>chat_sessions</code></td><td>예측 채팅 세션 (아바타별)</td></tr>
+          <tr><td><code>chat_messages</code></td><td>메시지 (role, content, 감정)</td></tr>
+          <tr><td><code>audit_logs</code></td><td>변경 이력 (diff, 작업자, 시각)</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== SLIDE 12: Agent Team ==================== -->
+<div class="slide" data-title="Agent Team">
+  <h2>에이전트 팀 운영 모델</h2>
+  <div class="card-grid card-grid-2 flex-grow">
+    <div class="flex-col gap-24">
+      <div class="card" style="border-color:var(--accent); text-align:center;">
+        <h3 style="color:var(--accent-light); margin-bottom:8px;">팀장 (Opus) - Lead</h3>
+        <ul class="list-compact" style="text-align:left; display:inline-block;">
+          <li>Phase 시작/완료 판단</li>
+          <li>QA 최종 승인</li>
+          <li>팀원이 못 푸는 문제만 개입</li>
+          <li>머지 결정</li>
+          <li>평소에는 모니터링만</li>
+        </ul>
+      </div>
+      <div style="text-align:center; color:var(--text-dim); font-size:13px;">에스컬레이션만</div>
+      <div class="card" style="text-align:center;">
+        <h3 style="margin-bottom:8px;">팀원 (Sonnet/Opus) - Workers</h3>
+        <div style="display:flex; gap:16px; justify-content:center; margin:16px 0;">
+          <div style="padding:12px 24px; border-radius:8px; background:rgba(6,182,212,0.1); border:1px solid rgba(6,182,212,0.3); color:var(--cyan);">Worker A</div>
+          <div style="color:var(--text-dim); display:flex; align-items:center; font-size:12px;">&larr; 메시지 &rarr;</div>
+          <div style="padding:12px 24px; border-radius:8px; background:rgba(6,182,212,0.1); border:1px solid rgba(6,182,212,0.3); color:var(--cyan);">Worker B</div>
+        </div>
+        <ul class="list-compact" style="text-align:left; display:inline-block;">
+          <li>서로 직접 소통하며 개발</li>
+          <li>공유 태스크 리스트로 진행 추적</li>
+          <li>충돌/블로커 시 팀장에 보고</li>
+        </ul>
+      </div>
+    </div>
+    <div class="card">
+      <h3>에스컬레이션 기준</h3>
+      <table style="font-size:14px; margin-top:12px;">
+        <thead><tr><th>상황</th><th>처리</th></tr></thead>
+        <tbody>
+          <tr><td>일반 CRUD, UI</td><td><span class="tag tag-green">팀원끼리 해결</span></td></tr>
+          <tr><td>API 인터페이스 불일치</td><td><span class="tag tag-cyan">팀원 메시지 조율</span></td></tr>
+          <tr><td>RLS / Realtime 버그</td><td><span class="tag tag-yellow">1회 시도 &rarr; 팀장</span></td></tr>
+          <tr><td>아키텍처 변경</td><td><span class="tag tag-red">즉시 팀장</span></td></tr>
+          <tr><td>QA 통과 판단</td><td><span class="tag tag-orange">팀장만</span></td></tr>
+        </tbody>
+      </table>
+      <div style="margin-top:24px; padding:16px; border-radius:8px; background:rgba(99,102,241,0.06); border:1px solid rgba(99,102,241,0.15);">
+        <h4>비용 효율</h4>
+        <div style="font-size:14px; margin-top:8px; line-height:1.8;">
+          Opus 사용 비중: <strong style="color:var(--green);">~15-20%</strong> (모니터링 + 에스컬레이션만)<br>
+          Sonnet이 개발 + 소통 전부 담당 &rarr; 전체 비용 절감
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== SLIDE 13: Dev Flow ==================== -->
+<div class="slide" data-title="Dev Flow">
+  <h2>개발 일정 흐름도</h2>
+  <div class="flex-grow flex-col gap-24" style="justify-content:center;">
+    <!-- P0 -->
+    <div class="flow-row">
+      <div class="flow-box flow-dev">P0 Auth+레이아웃</div>
+      <span class="flow-arrow">&rarr;</span>
+      <div class="flow-box flow-qa">P0-QA</div>
+      <span class="flow-arrow">&rarr;</span>
+      <div class="flow-box flow-git">feature/p0-auth &rarr; main</div>
+    </div>
+    <!-- P1 -->
+    <div class="flow-row">
+      <div style="width:32px;"></div>
+      <div class="flow-box flow-dev">P1 회고 시스템</div>
+      <span class="flow-arrow">&rarr;</span>
+      <div class="flow-box flow-qa">P1-QA</div>
+      <span class="flow-arrow">&rarr;</span>
+      <div class="flow-box flow-git">feature/p1-retrospective &rarr; main</div>
+    </div>
+    <!-- P2+P3+P4 -->
+    <div class="flow-row">
+      <div style="width:32px;"></div>
+      <div class="flow-parallel" style="display:flex; flex-direction:column; gap:6px; align-items:center;">
+        <div style="font-size:11px; color:var(--text-dim);">병렬</div>
+        <div style="display:flex; gap:8px;">
+          <div class="flow-box flow-dev">P2 대시보드</div>
+          <div class="flow-box flow-dev">P3 회의록</div>
+          <div class="flow-box flow-dev">P4 입금/결제</div>
+        </div>
+      </div>
+      <span class="flow-arrow">&rarr;</span>
+      <div class="flow-box flow-qa">P2~4-QA 통합</div>
+      <span class="flow-arrow">&rarr;</span>
+      <div class="flow-box flow-git">p2,p3,p4 &rarr; main</div>
+    </div>
+    <!-- P5+P6 -->
+    <div class="flow-row">
+      <div style="width:32px;"></div>
+      <div class="flow-parallel" style="display:flex; flex-direction:column; gap:6px; align-items:center;">
+        <div style="font-size:11px; color:var(--text-dim);">병렬</div>
+        <div style="display:flex; gap:8px;">
+          <div class="flow-box flow-dev">P5 견적서</div>
+          <div class="flow-box flow-dev">P6 클라이언트 예측</div>
+        </div>
+      </div>
+      <span class="flow-arrow">&rarr;</span>
+      <div class="flow-box flow-qa">P5~6-QA 통합</div>
+      <span class="flow-arrow">&rarr;</span>
+      <div class="flow-box flow-git">p5,p6 &rarr; main</div>
+    </div>
+    <!-- P7 -->
+    <div class="flow-row">
+      <div style="width:32px;"></div>
+      <div class="flow-box flow-dev">P7 설정+백업</div>
+      <span class="flow-arrow">&rarr;</span>
+      <div class="flow-box flow-qa">P7-QA + E2E</div>
+      <span class="flow-arrow">&rarr;</span>
+      <div class="flow-box flow-git">feature/p7 &rarr; main</div>
+      <span class="flow-arrow">&rarr;</span>
+      <div class="flow-box" style="background:rgba(34,197,94,0.2); border:2px solid var(--green); color:var(--green); font-weight:600;">v0.1 Tag</div>
+    </div>
+
+    <div style="display:flex; gap:24px; margin-top:16px;">
+      <div style="display:flex; align-items:center; gap:8px;"><div style="width:12px;height:12px;border-radius:3px;" class="flow-box flow-dev"></div><span style="font-size:13px; color:var(--text-dim);">개발</span></div>
+      <div style="display:flex; align-items:center; gap:8px;"><div style="width:12px;height:12px;border-radius:3px;" class="flow-box flow-qa"></div><span style="font-size:13px; color:var(--text-dim);">QA/버그수정</span></div>
+      <div style="display:flex; align-items:center; gap:8px;"><div style="width:12px;height:12px;border-radius:3px;" class="flow-box flow-git"></div><span style="font-size:13px; color:var(--text-dim);">Git 머지</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== SLIDE 14: Phase Detail Table ==================== -->
+<div class="slide" data-title="Phase Detail">
+  <h2>Phase별 상세 (모델 / 에이전트 / 시드 데이터)</h2>
+  <div class="flex-grow" style="overflow:auto;">
+    <table style="font-size:13px;">
+      <thead>
+        <tr><th>Phase</th><th>작업</th><th>모델</th><th>에이전트</th><th>Git 브랜치</th><th>시드 데이터</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><strong>P0</strong></td><td>프로젝트 초기화 + Auth + 레이아웃</td><td><span class="tag tag-orange">Opus</span></td><td>1개 순차</td><td><code>feature/p0-auth</code></td><td>7명 계정 (S1 B1 M2 N3)</td></tr>
+        <tr><td><strong>P0-QA</strong></td><td>Auth + 권한 + RLS</td><td><span class="tag tag-accent">Sonnet</span></td><td>1 code-reviewer</td><td>-</td><td>-</td></tr>
+        <tr style="background:var(--surface);"><td><strong>P0-GIT</strong></td><td>PR &rarr; 리뷰 &rarr; 머지</td><td><span class="tag tag-red">팀장 Opus</span></td><td>-</td><td><code>p0 &rarr; main</code></td><td>-</td></tr>
+        <tr><td><strong>P1</strong></td><td>회고 시스템</td><td><span class="tag tag-accent">Sonnet</span></td><td>2 병렬 (DB/API + UI)</td><td><code>feature/p1-retro</code></td><td>프로젝트 1 + 회고 7건</td></tr>
+        <tr><td><strong>P1-QA</strong></td><td>CRUD + 취합 로직</td><td><span class="tag tag-accent">Sonnet</span></td><td>1 code-reviewer</td><td>-</td><td>-</td></tr>
+        <tr style="background:var(--surface);"><td><strong>P1-GIT</strong></td><td>PR &rarr; 리뷰 &rarr; 머지</td><td><span class="tag tag-red">팀장 Opus</span></td><td>-</td><td><code>p1 &rarr; main</code></td><td>-</td></tr>
+        <tr><td><strong>P2</strong></td><td>대시보드</td><td><span class="tag tag-accent">Sonnet</span></td><td>1개</td><td><code>feature/p2-dashboard</code></td><td>P1~P4 시드 의존</td></tr>
+        <tr><td><strong>P3</strong></td><td>회의록 관리</td><td><span class="tag tag-accent">Sonnet</span></td><td>2 병렬 (CRUD + Sheets)</td><td><code>feature/p3-meetings</code></td><td>회의록 3 + 액션 10건</td></tr>
+        <tr><td><strong>P4</strong></td><td>입금/결제</td><td><span class="tag tag-accent">Sonnet</span></td><td>1개</td><td><code>feature/p4-payments</code></td><td>요청 10건 (은행 5곳)</td></tr>
+        <tr><td><strong>P2~4-QA</strong></td><td>통합 테스트</td><td><span class="tag tag-orange">Opus</span></td><td>1 code-reviewer</td><td>-</td><td>-</td></tr>
+        <tr style="background:var(--surface);"><td><strong>P2~4-GIT</strong></td><td>PR 3건 &rarr; 순차 머지</td><td><span class="tag tag-red">팀장 Opus</span></td><td>-</td><td><code>p2,3,4 &rarr; main</code></td><td>-</td></tr>
+        <tr><td><strong>P5</strong></td><td>견적서 실시간 편집</td><td><span class="tag tag-orange">Opus</span></td><td>2 병렬 (Realtime + 퍼블리시)</td><td><code>feature/p5-estimates</code></td><td>견적서 2 + 항목 10개 + 작년 1</td></tr>
+        <tr><td><strong>P6</strong></td><td>클라이언트 예측</td><td><span class="tag tag-accent">Sonnet</span></td><td>1개</td><td><code>feature/p6-predict</code></td><td>클라이언트 3명 + 채팅</td></tr>
+        <tr><td><strong>P5~6-QA</strong></td><td>동시편집 + Gemini 검증</td><td><span class="tag tag-orange">Opus</span></td><td>1 code-reviewer</td><td>-</td><td>-</td></tr>
+        <tr style="background:var(--surface);"><td><strong>P5~6-GIT</strong></td><td>PR 2건 &rarr; 순차 머지</td><td><span class="tag tag-red">팀장 Opus</span></td><td>-</td><td><code>p5,6 &rarr; main</code></td><td>-</td></tr>
+        <tr><td><strong>P7</strong></td><td>설정 + 백업</td><td><span class="tag tag-accent">Sonnet</span></td><td>1개</td><td><code>feature/p7-settings</code></td><td>audit_logs 50건</td></tr>
+        <tr><td><strong>P7-QA</strong></td><td>롤백 + E2E 회귀</td><td><span class="tag tag-orange">Opus</span></td><td>2 병렬 (E2E + 리뷰)</td><td>-</td><td>전체 시드 통합</td></tr>
+        <tr style="background:var(--surface);"><td><strong>P7-GIT</strong></td><td>최종 머지 + v0.1 태그</td><td><span class="tag tag-red">팀장 Opus</span></td><td>-</td><td><code>p7 &rarr; main</code> + <code>v0.1</code></td><td>-</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ==================== SLIDE 15: Git Rules ==================== -->
+<div class="slide" data-title="Git Rules">
+  <h2>Git 운영 규칙</h2>
+  <div class="card-grid card-grid-2 flex-grow">
+    <div class="card flex-col gap-20">
+      <h3>브랜치 전략</h3>
+      <pre style="font-size:15px; line-height:2;">
+main
+ ├── feature/p0-auth
+ ├── feature/p1-retrospective
+ ├── feature/p2-dashboard
+ ├── feature/p3-meetings
+ ├── feature/p4-payments
+ ├── feature/p5-estimates
+ ├── feature/p6-predict
+ └── feature/p7-settings</pre>
+      <h3>커밋 컨벤션</h3>
+      <div style="display:flex; gap:8px; flex-wrap:wrap;">
+        <span class="tag tag-green">feat: 새 기능</span>
+        <span class="tag tag-red">fix: 버그 수정</span>
+        <span class="tag tag-cyan">test: 테스트</span>
+        <span class="tag tag-yellow">chore: 설정/빌드</span>
+      </div>
+    </div>
+    <div class="card flex-col gap-20">
+      <h3>규칙</h3>
+      <div style="display:flex; flex-direction:column; gap:12px;">
+        <div style="display:flex; gap:12px; align-items:flex-start;">
+          <div style="min-width:28px; height:28px; border-radius:50%; background:var(--accent); display:flex; align-items:center; justify-content:center; font-size:14px; font-weight:600;">1</div>
+          <div><strong>머지 권한</strong><br><span style="font-size:14px; color:var(--text-dim);">팀장(Opus)만 main에 머지 가능</span></div>
+        </div>
+        <div style="display:flex; gap:12px; align-items:flex-start;">
+          <div style="min-width:28px; height:28px; border-radius:50%; background:var(--accent); display:flex; align-items:center; justify-content:center; font-size:14px; font-weight:600;">2</div>
+          <div><strong>PR 규칙</strong><br><span style="font-size:14px; color:var(--text-dim);">QA 통과 후에만 PR 생성, 팀장 승인 필수</span></div>
+        </div>
+        <div style="display:flex; gap:12px; align-items:flex-start;">
+          <div style="min-width:28px; height:28px; border-radius:50%; background:var(--accent); display:flex; align-items:center; justify-content:center; font-size:14px; font-weight:600;">3</div>
+          <div><strong>태그</strong><br><span style="font-size:14px; color:var(--text-dim);">전체 완료 시 <code>v0.1</code> 릴리스 태그</span></div>
+        </div>
+        <div style="display:flex; gap:12px; align-items:flex-start;">
+          <div style="min-width:28px; height:28px; border-radius:50%; background:var(--accent); display:flex; align-items:center; justify-content:center; font-size:14px; font-weight:600;">4</div>
+          <div><strong>금지</strong><br><span style="font-size:14px; color:var(--text-dim);">force push 금지, main 직접 커밋 금지</span></div>
+        </div>
+      </div>
+      <h3 style="margin-top:20px;">배포 전략</h3>
+      <table style="font-size:13px; margin-top:8px;">
+        <thead><tr><th>환경</th><th>플랫폼</th><th>시점</th></tr></thead>
+        <tbody>
+          <tr><td><span class="tag tag-cyan">Preview</span></td><td>Vercel</td><td>feature push 시 자동</td></tr>
+          <tr><td><span class="tag tag-yellow">Staging</span></td><td>Vercel</td><td>main push 시 자동</td></tr>
+          <tr><td><span class="tag tag-green">Production</span></td><td>Vultr</td><td>v0.1 태그 후 수동</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== SLIDE 16: Work Log Rules ==================== -->
+<div class="slide" data-title="Work Logs">
+  <h2>작업 로그 규칙</h2>
+  <div class="card-grid card-grid-2 flex-grow">
+    <div class="flex-col gap-20">
+      <div class="card">
+        <h3>로그 파일 구조</h3>
+        <pre style="font-size:14px; line-height:1.7; margin-top:12px;">workspace/logs/
+├── <span style="color:var(--accent-light)">PROGRESS.md</span>            <span style="color:var(--text-dim)"># 전체 현황 (팀장)</span>
+├── <span style="color:var(--cyan)">p0-auth.log.md</span>
+├── <span style="color:var(--cyan)">p1-retrospective.log.md</span>
+├── <span style="color:var(--cyan)">p2-dashboard.log.md</span>
+├── ...
+└── <span style="color:var(--cyan)">p7-settings.log.md</span></pre>
+      </div>
+      <div class="card">
+        <h3>PROGRESS.md 예시</h3>
+        <table style="font-size:12px; margin-top:8px;">
+          <thead><tr><th>Phase</th><th>상태</th><th>시작</th><th>QA</th><th>머지</th></tr></thead>
+          <tbody>
+            <tr><td>P0</td><td><span style="color:var(--green)">완료</span></td><td>02/25</td><td>PASS</td><td>merged</td></tr>
+            <tr><td>P1</td><td><span style="color:var(--yellow)">진행중</span></td><td>02/26</td><td>-</td><td>-</td></tr>
+            <tr><td>P2</td><td><span style="color:var(--text-dim)">대기</span></td><td>-</td><td>-</td><td>-</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div class="card flex-col gap-12">
+      <h3>기록 규칙 (7가지)</h3>
+      <div style="display:flex; flex-direction:column; gap:12px;">
+        <div style="display:flex; gap:10px; align-items:flex-start;">
+          <span class="tag tag-red" style="min-width:18px; text-align:center;">1</span>
+          <span style="font-size:14px;"><strong>기록 시점:</strong> 작업 시작, 완료, 블로커 발생, 해결, 에스컬레이션 시 반드시 기록</span>
+        </div>
+        <div style="display:flex; gap:10px; align-items:flex-start;">
+          <span class="tag tag-red" style="min-width:18px; text-align:center;">2</span>
+          <span style="font-size:14px;"><strong>필수 필드:</strong> 날짜시간, 작업자, 작업 내용, 상태</span>
+        </div>
+        <div style="display:flex; gap:10px; align-items:flex-start;">
+          <span class="tag tag-red" style="min-width:18px; text-align:center;">3</span>
+          <span style="font-size:14px;"><strong>블로커:</strong> 내용 + 시도한 해결법 + 조치 (팀원 요청 or 팀장 에스컬레이션)</span>
+        </div>
+        <div style="display:flex; gap:10px; align-items:flex-start;">
+          <span class="tag tag-red" style="min-width:18px; text-align:center;">4</span>
+          <span style="font-size:14px;"><strong>팀원 간 소통:</strong> 메시지 주고받은 내용도 로그에 기록</span>
+        </div>
+        <div style="display:flex; gap:10px; align-items:flex-start;">
+          <span class="tag tag-red" style="min-width:18px; text-align:center;">5</span>
+          <span style="font-size:14px;"><strong>QA 결과:</strong> 항목별 PASS/FAIL + 실패 원인 + 수정 내역</span>
+        </div>
+        <div style="display:flex; gap:10px; align-items:flex-start;">
+          <span class="tag tag-red" style="min-width:18px; text-align:center;">6</span>
+          <span style="font-size:14px;"><strong>팀장 업데이트:</strong> Phase 로그 기반 PROGRESS.md 갱신</span>
+        </div>
+        <div style="display:flex; gap:10px; align-items:flex-start;">
+          <span class="tag tag-red" style="min-width:18px; text-align:center;">7</span>
+          <span style="font-size:14px;"><strong>금지:</strong> 로그 없이 머지 불가, 블로커 미기록 금지</span>
+        </div>
+      </div>
+      <div style="margin-top:auto; padding:14px; border-radius:8px; background:rgba(239,68,68,0.06); border:1px solid rgba(239,68,68,0.2);">
+        <div style="font-size:13px; color:var(--red); font-weight:500;">로그 없이 코드 머지 = 불가</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== SLIDE 17: Summary ==================== -->
+<div class="slide" data-title="Summary">
+  <div style="flex:1; display:flex; flex-direction:column; justify-content:center; align-items:center; text-align:center;">
+    <h1 style="font-size:44px; margin-bottom:40px;">GRIFF-Q 0.1 요약</h1>
+    <div style="display:grid; grid-template-columns:repeat(4,1fr); gap:20px; max-width:1200px; width:100%;">
+      <div class="card" style="text-align:center;">
+        <div style="font-size:36px; font-weight:700; color:var(--accent-light);">8</div>
+        <div style="font-size:14px; color:var(--text-dim); margin-top:4px;">페이지</div>
+      </div>
+      <div class="card" style="text-align:center;">
+        <div style="font-size:36px; font-weight:700; color:var(--cyan);">14</div>
+        <div style="font-size:14px; color:var(--text-dim); margin-top:4px;">DB 테이블</div>
+      </div>
+      <div class="card" style="text-align:center;">
+        <div style="font-size:36px; font-weight:700; color:var(--green);">8</div>
+        <div style="font-size:14px; color:var(--text-dim); margin-top:4px;">Phase (P0~P7)</div>
+      </div>
+      <div class="card" style="text-align:center;">
+        <div style="font-size:36px; font-weight:700; color:var(--yellow);">7</div>
+        <div style="font-size:14px; color:var(--text-dim); margin-top:4px;">팀원</div>
+      </div>
+    </div>
+    <div style="display:flex; gap:16px; margin-top:40px; flex-wrap:wrap; justify-content:center;">
+      <span class="tag tag-accent" style="font-size:14px; padding:6px 16px;">Next.js</span>
+      <span class="tag tag-green" style="font-size:14px; padding:6px 16px;">Supabase</span>
+      <span class="tag tag-cyan" style="font-size:14px; padding:6px 16px;">shadcn/ui</span>
+      <span class="tag tag-yellow" style="font-size:14px; padding:6px 16px;">Tailwind CSS</span>
+      <span class="tag tag-orange" style="font-size:14px; padding:6px 16px;">Docker Compose</span>
+      <span class="tag tag-red" style="font-size:14px; padding:6px 16px;">Vultr</span>
+    </div>
+    <div style="margin-top:48px; color:var(--text-dim); font-size:15px;">
+      팀장 (Opus) 모니터링 &middot; 팀원 (Sonnet/Opus) 자율 개발 &middot; 로그 필수 &middot; QA 통과 후 머지
+    </div>
+  </div>
+</div>
+
+<!-- ==================== Navigation ==================== -->
+<div class="nav">
+  <button id="prevBtn" onclick="navigate(-1)">&larr;</button>
+  <div class="counter" id="counter">1 / 16</div>
+  <button id="nextBtn" onclick="navigate(1)">&rarr;</button>
+</div>
+
+<div class="key-hint">Arrow keys or click to navigate</div>
+
+<script>
+  const slides = document.querySelectorAll('.slide');
+  const counter = document.getElementById('counter');
+  const progressBar = document.getElementById('progressBar');
+  const slideIndex = document.getElementById('slideIndex');
+  let current = 0;
+
+  // Build dot index
+  slides.forEach((_, i) => {
+    const dot = document.createElement('div');
+    dot.className = 'dot' + (i === 0 ? ' active' : '');
+    dot.onclick = () => goTo(i);
+    slideIndex.appendChild(dot);
+  });
+
+  function goTo(index) {
+    slides[current].classList.remove('active');
+    slideIndex.children[current].classList.remove('active');
+    current = index;
+    slides[current].classList.add('active');
+    slideIndex.children[current].classList.add('active');
+    counter.textContent = `${current + 1} / ${slides.length}`;
+    progressBar.style.width = `${((current + 1) / slides.length) * 100}%`;
+  }
+
+  function navigate(dir) {
+    const next = current + dir;
+    if (next >= 0 && next < slides.length) goTo(next);
+  }
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowRight' || e.key === 'ArrowDown' || e.key === ' ') { e.preventDefault(); navigate(1); }
+    if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') { e.preventDefault(); navigate(-1); }
+    if (e.key === 'Home') { e.preventDefault(); goTo(0); }
+    if (e.key === 'End') { e.preventDefault(); goTo(slides.length - 1); }
+  });
+</script>
+
+</body>
+</html>
