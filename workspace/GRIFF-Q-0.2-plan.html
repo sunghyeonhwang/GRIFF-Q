@@ -1,0 +1,1599 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GRIFF-Q 0.2 전체 개발 계획</title>
+<style>
+  :root {
+    --bg-primary: #0d1117;
+    --bg-secondary: #161b22;
+    --bg-tertiary: #21262d;
+    --bg-hover: #30363d;
+    --border: #30363d;
+    --border-light: #484f58;
+    --text-primary: #e6edf3;
+    --text-secondary: #8b949e;
+    --text-muted: #656d76;
+    --accent-blue: #58a6ff;
+    --accent-green: #3fb950;
+    --accent-yellow: #d29922;
+    --accent-orange: #db6d28;
+    --accent-red: #f85149;
+    --accent-purple: #bc8cff;
+    --accent-cyan: #39d2c0;
+    --sidebar-width: 280px;
+    --header-height: 60px;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { scroll-behavior: smooth; scroll-padding-top: 80px; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans KR', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    line-height: 1.7;
+    font-size: 15px;
+  }
+
+  /* ===== SIDEBAR TOC ===== */
+  .sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: var(--sidebar-width);
+    height: 100vh;
+    background: var(--bg-secondary);
+    border-right: 1px solid var(--border);
+    overflow-y: auto;
+    z-index: 100;
+    padding: 20px 0;
+    transition: transform 0.3s ease;
+  }
+
+  .sidebar-header {
+    padding: 10px 20px 20px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 12px;
+  }
+
+  .sidebar-header h2 {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--accent-blue);
+    letter-spacing: -0.3px;
+  }
+
+  .sidebar-header .version {
+    display: inline-block;
+    background: var(--accent-blue);
+    color: var(--bg-primary);
+    font-size: 11px;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 10px;
+    margin-top: 6px;
+  }
+
+  .toc-list {
+    list-style: none;
+    padding: 0 12px;
+  }
+
+  .toc-list li {
+    margin-bottom: 2px;
+  }
+
+  .toc-list a {
+    display: block;
+    padding: 6px 12px;
+    color: var(--text-secondary);
+    text-decoration: none;
+    font-size: 13px;
+    border-radius: 6px;
+    transition: all 0.15s ease;
+    line-height: 1.5;
+  }
+
+  .toc-list a:hover {
+    background: var(--bg-tertiary);
+    color: var(--text-primary);
+  }
+
+  .toc-list .toc-sub {
+    padding-left: 24px;
+    font-size: 12px;
+    color: var(--text-muted);
+  }
+
+  .toc-list .toc-section-num {
+    color: var(--accent-blue);
+    font-weight: 600;
+    margin-right: 4px;
+    font-size: 12px;
+  }
+
+  /* ===== MOBILE TOGGLE ===== */
+  .sidebar-toggle {
+    display: none;
+    position: fixed;
+    top: 14px;
+    left: 14px;
+    z-index: 200;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    color: var(--text-primary);
+    width: 40px;
+    height: 40px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 20px;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* ===== MAIN CONTENT ===== */
+  .main {
+    margin-left: var(--sidebar-width);
+    max-width: 960px;
+    padding: 40px 48px 80px;
+  }
+
+  /* ===== HEADINGS ===== */
+  h1 {
+    font-size: 32px;
+    font-weight: 800;
+    color: var(--text-primary);
+    letter-spacing: -0.5px;
+    margin-bottom: 12px;
+    padding-bottom: 16px;
+    border-bottom: 2px solid var(--border);
+  }
+
+  h1 .subtitle {
+    display: block;
+    font-size: 14px;
+    font-weight: 400;
+    color: var(--text-secondary);
+    margin-top: 8px;
+    letter-spacing: 0;
+  }
+
+  h2 {
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-top: 56px;
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border);
+    letter-spacing: -0.3px;
+  }
+
+  h2 .section-num {
+    color: var(--accent-blue);
+    margin-right: 6px;
+  }
+
+  h3 {
+    font-size: 19px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-top: 36px;
+    margin-bottom: 14px;
+  }
+
+  h4 {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--accent-cyan);
+    margin-top: 28px;
+    margin-bottom: 10px;
+  }
+
+  h5 {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-top: 20px;
+    margin-bottom: 8px;
+  }
+
+  /* ===== BLOCKQUOTE ===== */
+  blockquote {
+    border-left: 3px solid var(--accent-blue);
+    background: rgba(88,166,255,0.06);
+    padding: 12px 16px;
+    margin: 16px 0;
+    border-radius: 0 6px 6px 0;
+    color: var(--text-secondary);
+    font-size: 14px;
+  }
+
+  /* ===== LISTS ===== */
+  ul, ol {
+    padding-left: 24px;
+    margin: 10px 0;
+  }
+
+  li {
+    margin-bottom: 4px;
+    color: var(--text-primary);
+  }
+
+  li::marker {
+    color: var(--text-muted);
+  }
+
+  /* ===== TABLES ===== */
+  .table-wrapper {
+    overflow-x: auto;
+    margin: 16px 0 24px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13.5px;
+  }
+
+  thead th {
+    background: var(--bg-tertiary);
+    color: var(--text-primary);
+    font-weight: 600;
+    text-align: left;
+    padding: 10px 14px;
+    border-bottom: 2px solid var(--border);
+    white-space: nowrap;
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+  }
+
+  tbody td {
+    padding: 9px 14px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+  }
+
+  tbody tr:nth-child(even) { background: rgba(22,27,34,0.5); }
+  tbody tr:nth-child(odd) { background: var(--bg-primary); }
+  tbody tr:hover { background: var(--bg-hover); }
+
+  /* ===== CODE ===== */
+  code {
+    background: var(--bg-tertiary);
+    color: var(--accent-cyan);
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-family: 'SF Mono', 'Fira Code', 'JetBrains Mono', Consolas, monospace;
+    font-size: 13px;
+  }
+
+  pre {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px 20px;
+    overflow-x: auto;
+    margin: 14px 0;
+    font-size: 13px;
+    line-height: 1.6;
+  }
+
+  pre code {
+    background: none;
+    padding: 0;
+    color: var(--text-primary);
+  }
+
+  .sql-keyword { color: var(--accent-purple); font-weight: 600; }
+  .sql-type { color: var(--accent-cyan); }
+  .sql-comment { color: var(--text-muted); font-style: italic; }
+  .sql-string { color: var(--accent-green); }
+
+  /* ===== BADGES ===== */
+  .badge {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 2px 10px;
+    border-radius: 10px;
+    letter-spacing: 0.2px;
+    vertical-align: middle;
+  }
+
+  .badge-green { background: rgba(63,185,80,0.15); color: var(--accent-green); border: 1px solid rgba(63,185,80,0.3); }
+  .badge-blue { background: rgba(88,166,255,0.15); color: var(--accent-blue); border: 1px solid rgba(88,166,255,0.3); }
+  .badge-yellow { background: rgba(210,153,34,0.15); color: var(--accent-yellow); border: 1px solid rgba(210,153,34,0.3); }
+  .badge-red { background: rgba(248,81,73,0.15); color: var(--accent-red); border: 1px solid rgba(248,81,73,0.3); }
+  .badge-purple { background: rgba(188,140,255,0.15); color: var(--accent-purple); border: 1px solid rgba(188,140,255,0.3); }
+  .badge-orange { background: rgba(219,109,40,0.15); color: var(--accent-orange); border: 1px solid rgba(219,109,40,0.3); }
+
+  /* ===== PHASE CARDS ===== */
+  .phase-card {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 24px;
+    margin: 20px 0;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .phase-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 4px;
+    height: 100%;
+  }
+
+  .phase-card.phase-p0::before { background: var(--accent-blue); }
+  .phase-card.phase-p1::before { background: var(--accent-green); }
+  .phase-card.phase-p2::before { background: var(--accent-purple); }
+  .phase-card.phase-p3::before { background: var(--accent-orange); }
+  .phase-card.phase-p4::before { background: var(--accent-cyan); }
+  .phase-card.phase-p5::before { background: var(--accent-red); }
+
+  .phase-card h3 {
+    margin-top: 0;
+    font-size: 20px;
+  }
+
+  .phase-card h4 {
+    margin-top: 24px;
+  }
+
+  .phase-tag {
+    display: inline-block;
+    font-size: 12px;
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: 6px;
+    margin-right: 8px;
+    margin-bottom: 8px;
+  }
+
+  .phase-tag-p0 { background: rgba(88,166,255,0.15); color: var(--accent-blue); }
+  .phase-tag-p1 { background: rgba(63,185,80,0.15); color: var(--accent-green); }
+  .phase-tag-p2 { background: rgba(188,140,255,0.15); color: var(--accent-purple); }
+  .phase-tag-p3 { background: rgba(219,109,40,0.15); color: var(--accent-orange); }
+  .phase-tag-p4 { background: rgba(57,210,192,0.15); color: var(--accent-cyan); }
+  .phase-tag-p5 { background: rgba(248,81,73,0.15); color: var(--accent-red); }
+
+  /* ===== FLOW DIAGRAM ===== */
+  .flow-diagram {
+    margin: 24px 0;
+    padding: 32px 20px;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow-x: auto;
+  }
+
+  .flow-row {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    margin-bottom: 16px;
+    flex-wrap: nowrap;
+    min-width: max-content;
+  }
+
+  .flow-row:last-child { margin-bottom: 0; }
+
+  .flow-box {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    white-space: nowrap;
+    text-align: center;
+    min-width: 60px;
+    border: 2px solid;
+    flex-shrink: 0;
+  }
+
+  .flow-box.phase { background: rgba(88,166,255,0.1); border-color: var(--accent-blue); color: var(--accent-blue); }
+  .flow-box.qa { background: rgba(210,153,34,0.1); border-color: var(--accent-yellow); color: var(--accent-yellow); }
+  .flow-box.git { background: rgba(188,140,255,0.1); border-color: var(--accent-purple); color: var(--accent-purple); font-size: 11px; }
+  .flow-box.uat { background: rgba(63,185,80,0.1); border-color: var(--accent-green); color: var(--accent-green); }
+  .flow-box.tag { background: rgba(248,81,73,0.1); border-color: var(--accent-red); color: var(--accent-red); }
+  .flow-box.parallel {
+    background: rgba(219,109,40,0.1);
+    border-color: var(--accent-orange);
+    color: var(--accent-orange);
+    border-style: dashed;
+  }
+
+  .flow-arrow {
+    display: inline-flex;
+    align-items: center;
+    color: var(--text-muted);
+    font-size: 18px;
+    padding: 0 6px;
+    flex-shrink: 0;
+    font-family: monospace;
+  }
+
+  .flow-arrow::after { content: '\2192'; }
+  .flow-arrow-down { display: block; text-align: left; padding-left: 36px; color: var(--text-muted); font-size: 16px; margin: -6px 0; line-height: 1.2; }
+  .flow-arrow-down::after { content: '\2193'; }
+
+  .flow-label {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-left: 8px;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  .flow-connector {
+    border-left: 2px dashed var(--border);
+    margin-left: 36px;
+    height: 12px;
+  }
+
+  /* ===== ORG CHART ===== */
+  .org-chart {
+    margin: 20px 0;
+    padding: 28px 24px;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+  }
+
+  .org-box {
+    border: 2px solid;
+    border-radius: 10px;
+    padding: 16px 20px;
+    margin-bottom: 12px;
+  }
+
+  .org-box.lead {
+    border-color: var(--accent-blue);
+    background: rgba(88,166,255,0.05);
+    max-width: 500px;
+    margin: 0 auto 16px;
+    text-align: center;
+  }
+
+  .org-box.lead .org-title {
+    color: var(--accent-blue);
+    font-weight: 700;
+    font-size: 16px;
+    margin-bottom: 8px;
+  }
+
+  .org-connector-v {
+    width: 2px;
+    height: 20px;
+    background: var(--border);
+    margin: 0 auto;
+  }
+
+  .org-connector-label {
+    text-align: center;
+    font-size: 12px;
+    color: var(--text-muted);
+    margin: 4px 0;
+  }
+
+  .org-box.workers {
+    border-color: var(--accent-green);
+    background: rgba(63,185,80,0.05);
+    max-width: 500px;
+    margin: 0 auto;
+  }
+
+  .org-box.workers .org-title {
+    color: var(--accent-green);
+    font-weight: 700;
+    font-size: 16px;
+    margin-bottom: 10px;
+    text-align: center;
+  }
+
+  .worker-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    max-width: 340px;
+    margin: 0 auto;
+  }
+
+  .worker-node {
+    background: var(--bg-tertiary);
+    padding: 8px 12px;
+    border-radius: 6px;
+    text-align: center;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-primary);
+  }
+
+  .worker-arrows {
+    display: flex;
+    justify-content: center;
+    gap: 60px;
+    color: var(--text-muted);
+    font-size: 12px;
+    margin: 4px 0;
+  }
+
+  .org-bullets {
+    font-size: 13px;
+    color: var(--text-secondary);
+    margin-top: 10px;
+    padding-left: 20px;
+  }
+
+  .org-bullets li { margin-bottom: 3px; }
+
+  /* ===== HIGHLIGHT TEXT ===== */
+  strong { color: var(--text-primary); font-weight: 600; }
+  em { color: var(--text-secondary); }
+
+  .highlight { color: var(--accent-blue); font-weight: 600; }
+
+  /* ===== HR ===== */
+  hr {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 40px 0;
+  }
+
+  /* ===== FILE TREE ===== */
+  .file-tree {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px 20px;
+    font-family: 'SF Mono', 'Fira Code', Consolas, monospace;
+    font-size: 13px;
+    line-height: 1.8;
+    color: var(--text-secondary);
+  }
+
+  .file-tree .dir { color: var(--accent-blue); font-weight: 600; }
+  .file-tree .file { color: var(--text-primary); }
+  .file-tree .comment { color: var(--text-muted); }
+
+  /* ===== RESPONSIVE ===== */
+  @media (max-width: 900px) {
+    .sidebar { transform: translateX(-100%); }
+    .sidebar.open { transform: translateX(0); box-shadow: 4px 0 20px rgba(0,0,0,0.5); }
+    .sidebar-toggle { display: flex; }
+    .main { margin-left: 0; padding: 60px 20px 60px; }
+    h1 { font-size: 24px; }
+    h2 { font-size: 20px; }
+    .flow-diagram { padding: 20px 12px; }
+    .org-box.lead, .org-box.workers { max-width: 100%; }
+  }
+
+  @media (max-width: 600px) {
+    .main { padding: 50px 16px 60px; }
+    table { font-size: 12px; }
+    thead th, tbody td { padding: 7px 8px; }
+    .worker-grid { grid-template-columns: 1fr; }
+  }
+
+  /* ===== PRINT ===== */
+  @media print {
+    :root {
+      --bg-primary: #fff;
+      --bg-secondary: #f8f9fa;
+      --bg-tertiary: #eef0f2;
+      --bg-hover: #e8eaed;
+      --border: #d0d7de;
+      --text-primary: #1f2328;
+      --text-secondary: #656d76;
+      --text-muted: #8b949e;
+      --accent-blue: #0969da;
+      --accent-green: #1a7f37;
+      --accent-yellow: #9a6700;
+      --accent-orange: #bc4c00;
+      --accent-red: #cf222e;
+      --accent-purple: #8250df;
+      --accent-cyan: #0a8080;
+    }
+
+    body { font-size: 11pt; line-height: 1.5; }
+    .sidebar, .sidebar-toggle { display: none !important; }
+    .main { margin-left: 0; padding: 0; max-width: 100%; }
+    .phase-card, .flow-diagram, .org-chart, .table-wrapper { break-inside: avoid; }
+    h2, h3 { break-after: avoid; }
+    .flow-box, .badge, .phase-tag { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+    pre { white-space: pre-wrap; word-wrap: break-word; }
+  }
+
+  /* ===== SCROLLBAR ===== */
+  ::-webkit-scrollbar { width: 8px; height: 8px; }
+  ::-webkit-scrollbar-track { background: var(--bg-primary); }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--border-light); }
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR TOGGLE -->
+<button class="sidebar-toggle" id="sidebarToggle" aria-label="Toggle navigation">&#9776;</button>
+
+<!-- SIDEBAR -->
+<nav class="sidebar" id="sidebar">
+  <div class="sidebar-header">
+    <h2>GRIFF-Q</h2>
+    <span class="version">v0.2 Development Plan</span>
+  </div>
+  <ul class="toc-list">
+    <li><a href="#sec1"><span class="toc-section-num">1</span>v0.2 목표</a></li>
+    <li><a href="#sec2"><span class="toc-section-num">2</span>기술 스택 추가</a></li>
+    <li><a href="#sec3"><span class="toc-section-num">3</span>에이전트 팀 운영 모델</a></li>
+    <li><a href="#sec3-role" class="toc-sub">역할 구조</a></li>
+    <li><a href="#sec3-model" class="toc-sub">모델 배정 기준</a></li>
+    <li><a href="#sec3-esc" class="toc-sub">에스컬레이션 기준</a></li>
+    <li><a href="#sec4"><span class="toc-section-num">4</span>개발 일정</a></li>
+    <li><a href="#sec4-flow" class="toc-sub">흐름도</a></li>
+    <li><a href="#sec4-detail" class="toc-sub">Phase별 상세</a></li>
+    <li><a href="#sec5"><span class="toc-section-num">5</span>Phase별 상세 기획</a></li>
+    <li><a href="#sec5-p0" class="toc-sub">P0: 퍼블리시 + 알림 + 검색</a></li>
+    <li><a href="#sec5-p1" class="toc-sub">P1: 회의록 강화</a></li>
+    <li><a href="#sec5-p2" class="toc-sub">P2: 아바타 고도화</a></li>
+    <li><a href="#sec5-p3" class="toc-sub">P3: 실시간 동시 편집</a></li>
+    <li><a href="#sec5-p4" class="toc-sub">P4: 프로젝트 관리 통합</a></li>
+    <li><a href="#sec5-p5" class="toc-sub">P5: 운영 인프라</a></li>
+    <li><a href="#sec6"><span class="toc-section-num">6</span>DB 마이그레이션 계획</a></li>
+    <li><a href="#sec7"><span class="toc-section-num">7</span>테스트 전략</a></li>
+    <li><a href="#sec8"><span class="toc-section-num">8</span>Git 운영 규칙</a></li>
+    <li><a href="#sec9"><span class="toc-section-num">9</span>배포 전략</a></li>
+    <li><a href="#sec10"><span class="toc-section-num">10</span>작업 로그 규칙</a></li>
+    <li><a href="#sec11"><span class="toc-section-num">11</span>리스크 &amp; 대응</a></li>
+    <li><a href="#sec12"><span class="toc-section-num">12</span>v0.3 로드맵</a></li>
+  </ul>
+</nav>
+
+<!-- MAIN CONTENT -->
+<main class="main">
+
+  <!-- TITLE -->
+  <h1>
+    GRIFF-Q 0.2 전체 개발 계획
+    <span class="subtitle">v0.1 완료 기준(2026-02-26) 위에서 기능 고도화 + 운영 인프라 구축</span>
+  </h1>
+
+  <!-- SECTION 1 -->
+  <h2 id="sec1"><span class="section-num">1)</span> v0.2 목표</h2>
+
+  <p>v0.1에서 구축한 CRUD 기반 업무 도구를 <strong>실무 운영 수준</strong>으로 끌어올린다.</p>
+
+  <ul>
+    <li>퍼블리시(PDF/Excel/Sheets) 완성으로 외부 산출물 생산</li>
+    <li>아바타 시스템 고도화 (데이터 학습 + 감정 분석 + 시뮬레이션)</li>
+    <li>견적서 실시간 동시 편집</li>
+    <li>프로젝트 단위 통합 관리 (허브 + 리뷰 + Post-mortem)</li>
+    <li>Vultr 프로덕션 배포 + 백업 자동화</li>
+  </ul>
+
+  <!-- SECTION 2 -->
+  <h2 id="sec2"><span class="section-num">2)</span> 기술 스택 추가</h2>
+
+  <div class="table-wrapper">
+    <table>
+      <thead>
+        <tr><th>영역</th><th>v0.1</th><th>v0.2 추가</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>퍼블리시</td><td><span style="color:var(--text-muted)">&mdash;</span></td><td><code>@react-pdf/renderer</code>, <code>exceljs</code>, Google Sheets API v4</td></tr>
+        <tr><td>실시간</td><td><span style="color:var(--text-muted)">&mdash;</span></td><td>Supabase Realtime + Presence</td></tr>
+        <tr><td>AI</td><td>Gemini 2.0 Flash (채팅)</td><td>+ 감정 분석, 프로필 자동 생성, 시뮬레이션 프롬프트</td></tr>
+        <tr><td>인프라</td><td>Vercel (개발/스테이징)</td><td>+ Vultr Docker Compose (프로덕션), S3 백업</td></tr>
+        <tr><td>알림</td><td><span style="color:var(--text-muted)">&mdash;</span></td><td>인앱 알림 (notifications 테이블), Slack Webhook</td></tr>
+        <tr><td>검색</td><td><span style="color:var(--text-muted)">&mdash;</span></td><td>PostgreSQL full-text search (<code>to_tsvector</code>)</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- SECTION 3 -->
+  <h2 id="sec3"><span class="section-num">3)</span> 에이전트 팀 운영 모델</h2>
+
+  <blockquote>v0.1과 동일한 팀장-팀원 구조 유지. v0.2는 Phase 복잡도에 따라 팀원 수 조절.</blockquote>
+
+  <h3 id="sec3-role">역할 구조</h3>
+
+  <div class="org-chart">
+    <div class="org-box lead">
+      <div class="org-title">팀장 (Opus) &mdash; Lead</div>
+      <ul class="org-bullets">
+        <li>Phase 시작/완료 판단</li>
+        <li>QA 최종 승인</li>
+        <li>아키텍처 결정 (Realtime, Docker)</li>
+        <li>머지 결정</li>
+        <li>평소에는 모니터링만</li>
+      </ul>
+    </div>
+
+    <div class="org-connector-v"></div>
+    <div class="org-connector-label">에스컬레이션만</div>
+    <div class="org-connector-v"></div>
+
+    <div class="org-box workers">
+      <div class="org-title">팀원 (Sonnet/Opus) &mdash; Workers</div>
+      <div class="worker-grid">
+        <div class="worker-node">Worker A</div>
+        <div class="worker-node">Worker B</div>
+        <div class="worker-node">Worker C</div>
+        <div class="worker-node">Worker D</div>
+      </div>
+      <div class="worker-arrows">
+        <span>&harr; 메시지</span>
+        <span>&harr; 메시지</span>
+      </div>
+      <ul class="org-bullets">
+        <li>서로 직접 소통하며 개발</li>
+        <li>공유 태스크 리스트로 진행 추적</li>
+        <li>충돌/블로커 발생 시 팀장에 보고</li>
+      </ul>
+    </div>
+  </div>
+
+  <h3 id="sec3-model">모델 배정 기준</h3>
+
+  <div class="table-wrapper">
+    <table>
+      <thead><tr><th>작업 유형</th><th>모델</th><th>이유</th></tr></thead>
+      <tbody>
+        <tr><td>Supabase Realtime/Presence 설계</td><td><span class="badge badge-purple">Opus</span></td><td>동시성 제어, 충돌 해결 로직</td></tr>
+        <tr><td>Docker Compose + 배포 스크립트</td><td><span class="badge badge-purple">Opus</span></td><td>인프라 설정, 보안</td></tr>
+        <tr><td>Gemini 프롬프트 엔지니어링</td><td><span class="badge badge-purple">Opus</span></td><td>시스템 프롬프트 품질</td></tr>
+        <tr><td>PDF/Excel 템플릿 렌더링</td><td><span class="badge badge-blue">Sonnet</span></td><td>라이브러리 API 활용</td></tr>
+        <tr><td>Google Sheets API 연동</td><td><span class="badge badge-blue">Sonnet</span></td><td>REST API CRUD</td></tr>
+        <tr><td>UI 컴포넌트/페이지 구현</td><td><span class="badge badge-blue">Sonnet</span></td><td>React + shadcn/ui</td></tr>
+        <tr><td>DB 마이그레이션, RLS</td><td><span class="badge badge-blue">Sonnet</span></td><td>SQL 작성</td></tr>
+        <tr><td>테스트 작성 (Playwright)</td><td><span class="badge badge-blue">Sonnet</span></td><td>E2E 테스트</td></tr>
+        <tr><td>간단한 버그 수정, 오타</td><td><span class="badge badge-green">Haiku</span></td><td>빠른 처리</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3 id="sec3-esc">에스컬레이션 기준</h3>
+
+  <div class="table-wrapper">
+    <table>
+      <thead><tr><th>상황</th><th>처리</th></tr></thead>
+      <tbody>
+        <tr><td>일반 CRUD, UI, 퍼블리시</td><td>팀원끼리 해결</td></tr>
+        <tr><td>Google Sheets API 인증 이슈</td><td>팀원 1회 시도 &rarr; 실패 시 팀장</td></tr>
+        <tr><td>Realtime 구독 충돌, Presence 동기화</td><td><span class="badge badge-red">즉시 팀장 에스컬레이션</span></td></tr>
+        <tr><td>Docker 빌드/배포 실패</td><td>팀원 1회 시도 &rarr; 실패 시 팀장</td></tr>
+        <tr><td>아키텍처 변경 (테이블 구조, API 설계)</td><td><span class="badge badge-red">즉시 팀장 에스컬레이션</span></td></tr>
+        <tr><td>QA 통과 판단</td><td><span class="badge badge-yellow">팀장만 최종 승인</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- SECTION 4 -->
+  <h2 id="sec4"><span class="section-num">4)</span> 개발 일정 (Phase + QA + Git)</h2>
+
+  <h3 id="sec4-flow">흐름도</h3>
+
+  <div class="flow-diagram">
+    <!-- Row 1: P0 -->
+    <div class="flow-row">
+      <div class="flow-box phase">P0</div>
+      <span class="flow-arrow"></span>
+      <div class="flow-box qa">P0-QA</div>
+      <span class="flow-arrow"></span>
+      <div class="flow-box git">feature/v2-p0-publish</div>
+      <span class="flow-arrow"></span>
+      <div class="flow-box git">main 머지</div>
+    </div>
+    <div class="flow-connector"></div>
+    <div class="flow-row" style="padding-left: 80px;">
+      <div class="flow-box uat">UAT 1차</div>
+      <span class="flow-label">퍼블리시 결과물 검수</span>
+    </div>
+
+    <div class="flow-connector"></div>
+
+    <!-- Row 2: P1 + P2 parallel -->
+    <div class="flow-row">
+      <div class="flow-box phase">P1</div>
+      <span style="padding:0 4px; color:var(--text-muted); font-size:12px;">+</span>
+      <div class="flow-box parallel">P2 병렬</div>
+      <span class="flow-arrow"></span>
+      <div class="flow-box qa">P1~2-QA</div>
+      <span class="flow-arrow"></span>
+      <div class="flow-box git">feature/v2-p1,p2</div>
+      <span class="flow-arrow"></span>
+      <div class="flow-box git">main 머지</div>
+    </div>
+    <div class="flow-connector"></div>
+    <div class="flow-row" style="padding-left: 80px;">
+      <div class="flow-box uat">UAT 2차</div>
+      <span class="flow-label">회의록 Sheets + 아바타 학습</span>
+    </div>
+
+    <div class="flow-connector"></div>
+
+    <!-- Row 3: P3 -->
+    <div class="flow-row">
+      <div class="flow-box phase">P3</div>
+      <span class="flow-arrow"></span>
+      <div class="flow-box qa">P3-QA</div>
+      <span class="flow-arrow"></span>
+      <div class="flow-box git">feature/v2-p3-realtime</div>
+      <span class="flow-arrow"></span>
+      <div class="flow-box git">main 머지</div>
+    </div>
+    <div class="flow-connector"></div>
+    <div class="flow-row" style="padding-left: 80px;">
+      <div class="flow-box uat">UAT 3차</div>
+      <span class="flow-label">실시간 동시 편집 2인 테스트</span>
+    </div>
+
+    <div class="flow-connector"></div>
+
+    <!-- Row 4: P4 -->
+    <div class="flow-row">
+      <div class="flow-box phase">P4</div>
+      <span class="flow-arrow"></span>
+      <div class="flow-box qa">P4-QA</div>
+      <span class="flow-arrow"></span>
+      <div class="flow-box git">feature/v2-p4-project</div>
+      <span class="flow-arrow"></span>
+      <div class="flow-box git">main 머지</div>
+    </div>
+
+    <div class="flow-connector"></div>
+
+    <!-- Row 5: P5 -->
+    <div class="flow-row">
+      <div class="flow-box phase">P5</div>
+      <span class="flow-arrow"></span>
+      <div class="flow-box qa">P5-QA + 전체 E2E</div>
+      <span class="flow-arrow"></span>
+      <div class="flow-box git">feature/v2-p5-infra</div>
+      <span class="flow-arrow"></span>
+      <div class="flow-box git">main 머지</div>
+    </div>
+    <div class="flow-connector"></div>
+    <div class="flow-row" style="padding-left: 80px;">
+      <div class="flow-box uat">UAT 4차</div>
+      <span class="flow-label">전체 회귀 + 프로덕션 배포 승인</span>
+      <span class="flow-arrow"></span>
+      <div class="flow-box tag">tag v0.2</div>
+    </div>
+  </div>
+
+  <h3 id="sec4-detail">Phase별 상세</h3>
+
+  <div class="table-wrapper">
+    <table>
+      <thead>
+        <tr><th>Phase</th><th>작업</th><th>모델</th><th>에이전트 구성</th><th>Git 브랜치</th><th>시드/테스트 데이터</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><span class="phase-tag phase-tag-p0">P0</span></td>
+          <td>퍼블리시 + 알림 + 검색 + 반응형</td>
+          <td><span class="badge badge-blue">Sonnet</span></td>
+          <td>3개 병렬 (퍼블리시 + 알림/검색 + 반응형)</td>
+          <td><code>feature/v2-p0-publish</code></td>
+          <td>견적서 PDF 샘플, Excel 출력 검증용 데이터</td>
+        </tr>
+        <tr>
+          <td><span class="phase-tag phase-tag-p0">P0-QA</span></td>
+          <td>PDF/Excel/Sheets 출력물 검증 + 알림 동작 + 검색 정확도 + 반응형</td>
+          <td><span class="badge badge-blue">Sonnet</span></td>
+          <td>1개 code-reviewer + Playwright</td>
+          <td>&mdash;</td>
+          <td>&mdash;</td>
+        </tr>
+        <tr>
+          <td><span class="phase-tag phase-tag-p0">P0-GIT</span></td>
+          <td>PR &rarr; 팀장 리뷰 &rarr; main 머지</td>
+          <td><span class="badge badge-purple">Opus</span></td>
+          <td>&mdash;</td>
+          <td><code>feature/v2-p0-publish &rarr; main</code></td>
+          <td>&mdash;</td>
+        </tr>
+        <tr>
+          <td><span class="badge badge-green">UAT 1차</span></td>
+          <td>PDF 다운로드, Excel 열기, Sheets 연동, 알림 수신, 모바일 UI</td>
+          <td>사용자</td>
+          <td>Vercel Staging</td>
+          <td>&mdash;</td>
+          <td>견적서 PDF 출력 &rarr; 내용/레이아웃 확인</td>
+        </tr>
+        <tr>
+          <td><span class="phase-tag phase-tag-p1">P1</span></td>
+          <td>회의록 강화 (Sheets 자동 연동 + UX 개선 + Sheets 퍼블리시)</td>
+          <td><span class="badge badge-blue">Sonnet</span></td>
+          <td>2개 병렬 (Sheets 연동 + UX 개선)</td>
+          <td><code>feature/v2-p1-meetings</code></td>
+          <td>Google Sheets 샘플 3종</td>
+        </tr>
+        <tr>
+          <td><span class="phase-tag phase-tag-p2">P2</span></td>
+          <td>아바타 고도화 (데이터 학습 + 감정 분석 + 시뮬레이션 + 대안 제안)</td>
+          <td><span class="badge badge-purple">Opus</span>+<span class="badge badge-blue">Sonnet</span></td>
+          <td>2개 병렬 (학습+감정 Opus + 시뮬레이션 UI Sonnet)</td>
+          <td><code>feature/v2-p2-predict</code></td>
+          <td>카톡 txt 3개, 이메일 csv 2개</td>
+        </tr>
+        <tr>
+          <td><span class="phase-tag phase-tag-p1">P1~2-QA</span></td>
+          <td>Sheets 읽기/쓰기 + 학습 프로필 품질 + 감정 게이지 정확도</td>
+          <td><span class="badge badge-purple">Opus</span></td>
+          <td>1개 code-reviewer</td>
+          <td>&mdash;</td>
+          <td>&mdash;</td>
+        </tr>
+        <tr>
+          <td><span class="badge badge-green">UAT 2차</span></td>
+          <td>Sheets URL 파싱, 대화 업로드 &rarr; 프로필 생성, 감정 게이지</td>
+          <td>사용자</td>
+          <td>Vercel Staging</td>
+          <td>&mdash;</td>
+          <td>실제 회의 Sheets + 실제 카톡 대화</td>
+        </tr>
+        <tr>
+          <td><span class="phase-tag phase-tag-p3">P3</span></td>
+          <td>견적서 실시간 동시 편집 (Realtime + Presence + 충돌 해결 + 템플릿)</td>
+          <td><span class="badge badge-purple">Opus</span></td>
+          <td>2개 병렬 (Realtime 구독 + Presence UI)</td>
+          <td><code>feature/v2-p3-realtime</code></td>
+          <td>견적서 2건 (동시 편집 시나리오)</td>
+        </tr>
+        <tr>
+          <td><span class="phase-tag phase-tag-p3">P3-QA</span></td>
+          <td>2인 동시 편집 시뮬레이션 + 커서 표시 + 충돌 알림 + 잠금 해제</td>
+          <td><span class="badge badge-purple">Opus</span></td>
+          <td>1개 code-reviewer + Playwright 2탭</td>
+          <td>&mdash;</td>
+          <td>&mdash;</td>
+        </tr>
+        <tr>
+          <td><span class="badge badge-green">UAT 3차</span></td>
+          <td>2인 동시 접속 &rarr; 견적서 편집 &rarr; 커서 + 충돌 처리</td>
+          <td>사용자 (2명)</td>
+          <td>Vercel Staging</td>
+          <td>&mdash;</td>
+          <td>2대 디바이스 동시 편집</td>
+        </tr>
+        <tr>
+          <td><span class="phase-tag phase-tag-p4">P4</span></td>
+          <td>프로젝트 관리 통합 (허브 + 리뷰 + Post-mortem)</td>
+          <td><span class="badge badge-blue">Sonnet</span></td>
+          <td>2개 병렬 (허브/리뷰 + Post-mortem)</td>
+          <td><code>feature/v2-p4-project</code></td>
+          <td>프로젝트 2건 + 연결 데이터</td>
+        </tr>
+        <tr>
+          <td><span class="phase-tag phase-tag-p5">P5</span></td>
+          <td>운영 인프라 (Docker 배포 + 백업 + 감사 롤백 + Slack)</td>
+          <td><span class="badge badge-purple">Opus</span></td>
+          <td>2개 병렬 (Docker+백업 + 롤백+Slack)</td>
+          <td><code>feature/v2-p5-infra</code></td>
+          <td>audit_logs 100건 (롤백 테스트)</td>
+        </tr>
+        <tr>
+          <td><span class="phase-tag phase-tag-p5">P5-QA</span></td>
+          <td>Docker 빌드+실행 + 백업 복원 + 롤백 정합성 + Slack + 전체 E2E</td>
+          <td><span class="badge badge-purple">Opus</span></td>
+          <td>2개 병렬 (인프라 검증 + E2E 회귀)</td>
+          <td>&mdash;</td>
+          <td>전체 시드 통합</td>
+        </tr>
+        <tr>
+          <td><span class="badge badge-green">UAT 4차</span></td>
+          <td>전체 기능 회귀 + Vultr 프로덕션 접속 + 백업 복원 + Slack 알림</td>
+          <td>사용자 (3명+)</td>
+          <td>Vultr Production</td>
+          <td>&mdash;</td>
+          <td>프로덕션 전체 시나리오</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- SECTION 5 -->
+  <h2 id="sec5"><span class="section-num">5)</span> Phase별 상세 기획</h2>
+
+  <!-- P0 -->
+  <div class="phase-card phase-p0" id="sec5-p0">
+    <span class="phase-tag phase-tag-p0">P0</span>
+    <h3>v0.1 보완 &mdash; 퍼블리시 + 알림 + 검색 + 반응형</h3>
+
+    <h4>P0-A: 퍼블리시 (Worker A &mdash; Sonnet)</h4>
+
+    <h5>견적서 PDF 다운로드</h5>
+    <ul>
+      <li><code>@react-pdf/renderer</code> 설치</li>
+      <li><code>src/components/estimates/estimate-pdf.tsx</code> &mdash; PDF 템플릿 컴포넌트
+        <ul>
+          <li>회사 로고, 견적서 번호, 기본 정보 (프로젝트/클라이언트/날짜/유효기간)</li>
+          <li>항목 테이블 (번호, 항목명, 수량, 단가, 금액, 비고)</li>
+          <li>소계/부가세/총액</li>
+          <li>하이라이트 셀 배경색 반영</li>
+        </ul>
+      </li>
+      <li><code>src/app/api/estimates/[id]/pdf/route.ts</code> &mdash; PDF 생성 API Route</li>
+      <li>상세 페이지에 "PDF 다운로드" 버튼 추가</li>
+    </ul>
+
+    <h5>견적서/회의록 Excel 다운로드</h5>
+    <ul>
+      <li><code>exceljs</code> 설치</li>
+      <li><code>src/app/api/estimates/[id]/excel/route.ts</code> &mdash; 견적서 Excel</li>
+      <li><code>src/app/api/meetings/[id]/excel/route.ts</code> &mdash; 회의록 + 액션아이템 Excel</li>
+      <li>각 상세 페이지에 "Excel 다운로드" 버튼 추가</li>
+    </ul>
+
+    <h5>입금/결제 목록 Excel 내보내기</h5>
+    <ul>
+      <li><code>src/app/api/payments/export/route.ts</code> &mdash; 전체 입금 내역 Excel</li>
+      <li>목록 페이지에 "Excel 내보내기" 버튼</li>
+    </ul>
+
+    <h5>Google Sheets 견적서 퍼블리시</h5>
+    <ul>
+      <li>Google Sheets API v4 + Service Account 연동</li>
+      <li><code>src/lib/google-sheets.ts</code> &mdash; Sheets API 클라이언트 래퍼</li>
+      <li><code>src/app/api/estimates/[id]/sheets/route.ts</code> &mdash; 견적서 &rarr; Sheets 내보내기</li>
+      <li>상세 페이지에 "Sheets 내보내기" 버튼</li>
+    </ul>
+
+    <h4>P0-B: 알림 + 검색 (Worker B &mdash; Sonnet)</h4>
+
+    <h5>인앱 알림 시스템</h5>
+    <ul>
+      <li>DB: <code>supabase/migrations/008_notifications.sql</code></li>
+    </ul>
+    <pre><code><span class="sql-keyword">create table</span> <span class="sql-type">public</span>.notifications (
+  id <span class="sql-type">uuid</span> <span class="sql-keyword">primary key</span> <span class="sql-keyword">default</span> gen_random_uuid(),
+  user_id <span class="sql-type">uuid</span> <span class="sql-keyword">references</span> public.users(id) <span class="sql-keyword">not null</span>,
+  type <span class="sql-type">text</span> <span class="sql-keyword">not null</span>, <span class="sql-comment">-- 'deadline', 'lock_released', 'estimate_confirmed', ...</span>
+  title <span class="sql-type">text</span> <span class="sql-keyword">not null</span>,
+  message <span class="sql-type">text</span> <span class="sql-keyword">not null</span>,
+  link <span class="sql-type">text</span>, <span class="sql-comment">-- 클릭 시 이동 경로</span>
+  is_read <span class="sql-type">boolean</span> <span class="sql-keyword">default</span> <span class="sql-string">false</span>,
+  created_at <span class="sql-type">timestamptz</span> <span class="sql-keyword">default</span> now()
+);</code></pre>
+
+    <ul>
+      <li><code>src/components/layout/notification-bell.tsx</code> &mdash; 헤더 벨 아이콘 + 드롭다운
+        <ul>
+          <li>읽지 않은 알림 개수 배지</li>
+          <li>클릭 시 최근 20건 표시</li>
+          <li>알림 클릭 &rarr; link로 이동 + 읽음 처리</li>
+        </ul>
+      </li>
+      <li>알림 트리거 (서버 사이드):
+        <ul>
+          <li>마감일 임박 (3일 이내): 매일 cron 또는 대시보드 로드 시 체크</li>
+          <li>견적서 잠금 해제: update 트리거</li>
+          <li>견적서 확정/발송: update 트리거</li>
+        </ul>
+      </li>
+    </ul>
+
+    <h5>통합 검색</h5>
+    <ul>
+      <li><code>src/app/(dashboard)/search/page.tsx</code> &mdash; 검색 결과 페이지</li>
+      <li><code>src/components/layout/search-bar.tsx</code> &mdash; 헤더 검색바 (Cmd+K 단축키)</li>
+      <li><code>src/app/api/search/route.ts</code> &mdash; 검색 API
+        <ul>
+          <li>PostgreSQL <code>to_tsvector('korean', ...)</code> + <code>to_tsquery</code> 또는 <code>ILIKE</code> 패턴</li>
+          <li>검색 대상: estimates, meetings, payments, retrospectives</li>
+          <li>결과: 테이블별 그룹핑 + 하이라이트</li>
+        </ul>
+      </li>
+    </ul>
+
+    <h4>P0-C: 모바일 반응형 (Worker C &mdash; Sonnet)</h4>
+    <ul>
+      <li>전 페이지 <code>md:</code> breakpoint 검수</li>
+      <li>테이블 &rarr; 모바일에서 카드 뷰 전환 (또는 수평 스크롤)</li>
+      <li>사이드바 모바일 드로어 동작 검증</li>
+      <li>견적서 항목 편집 모바일 UX (모달 or 아코디언)</li>
+      <li>채팅 인터페이스 모바일 레이아웃 (세션 목록 토글)</li>
+    </ul>
+  </div>
+
+  <!-- P1 -->
+  <div class="phase-card phase-p1" id="sec5-p1">
+    <span class="phase-tag phase-tag-p1">P1</span>
+    <h3>회의록 강화</h3>
+
+    <h4>P1-A: Google Sheets 자동 연동 (Worker A &mdash; Sonnet)</h4>
+
+    <h5>Sheets URL &rarr; 회의록 자동 매핑</h5>
+    <ul>
+      <li><code>/meetings/import</code> 페이지 확장
+        <ul>
+          <li>기존 텍스트 붙여넣기 + <strong>신규</strong> Sheets URL 입력 탭</li>
+          <li>URL 입력 &rarr; <code>src/app/api/meetings/import-sheets/route.ts</code></li>
+          <li>Sheets API로 데이터 읽기 &rarr; Gemini API로 필드 자동 매핑</li>
+          <li>매핑 결과 미리보기 &rarr; 사용자 확인 &rarr; 저장</li>
+        </ul>
+      </li>
+    </ul>
+
+    <h5>회의록 &rarr; Sheets 내보내기</h5>
+    <ul>
+      <li><code>src/app/api/meetings/[id]/sheets/route.ts</code></li>
+      <li>상세 페이지에 "Sheets 내보내기" 버튼</li>
+    </ul>
+
+    <h4>P1-B: 회의록 UX 개선 (Worker B &mdash; Sonnet)</h4>
+
+    <h5>목록 개선</h5>
+    <ul>
+      <li>프로젝트별 그룹핑 뷰 (Accordion)</li>
+      <li>날짜 범위 필터 (DateRangePicker)</li>
+      <li>키워드 검색 (제목, 내용)</li>
+      <li>정렬: 날짜순 / 미완료 액션아이템 우선</li>
+    </ul>
+
+    <h5>액션아이템 대시보드</h5>
+    <ul>
+      <li><code>/meetings/action-items</code> &mdash; 전체 액션아이템 통합 뷰</li>
+      <li>필터: 담당자별, 상태별, 마감일별</li>
+      <li>진행률 시각화 (프로그레스 바)</li>
+      <li>타임라인 뷰 (날짜별 카드)</li>
+    </ul>
+
+    <h5>인쇄용 레이아웃</h5>
+    <ul>
+      <li><code>@media print</code> CSS</li>
+      <li>회의록 상세 페이지 "인쇄" 버튼</li>
+    </ul>
+  </div>
+
+  <!-- P2 -->
+  <div class="phase-card phase-p2" id="sec5-p2">
+    <span class="phase-tag phase-tag-p2">P2</span>
+    <h3>아바타 고도화</h3>
+
+    <h4>P2-A: 데이터 학습 + 감정 분석 (Worker A &mdash; Opus)</h4>
+
+    <h5>대화 데이터 업로드</h5>
+    <ul>
+      <li><code>/predict/avatars/[id]/upload</code> &mdash; 데이터 업로드 페이지</li>
+      <li>지원 형식: <code>.txt</code> (카카오톡 내보내기), <code>.csv</code> (이메일 대화)</li>
+      <li>파서: 카톡 형식 (<code>yyyy.mm.dd hh:mm, 이름 : 메시지</code>) + CSV</li>
+      <li><code>src/app/api/predict/analyze-conversation/route.ts</code>
+        <ul>
+          <li>업로드된 대화 &rarr; Gemini API로 분석</li>
+          <li>출력: 말투 스타일, 성격 키워드, 의사결정 패턴, 민감 주제 자동 추출</li>
+          <li>추출된 프로필 &rarr; 아바타 인격 프로필에 자동 반영 (사용자 확인 후)</li>
+        </ul>
+      </li>
+    </ul>
+
+    <h5>감정 분석 패널</h5>
+    <ul>
+      <li><code>src/components/predict/sentiment-gauge.tsx</code> &mdash; 감정 게이지 컴포넌트
+        <ul>
+          <li>긍정 / 중립 / 부정 3단계 게이지 바</li>
+          <li>민감 주제 감지 시 경고 배지</li>
+        </ul>
+      </li>
+      <li>채팅 API에 감정 분석 추가:
+        <ul>
+          <li>Gemini 응답 시 JSON 구조로 <code>{ reply, sentiment, warning? }</code></li>
+          <li>시스템 프롬프트에 감정 메타데이터 출력 지시 추가</li>
+        </ul>
+      </li>
+    </ul>
+
+    <h5>대안 제안 힌트</h5>
+    <ul>
+      <li>부정 감정 감지 시 &rarr; "이렇게 말해보세요" 대안 3가지 제안</li>
+      <li>시스템 프롬프트 분기: 감정이 negative이면 대안 제안 모드 활성화</li>
+    </ul>
+
+    <h4>P2-B: 시뮬레이션 UI (Worker B &mdash; Sonnet)</h4>
+
+    <h5>상황 시뮬레이션 모드</h5>
+    <ul>
+      <li><code>/predict/chat/[avatarId]</code> 에 시뮬레이션 모드 토글 추가</li>
+      <li>프리셋 시나리오 목록:
+        <ul>
+          <li>견적 네고 ("가격을 10% 낮춰주세요")</li>
+          <li>일정 변경 요청 ("납기를 2주 앞당겨주세요")</li>
+          <li>불만 접수 ("결과물이 기대와 다릅니다")</li>
+          <li>추가 요청 ("여기에 기능 하나 더 추가해주세요")</li>
+          <li>커스텀 시나리오 (자유 입력)</li>
+        </ul>
+      </li>
+      <li>시나리오 선택 &rarr; 시스템 프롬프트에 상황 컨텍스트 주입</li>
+      <li>시뮬레이션 결과 저장 (별도 세션 태그)</li>
+    </ul>
+
+    <h5>대화 내보내기</h5>
+    <ul>
+      <li>채팅 세션 &rarr; 텍스트/PDF 다운로드</li>
+      <li>요약 생성: Gemini API로 대화 요약 + 핵심 포인트 추출</li>
+    </ul>
+  </div>
+
+  <!-- P3 -->
+  <div class="phase-card phase-p3" id="sec5-p3">
+    <span class="phase-tag phase-tag-p3">P3</span>
+    <h3>견적서 실시간 동시 편집</h3>
+    <blockquote>난이도 높음 &mdash; Opus 전용 Phase</blockquote>
+
+    <h4>P3-A: Realtime 구독 (Worker A &mdash; Opus)</h4>
+
+    <h5>Supabase Realtime 채널</h5>
+    <ul>
+      <li><code>estimate:{id}</code> 채널 구독</li>
+      <li>estimate_items 변경 시 실시간 브로드캐스트</li>
+      <li>충돌 해결: 마지막 저장 우선 (Last Writer Wins) + 변경 알림</li>
+      <li>잠금 해제: v0.1 잠금 방식 제거 &rarr; Realtime 기반 동시 편집으로 전환</li>
+      <li>DB: <code>estimate_items</code>에 <code>last_edited_by</code>, <code>last_edited_at</code> 컬럼 추가</li>
+    </ul>
+
+    <h5>셀 단위 업데이트</h5>
+    <ul>
+      <li>항목 수정 시 전체 저장 &rarr; 셀 단위 debounce 저장 (300ms)</li>
+      <li><code>supabase.from("estimate_items").update({ unit_price }).eq("id", itemId)</code></li>
+      <li>Realtime 이벤트 수신 &rarr; 해당 셀만 업데이트 (전체 리렌더 방지)</li>
+    </ul>
+
+    <h4>P3-B: Presence UI (Worker B &mdash; Opus)</h4>
+
+    <h5>접속자 표시</h5>
+    <ul>
+      <li>Supabase Presence로 현재 편집 중인 사용자 목록</li>
+      <li>상단에 접속자 아바타 표시 (최대 5명 + "+N")</li>
+      <li>각 사용자의 현재 편집 셀 위치 표시 (셀 테두리 색상)</li>
+    </ul>
+
+    <h5>충돌 알림</h5>
+    <ul>
+      <li>동일 셀 동시 편집 감지 &rarr; Toast 알림 ("OOO님이 이 항목을 수정했습니다")</li>
+      <li>충돌 발생 시 최신 값 자동 반영 + 이전 값 undo 가능</li>
+    </ul>
+
+    <h5>견적서 템플릿</h5>
+    <ul>
+      <li><code>/estimates/templates</code> &mdash; 템플릿 목록 페이지</li>
+      <li>자주 사용하는 항목 세트를 템플릿으로 저장</li>
+      <li>견적서 생성 시 템플릿 선택 &rarr; 항목 자동 채움</li>
+      <li>DB: <code>estimate_templates</code>, <code>estimate_template_items</code> 테이블</li>
+    </ul>
+  </div>
+
+  <!-- P4 -->
+  <div class="phase-card phase-p4" id="sec5-p4">
+    <span class="phase-tag phase-tag-p4">P4</span>
+    <h3>프로젝트 관리 통합</h3>
+
+    <h4>P4-A: 프로젝트 허브 + 리뷰 (Worker A &mdash; Sonnet)</h4>
+
+    <h5>프로젝트 허브</h5>
+    <ul>
+      <li><code>/projects</code> &mdash; 프로젝트 목록</li>
+      <li><code>/projects/[id]</code> &mdash; 프로젝트 상세 (허브)
+        <ul>
+          <li>연결된 견적서, 회의록, 회고, 입금 요청을 한 화면에 표시</li>
+          <li>탭: 개요 / 견적서 / 회의록 / 회고 / 입금</li>
+        </ul>
+      </li>
+      <li>DB: <code>projects</code> 테이블 확장
+        <ul>
+          <li>상태 (진행중/완료/보류), 시작일, 종료일, 담당자 추가</li>
+          <li>견적서/회의록/입금에 <code>project_id</code> FK 추가 (nullable, 점진 마이그레이션)</li>
+        </ul>
+      </li>
+    </ul>
+
+    <h5>프로젝트 리뷰</h5>
+    <ul>
+      <li><code>/projects/[id]/review</code> &mdash; 프로젝트 완료 후 성과 리뷰
+        <ul>
+          <li>목표 대비 달성도 (수동 입력)</li>
+          <li>타임라인 분석: 회의록 날짜 기준 이벤트 타임라인</li>
+          <li>팀 피드백 종합: 해당 프로젝트 회고 통합 인사이트 연동</li>
+          <li>견적 vs 실제 비용 비교 (입금 데이터 연동)</li>
+        </ul>
+      </li>
+    </ul>
+
+    <h4>P4-B: Post-mortem (Worker B &mdash; Sonnet)</h4>
+
+    <h5>Post-mortem 시스템</h5>
+    <ul>
+      <li><code>/projects/[id]/postmortem</code> &mdash; 사후 분석 페이지</li>
+      <li>DB: <code>postmortems</code> 테이블</li>
+    </ul>
+    <pre><code>id, project_id, title, incident_date,
+severity(<span class="sql-string">low</span>/<span class="sql-string">medium</span>/<span class="sql-string">high</span>/<span class="sql-string">critical</span>),
+timeline (<span class="sql-type">jsonb</span>), root_cause, lessons_learned,
+action_items (<span class="sql-type">jsonb</span>), created_by, created_at, updated_at</code></pre>
+    <ul>
+      <li>입력 폼:
+        <ul>
+          <li>사건 제목, 날짜, 심각도</li>
+          <li>타임라인: 시간순 이벤트 동적 추가 (시각 + 내용)</li>
+          <li>근본 원인 (Textarea)</li>
+          <li>교훈 도출 (동적 리스트)</li>
+          <li>재발 방지 액션아이템 (담당자 + 마감일 + 상태)</li>
+        </ul>
+      </li>
+      <li>뷰:
+        <ul>
+          <li>타임라인 시각화 (세로 타임라인 UI)</li>
+          <li>심각도 배지 색상 코딩</li>
+        </ul>
+      </li>
+    </ul>
+  </div>
+
+  <!-- P5 -->
+  <div class="phase-card phase-p5" id="sec5-p5">
+    <span class="phase-tag phase-tag-p5">P5</span>
+    <h3>운영 인프라</h3>
+
+    <h4>P5-A: Docker 배포 + 백업 (Worker A &mdash; Opus)</h4>
+
+    <h5>Docker Compose 프로덕션 배포</h5>
+    <ul>
+      <li><code>docker/Dockerfile</code> &mdash; Next.js standalone 빌드</li>
+      <li><code>docker/docker-compose.yml</code> &mdash; Next.js + Nginx 리버스 프록시</li>
+      <li><code>docker/nginx.conf</code> &mdash; SSL (Let's Encrypt), gzip, 캐시 헤더</li>
+      <li><code>docker/.env.production</code> &mdash; 프로덕션 환경변수 템플릿</li>
+      <li><code>scripts/deploy.sh</code> &mdash; Vultr 서버 배포 스크립트 (ssh + docker compose up)</li>
+    </ul>
+
+    <h5>백업 자동화</h5>
+    <ul>
+      <li><code>scripts/backup.sh</code> &mdash; pg_dump + gzip + S3 업로드</li>
+      <li><code>scripts/restore.sh</code> &mdash; S3 &rarr; pg_restore</li>
+      <li>cron job: 매일 03:00 UTC 자동 백업</li>
+      <li>보관 정책: 7일 일별 + 4주 주별 + 3개월 월별</li>
+    </ul>
+
+    <h4>P5-B: 감사 롤백 + Slack (Worker B &mdash; Opus)</h4>
+
+    <h5>감사 로그 롤백</h5>
+    <ul>
+      <li><code>/settings/logs</code> 상세 다이얼로그에 "롤백" 버튼 추가 (super/boss만)</li>
+      <li><code>src/app/api/audit/rollback/route.ts</code>
+        <ul>
+          <li>FK 정합성 검증: 롤백 대상 행의 참조 관계 확인</li>
+          <li>트랜잭션 기반: BEGIN &rarr; UPDATE/DELETE &rarr; audit_log INSERT &rarr; COMMIT</li>
+          <li>실패 시 자동 ROLLBACK + 에러 메시지</li>
+        </ul>
+      </li>
+      <li>롤백 가능 조건:
+        <ul>
+          <li>update &rarr; old_data로 복원</li>
+          <li>insert &rarr; 해당 행 삭제 (참조 없는 경우만)</li>
+          <li>delete &rarr; old_data로 재삽입 (ID 충돌 검사)</li>
+        </ul>
+      </li>
+      <li>롤백 불가 시 사유 표시 (FK 참조 존재 등)</li>
+    </ul>
+
+    <h5>Slack Webhook 알림</h5>
+    <ul>
+      <li><code>.env</code>에 <code>SLACK_WEBHOOK_URL</code> 추가</li>
+      <li><code>src/lib/slack.ts</code> &mdash; Slack 메시지 전송 헬퍼</li>
+      <li>알림 이벤트:
+        <ul>
+          <li>마감일 임박 (3일 이내) &mdash; 매일 요약</li>
+          <li>견적서 확정/발송</li>
+          <li>입금 완료 처리</li>
+          <li>Post-mortem 생성</li>
+        </ul>
+      </li>
+      <li>채널: <code>#griff-q-alerts</code></li>
+      <li>메시지 형식: Slack Block Kit (제목, 내용, 링크 버튼)</li>
+    </ul>
+  </div>
+
+  <!-- SECTION 6 -->
+  <h2 id="sec6"><span class="section-num">6)</span> DB 마이그레이션 계획</h2>
+
+  <div class="table-wrapper">
+    <table>
+      <thead><tr><th>마이그레이션</th><th>Phase</th><th>테이블/변경사항</th></tr></thead>
+      <tbody>
+        <tr><td><code>008_notifications.sql</code></td><td><span class="phase-tag phase-tag-p0">P0</span></td><td>notifications 테이블</td></tr>
+        <tr><td><code>009_search_index.sql</code></td><td><span class="phase-tag phase-tag-p0">P0</span></td><td>GIN 인덱스 (<code>to_tsvector</code>) for 검색</td></tr>
+        <tr><td><code>010_meetings_enhance.sql</code></td><td><span class="phase-tag phase-tag-p1">P1</span></td><td>meetings에 project_id FK 추가, action_items에 인덱스</td></tr>
+        <tr><td><code>011_avatar_uploads.sql</code></td><td><span class="phase-tag phase-tag-p2">P2</span></td><td>avatar_training_data 테이블 (업로드 이력)</td></tr>
+        <tr><td><code>012_realtime_estimates.sql</code></td><td><span class="phase-tag phase-tag-p3">P3</span></td><td>estimate_items에 last_edited_by/at, templates 테이블</td></tr>
+        <tr><td><code>013_projects.sql</code></td><td><span class="phase-tag phase-tag-p4">P4</span></td><td>projects 확장, FK 추가, postmortems 테이블</td></tr>
+        <tr><td><code>014_audit_rollback.sql</code></td><td><span class="phase-tag phase-tag-p5">P5</span></td><td>audit_logs에 rollback_of UUID FK</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- SECTION 7 -->
+  <h2 id="sec7"><span class="section-num">7)</span> 테스트 전략</h2>
+
+  <h3>자동화 테스트 (Playwright)</h3>
+
+  <div class="table-wrapper">
+    <table>
+      <thead><tr><th>Phase</th><th>테스트 시나리오</th><th>검증 항목</th></tr></thead>
+      <tbody>
+        <tr><td><span class="phase-tag phase-tag-p0">P0</span></td><td>PDF 다운로드 &rarr; 파일 크기 &gt; 0 확인</td><td>PDF 생성 성공</td></tr>
+        <tr><td><span class="phase-tag phase-tag-p0">P0</span></td><td>Excel 다운로드 &rarr; 파일 열기 &rarr; 시트 존재 확인</td><td>Excel 구조</td></tr>
+        <tr><td><span class="phase-tag phase-tag-p0">P0</span></td><td>알림 벨 클릭 &rarr; 드롭다운 &rarr; 읽음 처리</td><td>알림 CRUD</td></tr>
+        <tr><td><span class="phase-tag phase-tag-p0">P0</span></td><td>Cmd+K &rarr; 검색바 &rarr; 키워드 입력 &rarr; 결과 표시</td><td>통합 검색</td></tr>
+        <tr><td><span class="phase-tag phase-tag-p0">P0</span></td><td>모바일 뷰포트 &rarr; 테이블 카드 전환 &rarr; 폼 입력</td><td>반응형</td></tr>
+        <tr><td><span class="phase-tag phase-tag-p1">P1</span></td><td>Sheets URL 입력 &rarr; 파싱 결과 미리보기 &rarr; 저장</td><td>Sheets 연동</td></tr>
+        <tr><td><span class="phase-tag phase-tag-p1">P1</span></td><td>회의록 목록 &rarr; 프로젝트 필터 &rarr; 검색 &rarr; 정렬</td><td>UX 개선</td></tr>
+        <tr><td><span class="phase-tag phase-tag-p2">P2</span></td><td>txt 업로드 &rarr; 분석 &rarr; 프로필 자동 채움 &rarr; 확인</td><td>학습 파이프라인</td></tr>
+        <tr><td><span class="phase-tag phase-tag-p2">P2</span></td><td>채팅 &rarr; 감정 게이지 변화 &rarr; 경고 표시</td><td>감정 분석</td></tr>
+        <tr><td><span class="phase-tag phase-tag-p2">P2</span></td><td>시뮬레이션 시나리오 선택 &rarr; 채팅 &rarr; 결과 저장</td><td>시뮬레이션</td></tr>
+        <tr><td><span class="phase-tag phase-tag-p3">P3</span></td><td>2탭 동시 접속 &rarr; 같은 견적서 &rarr; 셀 수정 &rarr; 실시간 반영</td><td>Realtime</td></tr>
+        <tr><td><span class="phase-tag phase-tag-p3">P3</span></td><td>접속자 아바타 표시 &rarr; 편집 셀 하이라이트</td><td>Presence</td></tr>
+        <tr><td><span class="phase-tag phase-tag-p4">P4</span></td><td>프로젝트 허브 &rarr; 연결 데이터 표시 &rarr; 리뷰 작성</td><td>허브 통합</td></tr>
+        <tr><td><span class="phase-tag phase-tag-p4">P4</span></td><td>Post-mortem 생성 &rarr; 타임라인 &rarr; 액션아이템</td><td>Post-mortem</td></tr>
+        <tr><td><span class="phase-tag phase-tag-p5">P5</span></td><td>Docker build &rarr; 컨테이너 실행 &rarr; 헬스체크</td><td>배포</td></tr>
+        <tr><td><span class="phase-tag phase-tag-p5">P5</span></td><td>롤백 버튼 &rarr; 확인 &rarr; 데이터 복원 확인</td><td>롤백 정합성</td></tr>
+        <tr><td><span class="phase-tag phase-tag-p5">P5</span></td><td>전체 E2E 회귀: 로그인 &rarr; 회고 &rarr; 회의록 &rarr; 입금 &rarr; 견적서 &rarr; 채팅 &rarr; 설정</td><td>회귀</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>수동 테스트 (UAT)</h3>
+
+  <div class="table-wrapper">
+    <table>
+      <thead><tr><th>UAT</th><th>테스트 시나리오</th><th>참여자</th></tr></thead>
+      <tbody>
+        <tr><td><span class="badge badge-green">1차</span></td><td>PDF/Excel 출력물 내용 확인, 모바일 실기기 테스트</td><td>사용자 1명</td></tr>
+        <tr><td><span class="badge badge-green">2차</span></td><td>실제 Sheets 데이터로 연동 테스트, 실제 카톡 대화로 학습 테스트</td><td>사용자 1명</td></tr>
+        <tr><td><span class="badge badge-green">3차</span></td><td>2인 동시 견적서 편집 (실기기 2대)</td><td>사용자 2명</td></tr>
+        <tr><td><span class="badge badge-green">4차</span></td><td>Vultr 프로덕션 전체 플로우 + 팀원 3명 이상 동시 접속</td><td>사용자 3명+</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- SECTION 8 -->
+  <h2 id="sec8"><span class="section-num">8)</span> Git 운영 규칙</h2>
+
+  <blockquote>v0.1과 동일 + v0.2 네이밍 규칙 추가</blockquote>
+
+  <ol>
+    <li><strong>브랜치 전략</strong>: <code>main</code> &larr; <code>feature/v2-pN-기능명</code> (v2 접두사)</li>
+    <li><strong>머지 권한</strong>: 팀장(Opus)만 main에 머지 가능</li>
+    <li><strong>PR 규칙</strong>: QA 통과 후에만 PR 생성, 팀장 승인 필수</li>
+    <li><strong>커밋 컨벤션</strong>: <code>feat:</code>, <code>fix:</code>, <code>test:</code>, <code>chore:</code>, <code>infra:</code> 접두사</li>
+    <li><strong>태그</strong>: 전체 완료 시 <code>v0.2</code> 릴리스 태그</li>
+    <li><strong>핫픽스</strong>: <code>hotfix/v2-이슈명</code> 브랜치 &rarr; main 직접 머지 (긴급 시)</li>
+  </ol>
+
+  <!-- SECTION 9 -->
+  <h2 id="sec9"><span class="section-num">9)</span> 배포 전략</h2>
+
+  <div class="table-wrapper">
+    <table>
+      <thead><tr><th>환경</th><th>플랫폼</th><th>용도</th><th>시점</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Preview</strong></td><td>Vercel</td><td>PR별 자동 Preview 배포 &rarr; QA 테스트용</td><td>feature 브랜치 push 시 자동</td></tr>
+        <tr><td><strong>Staging</strong></td><td>Vercel</td><td>main 머지 후 통합 확인</td><td>main push 시 자동</td></tr>
+        <tr><td><strong>Production</strong></td><td>Vultr (Docker Compose)</td><td>최종 프로덕션</td><td>P5 완료 후 수동 배포</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <ul>
+    <li><strong>P0~P4</strong>: Vercel Preview/Staging에서 개발+테스트</li>
+    <li><strong>P5</strong>: Docker Compose 구성 + Vultr 서버 세팅 + 프로덕션 최초 배포</li>
+    <li><strong>이후</strong>: <code>main</code> push &rarr; Staging 자동 &rarr; 수동 승인 &rarr; Vultr 배포</li>
+  </ul>
+
+  <!-- SECTION 10 -->
+  <h2 id="sec10"><span class="section-num">10)</span> 작업 로그 규칙</h2>
+
+  <blockquote>v0.1과 동일</blockquote>
+
+  <h3>로그 파일 위치</h3>
+
+  <div class="file-tree">
+    <span class="dir">workspace/logs/</span><br>
+    ├── <span class="file">PROGRESS-v2.md</span> <span class="comment"># v0.2 전체 진행 현황 (팀장 관리)</span><br>
+    ├── <span class="file">v2-p0-publish.log.md</span><br>
+    ├── <span class="file">v2-p1-meetings.log.md</span><br>
+    ├── <span class="file">v2-p2-predict.log.md</span><br>
+    ├── <span class="file">v2-p3-realtime.log.md</span><br>
+    ├── <span class="file">v2-p4-project.log.md</span><br>
+    └── <span class="file">v2-p5-infra.log.md</span>
+  </div>
+
+  <h3>기록 규칙</h3>
+  <ol>
+    <li>작업 시작/완료/블로커/해결/에스컬레이션 시 반드시 기록</li>
+    <li>필수 필드: 날짜시간, 작업자(Worker 식별), 작업 내용, 상태</li>
+    <li>블로커 &rarr; 시도 방법 + 조치(팀원 요청 or 팀장 에스컬레이션)</li>
+    <li>QA 결과: 항목별 PASS/FAIL + 실패 원인 + 수정 내역</li>
+    <li>로그 없이 코드 머지 불가</li>
+  </ol>
+
+  <!-- SECTION 11 -->
+  <h2 id="sec11"><span class="section-num">11)</span> 리스크 &amp; 대응</h2>
+
+  <div class="table-wrapper">
+    <table>
+      <thead><tr><th>리스크</th><th>영향</th><th>대응</th></tr></thead>
+      <tbody>
+        <tr><td>Supabase Realtime 연결 불안정</td><td><span class="badge badge-red">P3</span> 견적서 동시 편집 실패</td><td>폴백: v0.1 잠금 방식 유지 + 재연결 로직</td></tr>
+        <tr><td>Google Sheets API 할당량 초과</td><td><span class="badge badge-yellow">P0/P1</span> Sheets 연동 실패</td><td>일일 요청 수 모니터링 + 캐싱</td></tr>
+        <tr><td>Gemini API 응답 지연/품질</td><td><span class="badge badge-yellow">P2</span> 감정 분석/학습 부정확</td><td>타임아웃 설정 + 프롬프트 버전 관리 + 폴백 메시지</td></tr>
+        <tr><td>Vultr 서버 장애</td><td><span class="badge badge-red">P5</span> 프로덕션 다운</td><td>헬스체크 + 자동 재시작 (Docker restart: always) + 백업</td></tr>
+        <tr><td>카톡 대화 형식 다양성</td><td><span class="badge badge-yellow">P2</span> 파서 실패</td><td>주요 형식 3종 지원 + 파싱 실패 시 수동 입력 안내</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- SECTION 12 -->
+  <h2 id="sec12"><span class="section-num">12)</span> v0.3 로드맵 (예비)</h2>
+
+  <div class="table-wrapper">
+    <table>
+      <thead><tr><th>기능</th><th>설명</th></tr></thead>
+      <tbody>
+        <tr><td>클라이언트 포털</td><td>외부 클라이언트 전용 견적서 확인/승인 공개 링크</td></tr>
+        <tr><td>대시보드 커스터마이징</td><td>위젯 순서 변경, 숨기기, 개인 설정 저장</td></tr>
+        <tr><td>이메일 알림</td><td>Slack 외 이메일 알림 채널 추가 (Resend API)</td></tr>
+        <tr><td>API 키 관리</td><td>외부 연동용 API 키 생성/관리 페이지</td></tr>
+        <tr><td>다국어 지원</td><td>next-intl 기반 영문/한글 전환</td></tr>
+        <tr><td>성능 최적화</td><td>ISR, Edge Runtime, 이미지 최적화, 번들 분석</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <hr>
+
+  <p style="text-align:center; color:var(--text-muted); font-size:13px; margin-top:40px;">
+    GRIFF-Q v0.2 Development Plan &mdash; Generated 2026-02-26
+  </p>
+
+</main>
+
+<script>
+  // Sidebar toggle for mobile
+  const toggle = document.getElementById('sidebarToggle');
+  const sidebar = document.getElementById('sidebar');
+
+  toggle.addEventListener('click', () => {
+    sidebar.classList.toggle('open');
+  });
+
+  // Close sidebar when clicking a link on mobile
+  sidebar.querySelectorAll('a').forEach(link => {
+    link.addEventListener('click', () => {
+      if (window.innerWidth <= 900) {
+        sidebar.classList.remove('open');
+      }
+    });
+  });
+
+  // Close sidebar when clicking outside on mobile
+  document.addEventListener('click', (e) => {
+    if (window.innerWidth <= 900 && !sidebar.contains(e.target) && e.target !== toggle) {
+      sidebar.classList.remove('open');
+    }
+  });
+</script>
+
+</body>
+</html>
