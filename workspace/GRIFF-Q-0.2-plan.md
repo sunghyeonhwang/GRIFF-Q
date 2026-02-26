@@ -1,6 +1,42 @@
 # GRIFF-Q 0.2 전체 개발 계획
 
 > v0.1 완료 기준(2026-02-26) 위에서 기능 고도화 + 운영 인프라 구축
+> **최종 업데이트: 2026-02-26**
+
+---
+
+## 0) 진행 현황 요약
+
+| Phase | 작업 | 상태 | 비고 |
+|---|---|---|---|
+| **v0.1** | Auth + 레이아웃 + 대시보드 | ✅ 완료 | |
+| **v0.1** | 회고 (KPT+SSC) | ✅ 완료 | |
+| **v0.1** | 회의록 (CRUD+액션아이템) | ✅ 완료 | |
+| **v0.1** | 입금/결제 | ✅ 완료 | |
+| **v0.1** | 견적서 (CRUD+비교+잠금) | ✅ 완료 | |
+| **v0.1** | 클라이언트 예측 (아바타+Gemini) | ✅ 완료 | |
+| **v0.1** | 설정 + 감사 로그 | ✅ 완료 | |
+| **추가** | 다크모드 | ✅ 완료 | |
+| **추가** | 회고 점수 시스템 (만족도+파트별+종합의견) | ✅ 완료 | 엑셀 기반 설계 반영 |
+| **추가** | 취합 뷰 5탭 (만족도/파트별/KPT+SSC/종합교훈/참여현황) | ✅ 완료 | |
+| **추가** | 포스트모템 타임라인 회고 구조 | ✅ 완료 | 타임라인별 근본원인/교훈/액션아이템 |
+| **추가** | 포스트모템 목록에 작성 버튼 | ✅ 완료 | 프로젝트 선택 드롭다운 |
+| **추가** | 회고 메뉴 트리 (사용가이드/스프린트/포스트모템) | ✅ 완료 | |
+| **추가** | 회고 사용가이드 페이지 | ✅ 완료 | |
+| **추가** | 입금/결제 트리 메뉴 (결제/대량전송/계산서) | ✅ 완료 | 대량전송·계산서는 v0.3 |
+| **추가** | 결제 페이지 복사 기능 (계좌번호/금액) | ✅ 완료 | |
+| **추가** | 프로젝트 메뉴 비활성화 (v0.3 리워크 예정) | ✅ 완료 | |
+| **추가** | 아바타 성격 분석 강화 + 채팅 UX 개선 | ✅ 완료 | |
+| **P0-A** | 퍼블리시 (PDF/Excel/Sheets) | 🔲 스캐폴딩만 | API Route 파일 생성됨, 실제 로직 미구현 |
+| **P0-B** | 인앱 알림 시스템 | 🔲 스캐폴딩만 | DB 마이그레이션+벨 컴포넌트 존재, 트리거 미구현 |
+| **P0-B** | 통합 검색 | 🔲 스캐폴딩만 | 검색바+API Route 존재, 검색 로직 미구현 |
+| **P0-C** | 모바일 반응형 | 🔲 미착수 | |
+| **P1** | 회의록 강화 (Sheets 연동+UX+액션아이템 대시보드) | 🔲 미착수 | |
+| **P2** | 아바타 고도화 (학습+감정분석+시뮬레이션) | 🔲 미착수 | 업로드 페이지만 생성됨 |
+| **P3** | 견적서 실시간 동시 편집 | 🔲 미착수 | |
+| **P4** | 프로젝트 관리 통합 | ⏸️ v0.3 이관 | 허브+리뷰는 v0.3에서 재설계 |
+| **P4-B** | Post-mortem | ✅ 완료 | 타임라인 회고 구조로 고도화 완료 |
+| **P5** | 운영 인프라 (Docker+백업+Slack) | 🔲 미착수 | |
 
 ---
 
@@ -11,7 +47,7 @@ v0.1에서 구축한 CRUD 기반 업무 도구를 **실무 운영 수준**으로
 - 퍼블리시(PDF/Excel/Sheets) 완성으로 외부 산출물 생산
 - 아바타 시스템 고도화 (데이터 학습 + 감정 분석 + 시뮬레이션)
 - 견적서 실시간 동시 편집
-- 프로젝트 단위 통합 관리 (허브 + 리뷰 + Post-mortem)
+- ~~프로젝트 단위 통합 관리 (허브 + 리뷰 + Post-mortem)~~ → **v0.3 이관** (Post-mortem만 완료)
 - Vultr 프로덕션 배포 + 백업 자동화
 
 ---
@@ -100,7 +136,7 @@ v0.1에서 구축한 CRUD 기반 업무 도구를 **실무 운영 수준**으로
   ├→ [P3] → [P3-QA] → git: feature/v2-p3-realtime → main 머지
   │                   → ✅ UAT 3차 (실시간 동시 편집 2인 테스트)
   │
-  ├→ [P4] → [P4-QA] → git: feature/v2-p4-project → main 머지
+  ├→ [P4] → v0.3 이관 (Post-mortem만 완료)
   │
   └→ [P5] → [P5-QA + 전체 E2E] → git: feature/v2-p5-infra → main 머지
                                  → ✅ UAT 4차 (전체 회귀 + 프로덕션 배포 승인)
@@ -109,28 +145,15 @@ v0.1에서 구축한 CRUD 기반 업무 도구를 **실무 운영 수준**으로
 
 ### Phase별 상세
 
-| Phase | 작업 | 모델 | 에이전트 구성 | Git 브랜치 | 시드/테스트 데이터 |
-|---|---|---|---|---|---|
-| **P0** | 퍼블리시 + 알림 + 검색 + 반응형 | Workers: Sonnet | 3개 병렬 (퍼블리시 + 알림/검색 + 반응형) | `feature/v2-p0-publish` | 견적서 PDF 샘플, Excel 출력 검증용 데이터 |
-| **P0-QA** | PDF/Excel/Sheets 출력물 검증 + 알림 동작 + 검색 정확도 + 반응형 레이아웃 | Workers: Sonnet | 1개 code-reviewer + Playwright | — | — |
-| **P0-GIT** | PR → 팀장 리뷰 → main 머지 | 팀장 Opus | — | `feature/v2-p0-publish → main` | — |
-| **✅ UAT 1차** | PDF 다운로드 확인, Excel 열기, Sheets 연동, 알림 수신, 모바일 UI | 사용자 | Vercel Staging | — | 견적서 PDF 출력 → 내용/레이아웃 확인, Excel 열기 → 수식/서식 확인 |
-| **P1** | 회의록 강화 (Sheets 자동 연동 + UX 개선 + Sheets 퍼블리시) | Workers: Sonnet | 2개 병렬 (Sheets 연동 + UX 개선) | `feature/v2-p1-meetings` | Google Sheets 샘플 3종 (다양한 형식) |
-| **P2** | 아바타 고도화 (데이터 학습 + 감정 분석 + 시뮬레이션 + 대안 제안) | Workers: Opus+Sonnet | 2개 병렬 (학습+감정 Opus + 시뮬레이션 UI Sonnet) | `feature/v2-p2-predict` | 카톡 대화 txt 샘플 3개, 이메일 csv 샘플 2개 |
-| **P1~2-QA** | Sheets 읽기/쓰기 + 학습 프로필 품질 + 감정 게이지 정확도 | Workers: Opus | 1개 code-reviewer | — | — |
-| **P1~2-GIT** | PR 2건 → 순차 머지 | 팀장 Opus | — | `feature/v2-p1,p2 → main` | — |
-| **✅ UAT 2차** | Sheets URL 입력 → 자동 파싱 확인, 대화 업로드 → 프로필 생성 품질 확인, 감정 게이지 직관성 | 사용자 | Vercel Staging | — | 실제 회의 Sheets + 실제 카톡 대화 테스트 |
-| **P3** | 견적서 실시간 동시 편집 (Realtime + Presence + 충돌 해결 + 템플릿) | Workers: Opus | 2개 병렬 (Realtime 구독 + Presence UI) | `feature/v2-p3-realtime` | 견적서 2건 (동시 편집 시나리오) |
-| **P3-QA** | 2인 동시 편집 시뮬레이션 + 커서 표시 + 충돌 시 알림 + 잠금 제거 확인 | Workers: Opus | 1개 code-reviewer + Playwright 2탭 | — | — |
-| **P3-GIT** | PR → 팀장 리뷰 → main 머지 | 팀장 Opus | — | `feature/v2-p3-realtime → main` | — |
-| **✅ UAT 3차** | 2인 이상 동시 접속 → 같은 견적서 편집 → 커서 표시 + 충돌 처리 확인 | 사용자(2명) | Vercel Staging | — | 2대 디바이스에서 동시 편집 시나리오 |
-| **P4** | 프로젝트 관리 통합 (허브 + 리뷰 + Post-mortem) | Workers: Sonnet | 2개 병렬 (허브/리뷰 + Post-mortem) | `feature/v2-p4-project` | 프로젝트 2건 + 연결된 견적서/회의록/회고 |
-| **P4-QA** | 프로젝트 허브 집계 + 리뷰 차트 + Post-mortem 플로우 | Workers: Sonnet | 1개 code-reviewer | — | — |
-| **P4-GIT** | PR → 머지 | 팀장 Opus | — | `feature/v2-p4-project → main` | — |
-| **P5** | 운영 인프라 (Docker 배포 + 백업 + 감사 롤백 + Slack) | Workers: Opus | 2개 병렬 (Docker+백업 + 롤백+Slack) | `feature/v2-p5-infra` | audit_logs 100건 (롤백 테스트) |
-| **P5-QA** | Docker 빌드+실행 + 백업 복원 + 롤백 정합성 + Slack 메시지 수신 + 전체 E2E 회귀 | Workers: Opus | 2개 병렬 (인프라 검증 + E2E 회귀) | — | 전체 시드 통합 |
-| **P5-GIT** | 최종 PR → 머지 → tag `v0.2` | 팀장 Opus | — | `feature/v2-p5-infra → main` → tag `v0.2` | — |
-| **✅ UAT 4차** | 전체 기능 회귀 + Vultr 프로덕션 접속 + 백업 복원 테스트 + Slack 알림 확인 | 사용자 | Vultr Production | — | 프로덕션 환경 전체 시나리오 |
+| Phase | 작업 | 상태 | 모델 | Git 브랜치 |
+|---|---|---|---|---|
+| **P0** | 퍼블리시 + 알림 + 검색 + 반응형 | 🔲 스캐폴딩만 | Workers: Sonnet | `feature/v2-p0-publish` |
+| **P1** | 회의록 강화 (Sheets 연동 + UX) | 🔲 미착수 | Workers: Sonnet | `feature/v2-p1-meetings` |
+| **P2** | 아바타 고도화 (학습 + 감정 + 시뮬레이션) | 🔲 미착수 | Workers: Opus+Sonnet | `feature/v2-p2-predict` |
+| **P3** | 견적서 실시간 동시 편집 | 🔲 미착수 | Workers: Opus | `feature/v2-p3-realtime` |
+| **P4** | 프로젝트 관리 통합 | ⏸️ v0.3 이관 | — | — |
+| **P4-B** | Post-mortem | ✅ 완료 | Workers: Sonnet | main 직접 |
+| **P5** | 운영 인프라 | 🔲 미착수 | Workers: Opus | `feature/v2-p5-infra` |
 
 ---
 
@@ -138,7 +161,9 @@ v0.1에서 구축한 CRUD 기반 업무 도구를 **실무 운영 수준**으로
 
 ### P0: v0.1 보완 — 퍼블리시 + 알림 + 검색 + 반응형
 
-#### P0-A: 퍼블리시 (Worker A — Sonnet)
+#### P0-A: 퍼블리시 (Worker A — Sonnet) — 🔲 스캐폴딩만
+
+> API Route 파일은 생성되었으나, 실제 PDF/Excel/Sheets 생성 로직 미구현
 
 **견적서 PDF 다운로드**
 - `@react-pdf/renderer` 설치
@@ -147,59 +172,47 @@ v0.1에서 구축한 CRUD 기반 업무 도구를 **실무 운영 수준**으로
   - 항목 테이블 (번호, 항목명, 수량, 단가, 금액, 비고)
   - 소계/부가세/총액
   - 하이라이트 셀 배경색 반영
-- `src/app/api/estimates/[id]/pdf/route.ts` — PDF 생성 API Route
+- `src/app/api/estimates/[id]/pdf/route.ts` — PDF 생성 API Route ✅ 파일 존재
 - 상세 페이지에 "PDF 다운로드" 버튼 추가
 
 **견적서/회의록 Excel 다운로드**
 - `exceljs` 설치
-- `src/app/api/estimates/[id]/excel/route.ts` — 견적서 Excel
-- `src/app/api/meetings/[id]/excel/route.ts` — 회의록 + 액션아이템 Excel
+- `src/app/api/estimates/[id]/excel/route.ts` — 견적서 Excel ✅ 파일 존재
+- `src/app/api/meetings/[id]/excel/route.ts` — 회의록 + 액션아이템 Excel ✅ 파일 존재
 - 각 상세 페이지에 "Excel 다운로드" 버튼 추가
 
 **입금/결제 목록 Excel 내보내기**
-- `src/app/api/payments/export/route.ts` — 전체 입금 내역 Excel
+- `src/app/api/payments/export/route.ts` — 전체 입금 내역 Excel ✅ 파일 존재
 - 목록 페이지에 "Excel 내보내기" 버튼
 
 **Google Sheets 견적서 퍼블리시**
 - Google Sheets API v4 + Service Account 연동
-- `src/lib/google-sheets.ts` — Sheets API 클라이언트 래퍼
-- `src/app/api/estimates/[id]/sheets/route.ts` — 견적서 → Sheets 내보내기
+- `src/lib/google-sheets.ts` — Sheets API 클라이언트 래퍼 ✅ 파일 존재
+- `src/app/api/estimates/[id]/sheets/route.ts` — 견적서 → Sheets 내보내기 ✅ 파일 존재
 - 상세 페이지에 "Sheets 내보내기" 버튼
 
-#### P0-B: 알림 + 검색 (Worker B — Sonnet)
+#### P0-B: 알림 + 검색 (Worker B — Sonnet) — 🔲 스캐폴딩만
+
+> DB 마이그레이션, 벨 컴포넌트, 검색바 파일은 존재하나 실제 동작 미구현
 
 **인앱 알림 시스템**
-- DB: `supabase/migrations/008_notifications.sql`
-  ```sql
-  create table public.notifications (
-    id uuid primary key default gen_random_uuid(),
-    user_id uuid references public.users(id) not null,
-    type text not null, -- 'deadline', 'lock_released', 'estimate_confirmed', ...
-    title text not null,
-    message text not null,
-    link text, -- 클릭 시 이동 경로
-    is_read boolean default false,
-    created_at timestamptz default now()
-  );
-  ```
-- `src/components/layout/notification-bell.tsx` — 헤더 벨 아이콘 + 드롭다운
+- DB: `supabase/migrations/008_notifications.sql` ✅ 파일 존재
+- `src/components/layout/notification-bell.tsx` ✅ 파일 존재
   - 읽지 않은 알림 개수 배지
   - 클릭 시 최근 20건 표시
   - 알림 클릭 → link로 이동 + 읽음 처리
-- 알림 트리거 (서버 사이드):
+- 알림 트리거 (서버 사이드): 🔲 미구현
   - 마감일 임박 (3일 이내): 매일 cron 또는 대시보드 로드 시 체크
   - 견적서 잠금 해제: update 트리거
   - 견적서 확정/발송: update 트리거
 
 **통합 검색**
-- `src/app/(dashboard)/search/page.tsx` — 검색 결과 페이지
-- `src/components/layout/search-bar.tsx` — 헤더 검색바 (Cmd+K 단축키)
-- `src/app/api/search/route.ts` — 검색 API
-  - PostgreSQL `to_tsvector('korean', ...)` + `to_tsquery` 또는 `ILIKE` 패턴
-  - 검색 대상: estimates(project_name, client_name), meetings(title, content), payments(name, note), retrospectives(keeps, problems, tries)
-  - 결과: 테이블별 그룹핑 + 하이라이트
+- `src/app/(dashboard)/search/page.tsx` ✅ 파일 존재
+- `src/components/layout/search-bar.tsx` ✅ 파일 존재
+- `src/app/api/search/route.ts` ✅ 파일 존재
+- 실제 검색 로직 (ILIKE/to_tsvector): 🔲 미구현
 
-#### P0-C: 모바일 반응형 (Worker C — Sonnet)
+#### P0-C: 모바일 반응형 (Worker C — Sonnet) — 🔲 미착수
 
 - 전 페이지 `md:` breakpoint 검수
 - 테이블 → 모바일에서 카드 뷰 전환 (또는 수평 스크롤)
@@ -209,19 +222,19 @@ v0.1에서 구축한 CRUD 기반 업무 도구를 **실무 운영 수준**으로
 
 ---
 
-### P1: 회의록 강화
+### P1: 회의록 강화 — 🔲 미착수
 
 #### P1-A: Google Sheets 자동 연동 (Worker A — Sonnet)
 
 **Sheets URL → 회의록 자동 매핑**
 - `/meetings/import` 페이지 확장
   - 기존 텍스트 붙여넣기 + **신규** Sheets URL 입력 탭
-  - URL 입력 → `src/app/api/meetings/import-sheets/route.ts`
+  - URL 입력 → `src/app/api/meetings/import-sheets/route.ts` ✅ 파일 존재
   - Sheets API로 데이터 읽기 → Gemini API로 필드 자동 매핑 (제목, 날짜, 참석자, 내용, 액션아이템)
   - 매핑 결과 미리보기 → 사용자 확인 → 저장
 
 **회의록 → Sheets 내보내기**
-- `src/app/api/meetings/[id]/sheets/route.ts`
+- `src/app/api/meetings/[id]/sheets/route.ts` ✅ 파일 존재
 - 상세 페이지에 "Sheets 내보내기" 버튼
 
 #### P1-B: 회의록 UX 개선 (Worker B — Sonnet)
@@ -233,7 +246,7 @@ v0.1에서 구축한 CRUD 기반 업무 도구를 **실무 운영 수준**으로
 - 정렬: 날짜순 / 미완료 액션아이템 우선
 
 **액션아이템 대시보드**
-- `/meetings/action-items` — 전체 액션아이템 통합 뷰
+- `/meetings/action-items` — 전체 액션아이템 통합 뷰 ✅ 파일 존재
 - 필터: 담당자별, 상태별, 마감일별
 - 진행률 시각화 (프로그레스 바)
 - 타임라인 뷰 (날짜별 카드)
@@ -244,12 +257,14 @@ v0.1에서 구축한 CRUD 기반 업무 도구를 **실무 운영 수준**으로
 
 ---
 
-### P2: 아바타 고도화
+### P2: 아바타 고도화 — 🔲 미착수
+
+> 업로드 페이지 스캐폴딩만 존재
 
 #### P2-A: 데이터 학습 + 감정 분석 (Worker A — Opus)
 
 **대화 데이터 업로드**
-- `/predict/avatars/[id]/upload` — 데이터 업로드 페이지
+- `/predict/avatars/[id]/upload` — 데이터 업로드 페이지 ✅ 파일 존재
 - 지원 형식: `.txt` (카카오톡 내보내기), `.csv` (이메일 대화)
 - 파서: 카톡 형식 (`yyyy.mm.dd hh:mm, 이름 : 메시지`) + CSV
 - `src/app/api/predict/analyze-conversation/route.ts`
@@ -288,7 +303,7 @@ v0.1에서 구축한 CRUD 기반 업무 도구를 **실무 운영 수준**으로
 
 ---
 
-### P3: 견적서 실시간 동시 편집
+### P3: 견적서 실시간 동시 편집 — 🔲 미착수
 
 > 난이도 높음 — Opus 전용 Phase
 
@@ -318,56 +333,42 @@ v0.1에서 구축한 CRUD 기반 업무 도구를 **실무 운영 수준**으로
 - 충돌 발생 시 최신 값 자동 반영 + 이전 값 undo 가능
 
 **견적서 템플릿**
-- `/estimates/templates` — 템플릿 목록 페이지
+- `/estimates/templates` — 템플릿 목록 페이지 ✅ 파일 존재
 - 자주 사용하는 항목 세트를 템플릿으로 저장
 - 견적서 생성 시 템플릿 선택 → 항목 자동 채움
-- DB: `estimate_templates`, `estimate_template_items` 테이블
+- DB: `estimate_templates`, `estimate_template_items` 테이블 ✅ 마이그레이션 존재
 
 ---
 
-### P4: 프로젝트 관리 통합
+### P4: 프로젝트 관리 통합 — ⏸️ v0.3 이관
 
-#### P4-A: 프로젝트 허브 + 리뷰 (Worker A — Sonnet)
+> **결정 사항 (2026-02-26)**: 프로젝트 메뉴를 다른 용도로 재설계 예정.
+> 현재 견적서/회의록/회고/입금과의 연결은 불필요하므로 v0.3에서 리워크.
+> Post-mortem만 v0.2에서 완료.
 
-**프로젝트 허브**
-- `/projects` — 프로젝트 목록
-- `/projects/[id]` — 프로젝트 상세 (허브)
-  - 연결된 견적서, 회의록, 회고, 입금 요청을 한 화면에 표시
-  - 탭: 개요 / 견적서 / 회의록 / 회고 / 입금
-- DB: `projects` 테이블 확장 (현재 retrospectives에 project_name으로만 존재)
-  - `projects`에 상태 (진행중/완료/보류), 시작일, 종료일, 담당자 추가
-  - 견적서/회의록/입금에 `project_id` FK 추가 (nullable, 점진 마이그레이션)
+#### P4-A: 프로젝트 허브 + 리뷰 — ⏸️ v0.3 이관
 
-**프로젝트 리뷰**
-- `/projects/[id]/review` — 프로젝트 완료 후 성과 리뷰
-  - 목표 대비 달성도 (수동 입력)
-  - 타임라인 분석: 회의록 날짜 기준 이벤트 타임라인
-  - 팀 피드백 종합: 해당 프로젝트 회고 통합 인사이트 연동
-  - 견적 vs 실제 비용 비교 (입금 데이터 연동)
+- `/projects` 프로젝트 목록 ✅ 파일 존재 (사이드바 비활성)
+- `/projects/[id]` 프로젝트 상세 ✅ 파일 존재 (사이드바 비활성)
+- `/projects/[id]/review` 리뷰 ✅ 파일 존재 (사이드바 비활성)
+- 모두 v0.3에서 용도 재정의 후 리워크
 
-#### P4-B: Post-mortem (Worker B — Sonnet)
+#### P4-B: Post-mortem — ✅ 완료
 
 **Post-mortem 시스템**
-- `/projects/[id]/postmortem` — 사후 분석 페이지
-- DB: `postmortems` 테이블
-  ```
-  id, project_id, title, incident_date, severity(low/medium/high/critical),
-  timeline (jsonb), root_cause, lessons_learned, action_items (jsonb),
-  created_by, created_at, updated_at
-  ```
-- 입력 폼:
-  - 사건 제목, 날짜, 심각도
-  - 타임라인: 시간순 이벤트 동적 추가 (시각 + 내용)
-  - 근본 원인 (Textarea)
-  - 교훈 도출 (동적 리스트)
-  - 재발 방지 액션아이템 (담당자 + 마감일 + 상태)
-- 뷰:
-  - 타임라인 시각화 (세로 타임라인 UI)
-  - 심각도 배지 색상 코딩
+- `/projects/[id]/postmortem` — 사후 분석 페이지 ✅
+- `/retrospective/postmortem` — 포스트모템 목록 + 작성 버튼 ✅
+- DB: `postmortems` 테이블 (009 마이그레이션) ✅
+- **타임라인 회고 구조로 고도화** (원래 계획보다 확장):
+  - 각 타임라인 항목에 날짜+시간+제목+설명+근본원인+교훈+액션아이템 포함
+  - Accordion UI로 접기/펼치기
+  - 뷰 페이지: 근본원인(빨강)/교훈(파랑)/액션아이템(초록) 색상 구분
+  - 하위 호환: 기존 DB 컬럼에도 통합 데이터 저장
+- 심각도 배지 색상 코딩 ✅
 
 ---
 
-### P5: 운영 인프라
+### P5: 운영 인프라 — 🔲 미착수
 
 #### P5-A: Docker 배포 + 백업 (Worker A — Opus)
 
@@ -413,15 +414,15 @@ v0.1에서 구축한 CRUD 기반 업무 도구를 **실무 운영 수준**으로
 
 ## 6) DB 마이그레이션 계획
 
-| 마이그레이션 | Phase | 테이블/변경사항 |
-|---|---|---|
-| `008_notifications.sql` | P0 | notifications 테이블 |
-| `009_search_index.sql` | P0 | GIN 인덱스 (to_tsvector) for 검색 |
-| `010_meetings_enhance.sql` | P1 | meetings에 project_id FK 추가, action_items에 인덱스 |
-| `011_avatar_uploads.sql` | P2 | avatar_training_data 테이블 (업로드 이력) |
-| `012_realtime_estimates.sql` | P3 | estimate_items에 last_edited_by/at, estimate_templates/items 테이블 |
-| `013_projects.sql` | P4 | projects 테이블 확장, estimates/meetings/payments에 project_id FK, postmortems 테이블 |
-| `014_audit_rollback.sql` | P5 | audit_logs에 rollback_of UUID FK (롤백 연쇄 추적) |
+| 마이그레이션 | Phase | 테이블/변경사항 | 상태 |
+|---|---|---|---|
+| `008_notifications.sql` | P0 | notifications 테이블 | ✅ 파일 존재 |
+| `009_projects_enhance.sql` | P4 | projects 확장 + postmortems + avatar_training_data + estimate_templates | ✅ 적용됨 |
+| `011_retrospective_scoring.sql` | 추가 | retrospectives에 점수/종합의견, summaries에 이슈/액션/교훈 | ✅ 적용됨 |
+| `009_search_index.sql` | P0 | GIN 인덱스 (to_tsvector) for 검색 | 🔲 미생성 |
+| `010_meetings_enhance.sql` | P1 | meetings에 project_id FK 추가, action_items에 인덱스 | 🔲 미생성 |
+| `012_realtime_estimates.sql` | P3 | estimate_items에 last_edited_by/at | 🔲 미생성 |
+| `014_audit_rollback.sql` | P5 | audit_logs에 rollback_of UUID FK | 🔲 미생성 |
 
 ---
 
@@ -443,8 +444,8 @@ v0.1에서 구축한 CRUD 기반 업무 도구를 **실무 운영 수준**으로
 | P2 | 시뮬레이션 시나리오 선택 → 채팅 → 결과 저장 | 시뮬레이션 |
 | P3 | 2탭 동시 접속 → 같은 견적서 → 셀 수정 → 실시간 반영 | Realtime |
 | P3 | 접속자 아바타 표시 → 편집 셀 하이라이트 | Presence |
-| P4 | 프로젝트 허브 → 연결 데이터 표시 → 리뷰 작성 | 허브 통합 |
-| P4 | Post-mortem 생성 → 타임라인 → 액션아이템 | Post-mortem |
+| ~~P4~~ | ~~프로젝트 허브 → 연결 데이터 표시 → 리뷰 작성~~ | ~~v0.3 이관~~ |
+| P4-B | Post-mortem 생성 → 타임라인 회고 → 액션아이템 | ✅ 수동 테스트 완료 |
 | P5 | Docker build → 컨테이너 실행 → 헬스체크 | 배포 |
 | P5 | 롤백 버튼 → 확인 → 데이터 복원 확인 | 롤백 정합성 |
 | P5 | 전체 E2E 회귀: 로그인→회고→회의록→입금→견적서→채팅→설정 | 회귀 |
@@ -481,7 +482,7 @@ v0.1에서 구축한 CRUD 기반 업무 도구를 **실무 운영 수준**으로
 | **Staging** | Vercel | main 머지 후 통합 확인 | main push 시 자동 |
 | **Production** | Vultr (Docker Compose) | 최종 프로덕션 | P5 완료 후 수동 배포 |
 
-- **P0~P4**: Vercel Preview/Staging에서 개발+테스트
+- **P0~P3**: Vercel Preview/Staging에서 개발+테스트
 - **P5**: Docker Compose 구성 + Vultr 서버 세팅 + 프로덕션 최초 배포
 - **이후**: `main` push → Staging 자동 → 수동 승인 → Vultr 배포
 
@@ -526,11 +527,14 @@ workspace/logs/
 
 ## 12) v0.3 로드맵 (예비)
 
-| 기능 | 설명 |
-|---|---|
-| 클라이언트 포털 | 외부 클라이언트 전용 견적서 확인/승인 공개 링크 |
-| 대시보드 커스터마이징 | 위젯 순서 변경, 숨기기, 개인 설정 저장 |
-| 이메일 알림 | Slack 외 이메일 알림 채널 추가 (Resend API) |
-| API 키 관리 | 외부 연동용 API 키 생성/관리 페이지 |
-| 다국어 지원 | next-intl 기반 영문/한글 전환 |
-| 성능 최적화 | ISR, Edge Runtime, 이미지 최적화, 번들 분석 |
+| 기능 | 설명 | 상태 |
+|---|---|---|
+| 프로젝트 메뉴 리워크 | 프로젝트를 다른 용도로 재설계, 견적서/회의록/회고/입금 연결 해제 | 사이드바 비활성 처리 완료 |
+| 결제 대량전송 | 복수 항목 선택 → 은행 대량전송용 엑셀 다운로드 | 사이드바 비활성 처리 완료 |
+| 계산서 발행 조회 | 외부 API 연동 세금계산서 발행 여부 확인 | 사이드바 비활성 처리 완료 |
+| 클라이언트 포털 | 외부 클라이언트 전용 견적서 확인/승인 공개 링크 | |
+| 대시보드 커스터마이징 | 위젯 순서 변경, 숨기기, 개인 설정 저장 | |
+| 이메일 알림 | Slack 외 이메일 알림 채널 추가 (Resend API) | |
+| API 키 관리 | 외부 연동용 API 키 생성/관리 페이지 | |
+| 다국어 지원 | next-intl 기반 영문/한글 전환 | |
+| 성능 최적화 | ISR, Edge Runtime, 이미지 최적화, 번들 분석 | |
