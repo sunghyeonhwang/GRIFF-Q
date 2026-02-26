@@ -68,7 +68,16 @@ export const MENU_ITEMS: MenuItem[] = [
       { title: "계산서", url: "/payments/invoice", disabled: true },
     ],
   },
-  { title: "견적서", url: "/estimates", icon: Calculator, minRole: "normal" },
+  {
+    title: "견적서",
+    url: "/estimates",
+    icon: Calculator,
+    minRole: "normal",
+    children: [
+      { title: "심플 견적", url: "/estimates" },
+      { title: "동시견적 확인", url: "/estimates/collab" },
+    ],
+  },
   {
     title: "프로젝트",
     url: "/projects",
