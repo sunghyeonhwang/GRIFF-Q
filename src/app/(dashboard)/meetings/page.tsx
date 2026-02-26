@@ -11,7 +11,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Plus, FileSpreadsheet } from "lucide-react";
+import { Plus, FileSpreadsheet, CheckSquare } from "lucide-react";
 
 export default async function MeetingsPage() {
   const user = await requireAuth();
@@ -56,6 +56,12 @@ export default async function MeetingsPage() {
           </p>
         </div>
         <div className="flex gap-2">
+          <Link href="/meetings/action-items">
+            <Button variant="outline">
+              <CheckSquare className="mr-2 size-4" />
+              액션아이템
+            </Button>
+          </Link>
           <Link href="/meetings/import">
             <Button variant="outline">
               <FileSpreadsheet className="mr-2 size-4" />

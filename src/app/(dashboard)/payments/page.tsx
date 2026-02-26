@@ -12,7 +12,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Plus } from "lucide-react";
+import { Plus, FileSpreadsheet } from "lucide-react";
 import { PaymentStatusActions } from "@/components/payments/payment-status-actions";
 
 export default async function PaymentsPage() {
@@ -48,12 +48,20 @@ export default async function PaymentsPage() {
             결제 요청을 등록하고 입금 상태를 관리합니다.
           </p>
         </div>
-        <Link href="/payments/new">
-          <Button>
-            <Plus className="mr-2 size-4" />
-            요청 등록
-          </Button>
-        </Link>
+        <div className="flex items-center gap-2">
+          <a href="/api/payments/export" target="_blank" rel="noopener noreferrer">
+            <Button variant="outline">
+              <FileSpreadsheet className="mr-2 size-4" />
+              Excel 내보내기
+            </Button>
+          </a>
+          <Link href="/payments/new">
+            <Button>
+              <Plus className="mr-2 size-4" />
+              요청 등록
+            </Button>
+          </Link>
+        </div>
       </div>
 
       {/* 요약 카드 */}

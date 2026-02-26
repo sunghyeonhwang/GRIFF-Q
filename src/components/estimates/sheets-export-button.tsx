@@ -1,0 +1,45 @@
+"use client";
+
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Sheet, Loader2 } from "lucide-react";
+
+interface SheetsExportButtonProps {
+  estimateId: string;
+}
+
+export function SheetsExportButton({ estimateId }: SheetsExportButtonProps) {
+  const [loading, setLoading] = useState(false);
+
+  async function handleExport() {
+    setLoading(true);
+    try {
+      const res = await fetch(`/api/estimates/${estimateId}/sheets`, {
+        method: "POST",
+      });
+      const data = await res.json();
+
+      if (!res.ok) {
+        alert(data.error || "Google Sheets 내보내기에 실패했습니다.");
+        return;
+      }
+
+      window.open(data.url, "_blank");
+    } catch {
+      alert("Google Sheets 내보내기에 실패했습니다.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <Button variant="outline" onClick={handleExport} disabled={loading}>
+      {loading ? (
+        <Loader2 className="mr-2 size-4 animate-spin" />
+      ) : (
+        <Sheet className="mr-2 size-4" />
+      )}
+      Sheets
+    </Button>
+  );
+}

@@ -13,7 +13,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { ArrowLeft, Pencil, GitCompareArrows } from "lucide-react";
+import { ArrowLeft, Pencil, GitCompareArrows, Download, FileSpreadsheet } from "lucide-react";
+import { SheetsExportButton } from "@/components/estimates/sheets-export-button";
 import {
   ESTIMATE_STATUS_LABELS,
   ESTIMATE_STATUS_VARIANTS,
@@ -84,6 +85,19 @@ export default async function EstimateDetailPage({
           </div>
         </div>
         <div className="flex items-center gap-2">
+          <a href={`/api/estimates/${id}/pdf`} target="_blank" rel="noopener noreferrer">
+            <Button variant="outline">
+              <Download className="mr-2 size-4" />
+              PDF
+            </Button>
+          </a>
+          <a href={`/api/estimates/${id}/excel`} target="_blank" rel="noopener noreferrer">
+            <Button variant="outline">
+              <FileSpreadsheet className="mr-2 size-4" />
+              Excel
+            </Button>
+          </a>
+          <SheetsExportButton estimateId={id} />
           <Link href={`/estimates/${id}/compare`}>
             <Button variant="outline">
               <GitCompareArrows className="mr-2 size-4" />

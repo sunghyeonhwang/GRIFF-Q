@@ -2,11 +2,16 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { requireAuth } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
-import { EstimateForm } from "@/components/estimates/estimate-form";
+import { RealtimeEstimateEditor } from "@/components/estimates/realtime-estimate-editor";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowLeft } from "lucide-react";
-import { LOCK_TIMEOUT_MINUTES } from "@/lib/estimate-constants";
+import {
+  LOCK_TIMEOUT_MINUTES,
+  ESTIMATE_STATUS_LABELS,
+  ESTIMATE_STATUS_VARIANTS,
+} from "@/lib/estimate-constants";
 
 export default async function EditEstimatePage({
   params,
@@ -56,48 +61,79 @@ export default async function EditEstimatePage({
     );
   }
 
-  // 편집 잠금 체크
-  if (estimate.locked_by && estimate.locked_by !== user.id && estimate.locked_at) {
-    const lockedAt = new Date(estimate.locked_at);
-    const now = new Date();
-    const diffMinutes = (now.getTime() - lockedAt.getTime()) / (1000 * 60);
-
-    if (diffMinutes < LOCK_TIMEOUT_MINUTES) {
-      return (
-        <div className="space-y-6">
-          <div className="flex items-center gap-3">
-            <Link href={`/estimates/${id}`}>
-              <Button variant="ghost" size="icon">
-                <ArrowLeft className="size-4" />
-              </Button>
-            </Link>
-            <h1 className="text-2xl font-bold">견적서 수정</h1>
-          </div>
-          <Card>
-            <CardContent className="py-8 text-center text-muted-foreground">
-              다른 사용자가 편집 중입니다. 잠시 후 다시 시도해 주세요.
-            </CardContent>
-          </Card>
-        </div>
-      );
-    }
-  }
-
   return (
     <div className="space-y-6">
+      {/* Header */}
       <div className="flex items-center gap-3">
         <Link href={`/estimates/${id}`}>
           <Button variant="ghost" size="icon">
             <ArrowLeft className="size-4" />
           </Button>
         </Link>
-        <h1 className="text-2xl font-bold">견적서 수정</h1>
+        <div>
+          <h1 className="text-2xl font-bold">견적서 실시간 편집</h1>
+          <p className="text-sm text-muted-foreground mt-1">
+            변경사항이 자동 저장됩니다.
+          </p>
+        </div>
       </div>
-      <EstimateForm
-        userId={user.id}
-        initialData={estimate}
-        initialItems={estimateItems ?? []}
-      />
+
+      {/* Estimate basic info (read-only) */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <CardTitle>견적 정보</CardTitle>
+            <Badge
+              variant={
+                ESTIMATE_STATUS_VARIANTS[estimate.status] ?? "outline"
+              }
+            >
+              {ESTIMATE_STATUS_LABELS[estimate.status] ?? estimate.status}
+            </Badge>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <dl className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+            <div>
+              <dt className="text-muted-foreground">프로젝트명</dt>
+              <dd className="font-semibold mt-1">{estimate.project_name}</dd>
+            </div>
+            <div>
+              <dt className="text-muted-foreground">클라이언트</dt>
+              <dd className="font-medium mt-1">{estimate.client_name}</dd>
+            </div>
+            <div>
+              <dt className="text-muted-foreground">견적일</dt>
+              <dd className="font-medium mt-1">
+                {estimate.estimate_date
+                  ? new Date(estimate.estimate_date).toLocaleDateString("ko-KR")
+                  : "-"}
+              </dd>
+            </div>
+            <div>
+              <dt className="text-muted-foreground">작성자</dt>
+              <dd className="font-medium mt-1">
+                {(estimate as any).users?.name ?? "-"}
+              </dd>
+            </div>
+          </dl>
+        </CardContent>
+      </Card>
+
+      {/* Realtime editor */}
+      <Card>
+        <CardHeader>
+          <CardTitle>견적 항목</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <RealtimeEstimateEditor
+            estimateId={id}
+            initialItems={estimateItems ?? []}
+            userId={user.id}
+            userName={user.name}
+          />
+        </CardContent>
+      </Card>
     </div>
   );
 }

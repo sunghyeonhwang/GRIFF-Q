@@ -13,7 +13,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { ArrowLeft, Pencil } from "lucide-react";
+import { ArrowLeft, Pencil, FileSpreadsheet } from "lucide-react";
+import { SheetsExportButton } from "@/components/meetings/sheets-export-button";
 
 export default async function MeetingDetailPage({
   params,
@@ -83,12 +84,21 @@ export default async function MeetingDetailPage({
             </div>
           </div>
         </div>
-        <Link href={`/meetings/${id}/edit`}>
-          <Button variant="outline">
-            <Pencil className="mr-2 size-4" />
-            수정
-          </Button>
-        </Link>
+        <div className="flex items-center gap-2">
+          <a href={`/api/meetings/${id}/excel`} target="_blank" rel="noopener noreferrer">
+            <Button variant="outline">
+              <FileSpreadsheet className="mr-2 size-4" />
+              Excel
+            </Button>
+          </a>
+          <SheetsExportButton meetingId={id} />
+          <Link href={`/meetings/${id}/edit`}>
+            <Button variant="outline">
+              <Pencil className="mr-2 size-4" />
+              수정
+            </Button>
+          </Link>
+        </div>
       </div>
 
       {/* 참석자 */}

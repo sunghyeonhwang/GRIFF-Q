@@ -7,6 +7,9 @@ import {
   FolderKanban,
   Brain,
   Settings,
+  BookOpen,
+  Repeat,
+  AlertTriangle,
   type LucideIcon,
 } from "lucide-react";
 import { type UserRole, hasMinimumRole } from "@/types/auth.types";
@@ -16,6 +19,8 @@ export interface MenuItem {
   url: string;
   icon: LucideIcon;
   minRole: UserRole;
+  disabled?: boolean;
+  children?: { title: string; url: string }[];
 }
 
 export const MENU_ITEMS: MenuItem[] = [
@@ -30,6 +35,11 @@ export const MENU_ITEMS: MenuItem[] = [
     url: "/retrospective",
     icon: MessageSquareText,
     minRole: "normal",
+    children: [
+      { title: "사용가이드", url: "/retrospective/guide" },
+      { title: "스프린트", url: "/retrospective/sprint" },
+      { title: "포스트모템", url: "/retrospective/postmortem" },
+    ],
   },
   { title: "회의록", url: "/meetings", icon: FileText, minRole: "normal" },
   { title: "입금/결제", url: "/payments", icon: CreditCard, minRole: "normal" },
@@ -39,6 +49,7 @@ export const MENU_ITEMS: MenuItem[] = [
     url: "/projects",
     icon: FolderKanban,
     minRole: "normal",
+    disabled: true,
   },
   {
     title: "클라이언트 예측",

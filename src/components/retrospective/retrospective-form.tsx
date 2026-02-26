@@ -3,12 +3,19 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import { ROLES } from "@/lib/retrospective-constants";
+import {
+  ROLES,
+  EVALUATION_PARTS,
+  SATISFACTION_ITEMS,
+  SCORE_LABELS,
+  type PartEvaluation,
+} from "@/lib/retrospective-constants";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Badge } from "@/components/ui/badge";
 import {
   Card,
   CardContent,
@@ -31,7 +38,13 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Plus, Trash2 } from "lucide-react";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
+import { Plus, Trash2, Star } from "lucide-react";
 
 interface Project {
   id: string;
@@ -44,12 +57,24 @@ interface RetrospectiveData {
   period_start: string;
   period_end: string;
   roles: string[];
+  // 만족도 점수
+  satisfaction_scores: Record<string, number>;
+  // 파트별 평가
+  part_evaluations: PartEvaluation[];
+  // KPT
   keep: string[];
   problem: string[];
   try: string[];
+  // SSC
   start_items: string[];
   stop: string[];
   continue_items: string[];
+  // 종합 의견
+  overall_best: string;
+  overall_worst: string;
+  overall_improvement: string;
+  overall_message: string;
+  // 공유 메모 (기존 유지)
   team_share_note: string;
   next_action_note: string;
   status: string;
@@ -61,6 +86,49 @@ interface RetrospectiveFormProps {
   projects: Project[];
   initialData?: any;
   readOnly?: boolean;
+}
+
+function initPartEvaluations(existing?: PartEvaluation[]): PartEvaluation[] {
+  return EVALUATION_PARTS.map((part) => {
+    const found = existing?.find((e) => e.part === part);
+    return found ?? { part, score: 0, good: "", bad: "", reason: "", improvement: "" };
+  });
+}
+
+function ScoreSelector({
+  value,
+  onChange,
+  disabled,
+}: {
+  value: number;
+  onChange: (v: number) => void;
+  disabled?: boolean;
+}) {
+  return (
+    <div className="flex items-center gap-1">
+      {[1, 2, 3, 4, 5].map((n) => (
+        <button
+          key={n}
+          type="button"
+          disabled={disabled}
+          onClick={() => onChange(n)}
+          className={`flex size-8 items-center justify-center rounded-md border text-sm font-medium transition-colors ${
+            value === n
+              ? "border-primary bg-primary text-primary-foreground"
+              : "border-input hover:bg-accent"
+          } ${disabled ? "cursor-default opacity-60" : "cursor-pointer"}`}
+          title={SCORE_LABELS[n]}
+        >
+          {n}
+        </button>
+      ))}
+      {value > 0 && (
+        <span className="ml-2 text-xs text-muted-foreground">
+          {SCORE_LABELS[value]}
+        </span>
+      )}
+    </div>
+  );
 }
 
 export function RetrospectiveForm({
@@ -81,12 +149,18 @@ export function RetrospectiveForm({
     period_start: initialData?.period_start ?? "",
     period_end: initialData?.period_end ?? "",
     roles: initialData?.roles ?? [],
+    satisfaction_scores: initialData?.satisfaction_scores ?? {},
+    part_evaluations: initPartEvaluations(initialData?.part_evaluations),
     keep: initialData?.keep?.length ? initialData.keep : [""],
     problem: initialData?.problem?.length ? initialData.problem : [""],
     try: initialData?.try?.length ? initialData.try : [""],
     start_items: initialData?.start_items?.length ? initialData.start_items : [""],
     stop: initialData?.stop?.length ? initialData.stop : [""],
     continue_items: initialData?.continue_items?.length ? initialData.continue_items : [""],
+    overall_best: initialData?.overall_best ?? "",
+    overall_worst: initialData?.overall_worst ?? "",
+    overall_improvement: initialData?.overall_improvement ?? "",
+    overall_message: initialData?.overall_message ?? "",
     team_share_note: initialData?.team_share_note ?? "",
     next_action_note: initialData?.next_action_note ?? "",
     status: initialData?.status ?? "draft",
@@ -99,6 +173,21 @@ export function RetrospectiveForm({
         ? prev.roles.filter((r) => r !== role)
         : [...prev.roles, role],
     }));
+  }
+
+  function setSatisfaction(key: string, value: number) {
+    setForm((prev) => ({
+      ...prev,
+      satisfaction_scores: { ...prev.satisfaction_scores, [key]: value },
+    }));
+  }
+
+  function updatePartEval(index: number, field: keyof PartEvaluation, value: string | number) {
+    setForm((prev) => {
+      const evals = [...prev.part_evaluations];
+      evals[index] = { ...evals[index], [field]: value };
+      return { ...prev, part_evaluations: evals };
+    });
   }
 
   function updateListItem(
@@ -165,18 +254,27 @@ export function RetrospectiveForm({
     setLoading(true);
     const supabase = createClient();
 
+    // 점수 0인 파트 평가는 빈 값으로 처리
+    const filledEvals = form.part_evaluations.filter((e) => e.score > 0);
+
     const payload = {
       project_id: form.project_id,
       author_id: userId,
       period_start: form.period_start,
       period_end: form.period_end,
       roles: form.roles,
+      satisfaction_scores: form.satisfaction_scores,
+      part_evaluations: filledEvals,
       keep: form.keep.filter((v) => v.trim()),
       problem: form.problem.filter((v) => v.trim()),
       try: form.try.filter((v) => v.trim()),
       start_items: form.start_items.filter((v) => v.trim()),
       stop: form.stop.filter((v) => v.trim()),
       continue_items: form.continue_items.filter((v) => v.trim()),
+      overall_best: form.overall_best,
+      overall_worst: form.overall_worst,
+      overall_improvement: form.overall_improvement,
+      overall_message: form.overall_message,
       team_share_note: form.team_share_note,
       next_action_note: form.next_action_note,
       status,
@@ -251,9 +349,21 @@ export function RetrospectiveForm({
     );
   }
 
+  // 만족도 평균 계산
+  const satValues = Object.values(form.satisfaction_scores).filter((v) => v > 0);
+  const satAvg = satValues.length > 0
+    ? (satValues.reduce((a, b) => a + b, 0) / satValues.length).toFixed(1)
+    : "-";
+
+  // 파트 평가 평균
+  const evalScores = form.part_evaluations.filter((e) => e.score > 0);
+  const evalAvg = evalScores.length > 0
+    ? (evalScores.reduce((a, b) => a + b.score, 0) / evalScores.length).toFixed(1)
+    : "-";
+
   return (
     <div className="space-y-6">
-      {/* 기본 정보 */}
+      {/* 1. 기본 정보 */}
       <Card>
         <CardHeader>
           <CardTitle>기본 정보</CardTitle>
@@ -323,7 +433,7 @@ export function RetrospectiveForm({
           </div>
 
           <div className="space-y-2">
-            <Label>역할 (복수 선택)</Label>
+            <Label>담당 역할 (복수 선택)</Label>
             <div className="flex flex-wrap gap-3">
               {ROLES.map((role) => (
                 <label
@@ -343,7 +453,132 @@ export function RetrospectiveForm({
         </CardContent>
       </Card>
 
-      {/* KPT */}
+      {/* 2. 프로젝트 전체 만족도 */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="flex items-center gap-2">
+                <Star className="size-5" />
+                프로젝트 전체 만족도
+              </CardTitle>
+              <CardDescription>각 항목에 1~5점으로 평가해주세요.</CardDescription>
+            </div>
+            {satAvg !== "-" && (
+              <Badge variant="secondary" className="text-base px-3 py-1">
+                평균 {satAvg}점
+              </Badge>
+            )}
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="grid gap-4 sm:grid-cols-2">
+            {SATISFACTION_ITEMS.map((item) => (
+              <div key={item.key} className="flex items-center justify-between rounded-lg border p-3">
+                <Label className="text-sm font-medium">{item.label}</Label>
+                <ScoreSelector
+                  value={form.satisfaction_scores[item.key] ?? 0}
+                  onChange={(v) => setSatisfaction(item.key, v)}
+                  disabled={readOnly}
+                />
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* 3. 파트별 평가 */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle>파트별 평가</CardTitle>
+              <CardDescription>
+                각 파트에 대해 점수(1~5)와 의견을 작성해주세요. 평가할 파트만 작성하면 됩니다.
+              </CardDescription>
+            </div>
+            {evalAvg !== "-" && (
+              <Badge variant="secondary" className="text-base px-3 py-1">
+                평균 {evalAvg}점
+              </Badge>
+            )}
+          </div>
+        </CardHeader>
+        <CardContent>
+          <Accordion type="multiple" className="w-full">
+            {form.part_evaluations.map((pe, idx) => (
+              <AccordionItem key={pe.part} value={pe.part}>
+                <AccordionTrigger className="hover:no-underline">
+                  <div className="flex items-center gap-3">
+                    <span className="text-sm text-muted-foreground w-6">{idx + 1}.</span>
+                    <span className="font-medium">{pe.part}</span>
+                    {pe.score > 0 && (
+                      <Badge
+                        variant={pe.score >= 4 ? "default" : pe.score >= 3 ? "secondary" : "destructive"}
+                        className="text-xs"
+                      >
+                        {pe.score}점
+                      </Badge>
+                    )}
+                  </div>
+                </AccordionTrigger>
+                <AccordionContent className="space-y-3 pt-2">
+                  <div className="flex items-center gap-3">
+                    <Label className="w-16 shrink-0 text-sm">점수</Label>
+                    <ScoreSelector
+                      value={pe.score}
+                      onChange={(v) => updatePartEval(idx, "score", v)}
+                      disabled={readOnly}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-sm">잘한 점</Label>
+                    <Textarea
+                      value={pe.good}
+                      onChange={(e) => updatePartEval(idx, "good", e.target.value)}
+                      placeholder="이 파트에서 잘한 점을 작성해주세요."
+                      rows={2}
+                      disabled={readOnly}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-sm">아쉬운 점</Label>
+                    <Textarea
+                      value={pe.bad}
+                      onChange={(e) => updatePartEval(idx, "bad", e.target.value)}
+                      placeholder="이 파트에서 아쉬운 점을 작성해주세요."
+                      rows={2}
+                      disabled={readOnly}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-sm">점수 근거</Label>
+                    <Textarea
+                      value={pe.reason}
+                      onChange={(e) => updatePartEval(idx, "reason", e.target.value)}
+                      placeholder="위 점수를 준 이유를 설명해주세요."
+                      rows={2}
+                      disabled={readOnly}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-sm">다음 프로젝트 개선안</Label>
+                    <Textarea
+                      value={pe.improvement}
+                      onChange={(e) => updatePartEval(idx, "improvement", e.target.value)}
+                      placeholder="다음 프로젝트에서 개선할 방법을 제안해주세요."
+                      rows={2}
+                      disabled={readOnly}
+                    />
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
+            ))}
+          </Accordion>
+        </CardContent>
+      </Card>
+
+      {/* 4. KPT */}
       <Card>
         <CardHeader>
           <CardTitle>KPT</CardTitle>
@@ -356,7 +591,7 @@ export function RetrospectiveForm({
         </CardContent>
       </Card>
 
-      {/* SSC */}
+      {/* 5. SSC */}
       <Card>
         <CardHeader>
           <CardTitle>SSC</CardTitle>
@@ -369,7 +604,65 @@ export function RetrospectiveForm({
         </CardContent>
       </Card>
 
-      {/* 공유 메모 */}
+      {/* 6. 종합 의견 */}
+      <Card>
+        <CardHeader>
+          <CardTitle>종합 의견</CardTitle>
+          <CardDescription>프로젝트 전체에 대한 의견을 작성해주세요.</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <Label>이번 프로젝트에서 가장 잘한 점</Label>
+            <Textarea
+              value={form.overall_best}
+              onChange={(e) =>
+                setForm((prev) => ({ ...prev, overall_best: e.target.value }))
+              }
+              placeholder="팀이 가장 잘 해낸 부분을 작성해주세요."
+              rows={3}
+              disabled={readOnly}
+            />
+          </div>
+          <div className="space-y-2">
+            <Label>이번 프로젝트에서 가장 아쉬운 점</Label>
+            <Textarea
+              value={form.overall_worst}
+              onChange={(e) =>
+                setForm((prev) => ({ ...prev, overall_worst: e.target.value }))
+              }
+              placeholder="가장 아쉬웠던 부분을 작성해주세요."
+              rows={3}
+              disabled={readOnly}
+            />
+          </div>
+          <div className="space-y-2">
+            <Label>다음 프로젝트에 반드시 개선할 사항</Label>
+            <Textarea
+              value={form.overall_improvement}
+              onChange={(e) =>
+                setForm((prev) => ({ ...prev, overall_improvement: e.target.value }))
+              }
+              placeholder="반드시 개선해야 할 사항을 작성해주세요."
+              rows={3}
+              disabled={readOnly}
+            />
+          </div>
+          <div className="space-y-2">
+            <Label>팀원들에게 전하고 싶은 말</Label>
+            <Textarea
+              value={form.overall_message}
+              onChange={(e) =>
+                setForm((prev) => ({ ...prev, overall_message: e.target.value }))
+              }
+              placeholder="팀원들에게 하고 싶은 말을 자유롭게 작성해주세요."
+              rows={3}
+              disabled={readOnly}
+            />
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* 7. 공유 메모 (기존) */}
       <Card>
         <CardHeader>
           <CardTitle>공유 메모 (선택)</CardTitle>
