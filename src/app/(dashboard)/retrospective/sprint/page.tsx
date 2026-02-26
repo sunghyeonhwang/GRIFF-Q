@@ -120,7 +120,7 @@ export default async function RetrospectivePage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-bold">스프린트 회고</h1>
           <p className="text-muted-foreground">
@@ -158,7 +158,7 @@ export default async function RetrospectivePage() {
         {/* 내 회고 탭 */}
         <TabsContent value="mine" className="space-y-4">
           {myRetros.length > 0 ? (
-            <div className="rounded-lg border">
+            <div className="rounded-lg border overflow-x-auto">
               <Table>
                 <TableHeader>
                   <TableRow>
@@ -256,7 +256,7 @@ export default async function RetrospectivePage() {
                   </AccordionTrigger>
                   <AccordionContent>
                     {p.retros.length > 0 ? (
-                      <div className="rounded-lg border">
+                      <div className="rounded-lg border overflow-x-auto">
                         <Table>
                           <TableHeader>
                             <TableRow>

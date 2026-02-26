@@ -46,7 +46,7 @@ export default async function RetrospectiveGuidePage() {
           {/* 만족도 */}
           <div className="rounded-lg border p-4 space-y-2">
             <h3 className="font-semibold">프로젝트 전체 만족도 (1~5점)</h3>
-            <div className="grid grid-cols-2 gap-2 text-muted-foreground">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-muted-foreground">
               <div><strong className="text-foreground">클라이언트 만족도</strong> — 고객 만족 수준</div>
               <div><strong className="text-foreground">내부 팀 만족도</strong> — 팀 내부 만족 수준</div>
               <div><strong className="text-foreground">일정 준수율</strong> — 일정 내 완료 여부</div>
@@ -83,7 +83,7 @@ export default async function RetrospectiveGuidePage() {
           {/* 점수 기준 */}
           <div className="rounded-lg border p-4 space-y-2">
             <h3 className="font-semibold">점수 기준</h3>
-            <div className="grid grid-cols-5 gap-2 text-center text-sm">
+            <div className="grid grid-cols-3 sm:grid-cols-5 gap-2 text-center text-sm">
               <div className="rounded bg-red-100 dark:bg-red-950 p-2">
                 <div className="font-bold">1점</div>
                 <div className="text-muted-foreground text-xs">매우 미흡</div>

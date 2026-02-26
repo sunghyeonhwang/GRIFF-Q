@@ -36,14 +36,14 @@ export default async function PaymentsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-bold">결제</h1>
           <p className="text-muted-foreground">
             결제해야 할 항목을 관리합니다. 계좌번호와 금액을 복사할 수 있습니다.
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <a href="/api/payments/export" target="_blank" rel="noopener noreferrer">
             <Button variant="outline">
               <FileSpreadsheet className="mr-2 size-4" />
@@ -102,6 +102,7 @@ export default async function PaymentsPage() {
             <CardTitle className="text-lg">결제 대기</CardTitle>
           </CardHeader>
           <CardContent>
+            <div className="overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -143,7 +144,7 @@ export default async function PaymentsPage() {
                         <CopyButton value={String(p.amount)} />
                       </div>
                     </TableCell>
-                    <TableCell className="text-sm text-muted-foreground">
+                    <TableCell className="text-sm text-muted-foreground whitespace-nowrap">
                       {p.due_date
                         ? new Date(p.due_date).toLocaleDateString("ko-KR")
                         : "-"}
@@ -160,6 +161,7 @@ export default async function PaymentsPage() {
                 ))}
               </TableBody>
             </Table>
+            </div>
           </CardContent>
         </Card>
       )}
@@ -173,6 +175,7 @@ export default async function PaymentsPage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
+            <div className="overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -204,7 +207,7 @@ export default async function PaymentsPage() {
                     <TableCell>
                       {Number(p.amount).toLocaleString()}원
                     </TableCell>
-                    <TableCell className="text-sm">
+                    <TableCell className="text-sm whitespace-nowrap">
                       {p.due_date
                         ? new Date(p.due_date).toLocaleDateString("ko-KR")
                         : "-"}
@@ -216,6 +219,7 @@ export default async function PaymentsPage() {
                 ))}
               </TableBody>
             </Table>
+            </div>
           </CardContent>
         </Card>
       )}

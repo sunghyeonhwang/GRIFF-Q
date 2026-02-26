@@ -47,7 +47,16 @@ export const MENU_ITEMS: MenuItem[] = [
       { title: "포스트모템", url: "/retrospective/postmortem" },
     ],
   },
-  { title: "회의록", url: "/meetings", icon: FileText, minRole: "normal" },
+  {
+    title: "회의록",
+    url: "/meetings",
+    icon: FileText,
+    minRole: "normal",
+    children: [
+      { title: "전체 회의록", url: "/meetings" },
+      { title: "액션아이템", url: "/meetings/action-items" },
+    ],
+  },
   {
     title: "입금/결제",
     url: "/payments",

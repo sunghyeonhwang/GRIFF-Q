@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/table";
 import { ArrowLeft, Pencil, FileSpreadsheet } from "lucide-react";
 import { SheetsExportButton } from "@/components/meetings/sheets-export-button";
+import { PrintButton } from "@/components/meetings/print-button";
 
 export default async function MeetingDetailPage({
   params,
@@ -68,9 +69,9 @@ export default async function MeetingDetailPage({
   return (
     <div className="space-y-6">
       {/* 헤더 */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-3">
-          <Link href="/meetings">
+          <Link href="/meetings" className="no-print">
             <Button variant="ghost" size="icon">
               <ArrowLeft className="size-4" />
             </Button>
@@ -84,7 +85,8 @@ export default async function MeetingDetailPage({
             </div>
           </div>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2 no-print">
+          <PrintButton />
           <a href={`/api/meetings/${id}/excel`} target="_blank" rel="noopener noreferrer">
             <Button variant="outline">
               <FileSpreadsheet className="mr-2 size-4" />
@@ -151,6 +153,7 @@ export default async function MeetingDetailPage({
         </CardHeader>
         <CardContent>
           {items.length > 0 ? (
+            <div className="overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -187,6 +190,7 @@ export default async function MeetingDetailPage({
                 ))}
               </TableBody>
             </Table>
+            </div>
           ) : (
             <p className="text-sm text-muted-foreground text-center py-4">
               액션아이템 없음

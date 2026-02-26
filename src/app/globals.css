@@ -124,3 +124,70 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Print styles for meeting detail */
+@media print {
+  /* Hide sidebar, header, and non-print elements */
+  [data-slot="sidebar"],
+  [data-sidebar="sidebar"],
+  header,
+  nav,
+  .no-print,
+  [data-slot="sidebar-trigger"] {
+    display: none !important;
+  }
+
+  /* Reset main content to full width */
+  [data-slot="sidebar-inset"],
+  main {
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  body {
+    background: white !important;
+    color: black !important;
+    font-size: 12pt;
+    line-height: 1.5;
+  }
+
+  /* A4 page settings */
+  @page {
+    size: A4;
+    margin: 15mm;
+  }
+
+  /* Ensure cards and tables print cleanly */
+  .rounded-lg,
+  [data-slot="card"] {
+    border: 1px solid #ddd !important;
+    box-shadow: none !important;
+    break-inside: avoid;
+  }
+
+  table {
+    border-collapse: collapse;
+    width: 100%;
+  }
+
+  th,
+  td {
+    border: 1px solid #ccc !important;
+    padding: 6px 8px !important;
+  }
+
+  /* Badge styles for print */
+  [data-slot="badge"] {
+    border: 1px solid #999 !important;
+    background: transparent !important;
+    color: black !important;
+    padding: 2px 6px !important;
+  }
+
+  a {
+    color: black !important;
+    text-decoration: none !important;
+  }
+}

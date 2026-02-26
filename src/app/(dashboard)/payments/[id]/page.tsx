@@ -33,7 +33,7 @@ export default async function PaymentDetailPage({
   return (
     <div className="space-y-6">
       {/* 헤더 */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-3">
           <Link href="/payments">
             <Button variant="ghost" size="icon">
@@ -48,7 +48,7 @@ export default async function PaymentDetailPage({
             </p>
           </div>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           {payment.status === "pending" && (
             <PaymentStatusActions paymentId={payment.id} userId={user.id} />
           )}
@@ -79,7 +79,7 @@ export default async function PaymentDetailPage({
           <CardTitle>결제 정보</CardTitle>
         </CardHeader>
         <CardContent>
-          <dl className="grid grid-cols-2 gap-4 text-sm">
+          <dl className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
             <div>
               <dt className="text-muted-foreground">금액</dt>
               <dd className="font-semibold text-lg mt-1">

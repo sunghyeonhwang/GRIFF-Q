@@ -1,9 +1,16 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   Table,
   TableBody,
@@ -13,6 +20,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Progress } from "@/components/ui/progress";
 import {
   CheckCircle,
   Circle,
@@ -49,11 +57,27 @@ const STATUS_VARIANTS: Record<string, "default" | "secondary" | "outline" | "des
 
 export function ActionItemsView({ actionItems }: ActionItemsViewProps) {
   const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [assigneeFilter, setAssigneeFilter] = useState<string>("all");
 
-  const filtered =
-    statusFilter === "all"
-      ? actionItems
-      : actionItems.filter((ai) => ai.status === statusFilter);
+  // Extract unique assignee names for filter dropdown
+  const assigneeNames = useMemo(() => {
+    const names = new Set<string>();
+    for (const ai of actionItems) {
+      if (ai.assignee_name) names.add(ai.assignee_name);
+    }
+    return Array.from(names).sort();
+  }, [actionItems]);
+
+  const filtered = useMemo(() => {
+    let result = actionItems;
+    if (statusFilter !== "all") {
+      result = result.filter((ai) => ai.status === statusFilter);
+    }
+    if (assigneeFilter !== "all") {
+      result = result.filter((ai) => ai.assignee_name === assigneeFilter);
+    }
+    return result;
+  }, [actionItems, statusFilter, assigneeFilter]);
 
   const total = actionItems.length;
   const pending = actionItems.filter((ai) => ai.status === "pending").length;
@@ -110,27 +134,39 @@ export function ActionItemsView({ actionItems }: ActionItemsViewProps) {
             <span className="text-sm font-medium">전체 완료율</span>
             <span className="text-sm text-muted-foreground">{completionRate}%</span>
           </div>
-          <div className="h-2 w-full rounded-full bg-muted">
-            <div
-              className="h-full rounded-full bg-primary transition-all"
-              style={{ width: `${completionRate}%` }}
-            />
-          </div>
+          <Progress value={completionRate} className="h-2" />
         </CardContent>
       </Card>
 
-      {/* Filter tabs */}
-      <Tabs value={statusFilter} onValueChange={setStatusFilter}>
-        <TabsList>
-          <TabsTrigger value="all">전체 ({total})</TabsTrigger>
-          <TabsTrigger value="pending">대기 ({pending})</TabsTrigger>
-          <TabsTrigger value="in_progress">진행중 ({inProgress})</TabsTrigger>
-          <TabsTrigger value="completed">완료 ({completed})</TabsTrigger>
-        </TabsList>
-      </Tabs>
+      {/* Filter tabs + assignee filter */}
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <Tabs value={statusFilter} onValueChange={setStatusFilter}>
+          <TabsList>
+            <TabsTrigger value="all">전체 ({total})</TabsTrigger>
+            <TabsTrigger value="pending">대기 ({pending})</TabsTrigger>
+            <TabsTrigger value="in_progress">진행중 ({inProgress})</TabsTrigger>
+            <TabsTrigger value="completed">완료 ({completed})</TabsTrigger>
+          </TabsList>
+        </Tabs>
+        {assigneeNames.length > 0 && (
+          <Select value={assigneeFilter} onValueChange={setAssigneeFilter}>
+            <SelectTrigger className="w-[150px]">
+              <SelectValue placeholder="담당자 필터" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">전체 담당자</SelectItem>
+              {assigneeNames.map((name) => (
+                <SelectItem key={name} value={name}>
+                  {name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        )}
+      </div>
 
       {/* Table */}
-      <div className="rounded-lg border">
+      <div className="rounded-lg border overflow-x-auto">
         <Table>
           <TableHeader>
             <TableRow>

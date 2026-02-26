@@ -229,9 +229,9 @@ export function ChatInterface({ avatar, sessions: initialSessions }: ChatInterfa
   };
 
   return (
-    <div className="flex h-[calc(100vh-8rem)] gap-4 overflow-hidden">
+    <div className="flex flex-col md:flex-row h-[calc(100vh-8rem)] gap-4 overflow-hidden">
       {/* Sidebar */}
-      <Card className="flex w-72 shrink-0 flex-col overflow-hidden">
+      <Card className="flex w-full md:w-72 shrink-0 flex-col overflow-hidden max-h-48 md:max-h-none">
         <div className="border-b p-3">
           <div className="flex items-center gap-2 mb-3">
             <Link href="/predict/avatars">

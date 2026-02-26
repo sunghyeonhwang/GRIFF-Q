@@ -55,7 +55,7 @@ export default async function PostmortemListPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-bold">포스트모템</h1>
           <p className="text-muted-foreground">
@@ -66,7 +66,7 @@ export default async function PostmortemListPage() {
       </div>
 
       {items.length > 0 ? (
-        <div className="rounded-lg border">
+        <div className="rounded-lg border overflow-x-auto">
           <Table>
             <TableHeader>
               <TableRow>

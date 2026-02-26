@@ -69,7 +69,7 @@ export default async function EstimateDetailPage({
   return (
     <div className="space-y-6">
       {/* 헤더 */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-3">
           <Link href="/estimates">
             <Button variant="ghost" size="icon">
@@ -84,7 +84,7 @@ export default async function EstimateDetailPage({
             </p>
           </div>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <a href={`/api/estimates/${id}/pdf`} target="_blank" rel="noopener noreferrer">
             <Button variant="outline">
               <Download className="mr-2 size-4" />
@@ -131,7 +131,7 @@ export default async function EstimateDetailPage({
           <CardTitle>견적 정보</CardTitle>
         </CardHeader>
         <CardContent>
-          <dl className="grid grid-cols-2 gap-4 text-sm">
+          <dl className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
             <div>
               <dt className="text-muted-foreground">프로젝트명</dt>
               <dd className="font-semibold text-lg mt-1">
@@ -168,6 +168,7 @@ export default async function EstimateDetailPage({
           <CardTitle>견적 항목</CardTitle>
         </CardHeader>
         <CardContent>
+          <div className="overflow-x-auto">
           <Table>
             <TableHeader>
               <TableRow>
@@ -224,6 +225,7 @@ export default async function EstimateDetailPage({
               )}
             </TableBody>
           </Table>
+          </div>
 
           {/* 합계 */}
           {items.length > 0 && (

@@ -245,7 +245,7 @@ export function TemplateManager({ templates, userId }: TemplateManagerProps) {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-bold">견적서 템플릿</h1>
           <p className="text-muted-foreground">
@@ -287,6 +287,7 @@ export function TemplateManager({ templates, userId }: TemplateManagerProps) {
 
               <div className="space-y-2">
                 <Label>항목 목록</Label>
+                <div className="overflow-x-auto">
                 <Table>
                   <TableHeader>
                     <TableRow>
@@ -360,6 +361,7 @@ export function TemplateManager({ templates, userId }: TemplateManagerProps) {
                     ))}
                   </TableBody>
                 </Table>
+                </div>
                 <Button variant="outline" size="sm" onClick={addNewItem}>
                   <Plus className="mr-2 size-4" />
                   항목 추가
@@ -438,6 +440,7 @@ export function TemplateManager({ templates, userId }: TemplateManagerProps) {
                 로딩 중...
               </p>
             ) : (
+              <div className="overflow-x-auto">
               <Table>
                 <TableHeader>
                   <TableRow>
@@ -475,8 +478,9 @@ export function TemplateManager({ templates, userId }: TemplateManagerProps) {
                   ))}
                 </TableBody>
               </Table>
+              </div>
             )}
-            <div className="flex justify-between">
+            <div className="flex flex-col gap-2 sm:flex-row sm:justify-between">
               <Button
                 variant="destructive"
                 size="sm"

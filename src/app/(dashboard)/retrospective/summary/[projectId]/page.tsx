@@ -251,8 +251,8 @@ export default async function SummaryPage({
             <CardContent>
               <div className="space-y-3">
                 {satAverages.map((item) => (
-                  <div key={item.key} className="flex items-center justify-between">
-                    <span className="text-sm font-medium w-40">{item.label}</span>
+                  <div key={item.key} className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+                    <span className="text-sm font-medium sm:w-40">{item.label}</span>
                     {item.avg > 0 ? (
                       <ScoreBar score={item.avg} />
                     ) : (
@@ -271,6 +271,7 @@ export default async function SummaryPage({
                 <CardTitle>팀원별 평균 점수</CardTitle>
               </CardHeader>
               <CardContent>
+                <div className="overflow-x-auto">
                 <Table>
                   <TableHeader>
                     <TableRow>
@@ -297,6 +298,7 @@ export default async function SummaryPage({
                     ))}
                   </TableBody>
                 </Table>
+                </div>
               </CardContent>
             </Card>
           )}
@@ -341,7 +343,7 @@ export default async function SummaryPage({
                 <div className="space-y-3">
                   {partAverages.map((p, idx) => (
                     <div key={p.part}>
-                      <div className="flex items-center justify-between mb-1">
+                      <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between mb-1">
                         <span className="text-sm font-medium flex items-center gap-2">
                           <span className="text-muted-foreground w-5">{idx + 1}.</span>
                           {p.part}
@@ -621,6 +623,7 @@ export default async function SummaryPage({
               <CardTitle>역할별 이슈 & 액션</CardTitle>
             </CardHeader>
             <CardContent>
+              <div className="overflow-x-auto">
               <Table>
                 <TableHeader>
                   <TableRow>
@@ -659,6 +662,7 @@ export default async function SummaryPage({
                   )}
                 </TableBody>
               </Table>
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
@@ -670,6 +674,7 @@ export default async function SummaryPage({
               <CardTitle>참여 현황</CardTitle>
             </CardHeader>
             <CardContent>
+              <div className="overflow-x-auto">
               <Table>
                 <TableHeader>
                   <TableRow>
@@ -711,6 +716,7 @@ export default async function SummaryPage({
                   })}
                 </TableBody>
               </Table>
+              </div>
             </CardContent>
           </Card>
         </TabsContent>

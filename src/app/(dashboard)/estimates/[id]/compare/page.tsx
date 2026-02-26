@@ -57,6 +57,7 @@ function ItemsTable({
 
   return (
     <>
+      <div className="overflow-x-auto">
       <Table>
         <TableHeader>
           <TableRow>
@@ -129,6 +130,7 @@ function ItemsTable({
           )}
         </TableBody>
       </Table>
+      </div>
 
       {items.length > 0 && (
         <div className="mt-4 flex justify-end">

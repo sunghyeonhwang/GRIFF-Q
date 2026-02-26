@@ -167,6 +167,7 @@ export default async function DashboardPage() {
           </CardHeader>
           <CardContent>
             {upcomingActions && upcomingActions.length > 0 ? (
+              <div className="overflow-x-auto">
               <Table>
                 <TableHeader>
                   <TableRow>
@@ -193,6 +194,7 @@ export default async function DashboardPage() {
                   ))}
                 </TableBody>
               </Table>
+              </div>
             ) : (
               <p className="text-sm text-muted-foreground py-4 text-center">
                 7일 이내 마감 항목 없음
@@ -208,6 +210,7 @@ export default async function DashboardPage() {
           </CardHeader>
           <CardContent>
             {pendingPayments && pendingPayments.length > 0 ? (
+              <div className="overflow-x-auto">
               <Table>
                 <TableHeader>
                   <TableRow>
@@ -239,6 +242,7 @@ export default async function DashboardPage() {
                   ))}
                 </TableBody>
               </Table>
+              </div>
             ) : (
               <p className="text-sm text-muted-foreground py-4 text-center">
                 대기 중인 요청 없음

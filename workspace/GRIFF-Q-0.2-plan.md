@@ -1,7 +1,7 @@
 # GRIFF-Q 0.2 전체 개발 계획
 
 > v0.1 완료 기준(2026-02-26) 위에서 기능 고도화 + 운영 인프라 구축
-> **최종 업데이트: 2026-02-26**
+> **최종 업데이트: 2026-02-26 (2차)**
 
 ---
 
@@ -27,9 +27,10 @@
 | **추가** | 결제 페이지 복사 기능 (계좌번호/금액) | ✅ 완료 | |
 | **추가** | 프로젝트 메뉴 비활성화 (v0.3 리워크 예정) | ✅ 완료 | |
 | **추가** | 아바타 성격 분석 강화 + 채팅 UX 개선 | ✅ 완료 | |
-| **P0-A** | 퍼블리시 (PDF/Excel/Sheets) | 🔲 스캐폴딩만 | API Route 파일 생성됨, 실제 로직 미구현 |
-| **P0-B** | 인앱 알림 시스템 | 🔲 스캐폴딩만 | DB 마이그레이션+벨 컴포넌트 존재, 트리거 미구현 |
-| **P0-B** | 통합 검색 | 🔲 스캐폴딩만 | 검색바+API Route 존재, 검색 로직 미구현 |
+| **추가** | GRIFF-Q 로고 + 파비콘 적용 | ✅ 완료 | SVG 로고 사이드바 중앙정렬, 미니 로고 파비콘 |
+| **P0-A** | 퍼블리시 (PDF/Excel/Sheets) | ✅ 완료 | 견적서 PDF/Excel/Sheets, 회의록 Excel/Sheets, 결제 Excel |
+| **P0-B** | 인앱 알림 시스템 | ✅ 완료 | 벨 컴포넌트+마감 임박 자동 알림+결제 완료 알림 트리거 |
+| **P0-B** | 통합 검색 | ✅ 완료 | Cmd+K 검색바, ILIKE 4카테고리 검색 (견적서/회의록/입금/회고) |
 | **P0-C** | 모바일 반응형 | 🔲 미착수 | |
 | **P1** | 회의록 강화 (Sheets 연동+UX+액션아이템 대시보드) | 🔲 미착수 | |
 | **P2** | 아바타 고도화 (학습+감정분석+시뮬레이션) | 🔲 미착수 | 업로드 페이지만 생성됨 |
@@ -147,7 +148,7 @@ v0.1에서 구축한 CRUD 기반 업무 도구를 **실무 운영 수준**으로
 
 | Phase | 작업 | 상태 | 모델 | Git 브랜치 |
 |---|---|---|---|---|
-| **P0** | 퍼블리시 + 알림 + 검색 + 반응형 | 🔲 스캐폴딩만 | Workers: Sonnet | `feature/v2-p0-publish` |
+| **P0** | 퍼블리시 + 알림 + 검색 + 반응형 | ✅ P0-A/B 완료, 🔲 P0-C 미착수 | Workers: Sonnet | main 직접 |
 | **P1** | 회의록 강화 (Sheets 연동 + UX) | 🔲 미착수 | Workers: Sonnet | `feature/v2-p1-meetings` |
 | **P2** | 아바타 고도화 (학습 + 감정 + 시뮬레이션) | 🔲 미착수 | Workers: Opus+Sonnet | `feature/v2-p2-predict` |
 | **P3** | 견적서 실시간 동시 편집 | 🔲 미착수 | Workers: Opus | `feature/v2-p3-realtime` |
@@ -161,39 +162,33 @@ v0.1에서 구축한 CRUD 기반 업무 도구를 **실무 운영 수준**으로
 
 ### P0: v0.1 보완 — 퍼블리시 + 알림 + 검색 + 반응형
 
-#### P0-A: 퍼블리시 (Worker A — Sonnet) — 🔲 스캐폴딩만
+#### P0-A: 퍼블리시 (Worker A — Sonnet) — ✅ 완료
 
-> API Route 파일은 생성되었으나, 실제 PDF/Excel/Sheets 생성 로직 미구현
+> 견적서 PDF/Excel/Sheets, 회의록 Excel/Sheets, 결제 Excel 모두 구현 완료
 
-**견적서 PDF 다운로드**
-- `@react-pdf/renderer` 설치
-- `src/components/estimates/estimate-pdf.tsx` — PDF 템플릿 컴포넌트
-  - 회사 로고, 견적서 번호, 기본 정보 (프로젝트/클라이언트/날짜/유효기간)
-  - 항목 테이블 (번호, 항목명, 수량, 단가, 금액, 비고)
-  - 소계/부가세/총액
-  - 하이라이트 셀 배경색 반영
-- `src/app/api/estimates/[id]/pdf/route.ts` — PDF 생성 API Route ✅ 파일 존재
-- 상세 페이지에 "PDF 다운로드" 버튼 추가
+**견적서 PDF 다운로드** ✅
+- `@react-pdf/renderer` 설치 ✅
+- `src/app/api/estimates/[id]/pdf/route.ts` — NotoSansKR 한글 폰트, A4 레이아웃 ✅
+- 견적서 상세 페이지에 "PDF" 다운로드 버튼 ✅
 
-**견적서/회의록 Excel 다운로드**
-- `exceljs` 설치
-- `src/app/api/estimates/[id]/excel/route.ts` — 견적서 Excel ✅ 파일 존재
-- `src/app/api/meetings/[id]/excel/route.ts` — 회의록 + 액션아이템 Excel ✅ 파일 존재
-- 각 상세 페이지에 "Excel 다운로드" 버튼 추가
+**견적서/회의록 Excel 다운로드** ✅
+- `exceljs` 설치 ✅
+- `src/app/api/estimates/[id]/excel/route.ts` — 견적정보+견적항목 2시트 ✅
+- `src/app/api/meetings/[id]/excel/route.ts` — 회의록+액션아이템 2시트 ✅
+- 각 상세 페이지에 "Excel" 다운로드 버튼 ✅
 
-**입금/결제 목록 Excel 내보내기**
-- `src/app/api/payments/export/route.ts` — 전체 입금 내역 Excel ✅ 파일 존재
-- 목록 페이지에 "Excel 내보내기" 버튼
+**입금/결제 목록 Excel 내보내기** ✅
+- `src/app/api/payments/export/route.ts` — 전체 입금 내역 Excel ✅
+- 결제 목록 페이지에 "Excel" 내보내기 버튼 ✅
 
-**Google Sheets 견적서 퍼블리시**
-- Google Sheets API v4 + Service Account 연동
-- `src/lib/google-sheets.ts` — Sheets API 클라이언트 래퍼 ✅ 파일 존재
-- `src/app/api/estimates/[id]/sheets/route.ts` — 견적서 → Sheets 내보내기 ✅ 파일 존재
-- 상세 페이지에 "Sheets 내보내기" 버튼
+**Google Sheets 퍼블리시** ✅
+- `googleapis` 설치, Service Account 인증 ✅
+- `src/lib/google-sheets.ts` — 견적서/회의록 Sheets 내보내기 ✅
+- 견적서/회의록 상세 페이지에 "Sheets" 내보내기 버튼 ✅
 
-#### P0-B: 알림 + 검색 (Worker B — Sonnet) — 🔲 스캐폴딩만
+#### P0-B: 알림 + 검색 (Worker B — Sonnet) — ✅ 완료
 
-> DB 마이그레이션, 벨 컴포넌트, 검색바 파일은 존재하나 실제 동작 미구현
+> 알림 트리거(마감 임박/결제 완료) + 통합 검색(ILIKE 4카테고리) 구현 완료
 
 **인앱 알림 시스템**
 - DB: `supabase/migrations/008_notifications.sql` ✅ 파일 존재
@@ -201,16 +196,16 @@ v0.1에서 구축한 CRUD 기반 업무 도구를 **실무 운영 수준**으로
   - 읽지 않은 알림 개수 배지
   - 클릭 시 최근 20건 표시
   - 알림 클릭 → link로 이동 + 읽음 처리
-- 알림 트리거 (서버 사이드): 🔲 미구현
-  - 마감일 임박 (3일 이내): 매일 cron 또는 대시보드 로드 시 체크
-  - 견적서 잠금 해제: update 트리거
-  - 견적서 확정/발송: update 트리거
+- 알림 트리거 (서버 사이드): ✅ 구현 완료
+  - 마감일 임박 (3일 이내): 대시보드 로드 시 자동 체크 + 중복 방지
+  - 결제 완료: 전체 활성 유저에게 알림 생성
+  - `src/lib/notifications.ts` — 알림 생성 헬퍼 (단일/전체/마감 임박 체크)
 
 **통합 검색**
-- `src/app/(dashboard)/search/page.tsx` ✅ 파일 존재
-- `src/components/layout/search-bar.tsx` ✅ 파일 존재
-- `src/app/api/search/route.ts` ✅ 파일 존재
-- 실제 검색 로직 (ILIKE/to_tsvector): 🔲 미구현
+- `src/app/(dashboard)/search/page.tsx` ✅
+- `src/components/layout/search-bar.tsx` ✅ Cmd+K 단축키, 300ms 디바운스
+- `src/app/api/search/route.ts` ✅ ILIKE 패턴 매칭, 카테고리별 5건 제한
+- 검색 대상: 견적서(프로젝트/클라이언트), 회의록(제목/내용), 입금(이름/비고), 회고(KPT)
 
 #### P0-C: 모바일 반응형 (Worker C — Sonnet) — 🔲 미착수
 
@@ -532,6 +527,7 @@ workspace/logs/
 | 프로젝트 메뉴 리워크 | 프로젝트를 다른 용도로 재설계, 견적서/회의록/회고/입금 연결 해제 | 사이드바 비활성 처리 완료 |
 | 결제 대량전송 | 복수 항목 선택 → 은행 대량전송용 엑셀 다운로드 | 사이드바 비활성 처리 완료 |
 | 계산서 발행 조회 | 외부 API 연동 세금계산서 발행 여부 확인 | 사이드바 비활성 처리 완료 |
+| 뉴스 큐레이션 | AI / Design / Tools 3카테고리 뉴스 아티클 수집·정리 메뉴 | |
 | 클라이언트 포털 | 외부 클라이언트 전용 견적서 확인/승인 공개 링크 | |
 | 대시보드 커스터마이징 | 위젯 순서 변경, 숨기기, 개인 설정 저장 | |
 | 이메일 알림 | Slack 외 이메일 알림 채널 추가 (Resend API) | |
