@@ -3,7 +3,7 @@
 import { useState, type KeyboardEvent } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import { AVATAR_ICONS, TONE_STYLES, DECISION_PATTERNS } from "@/lib/predict-constants";
+import { AVATAR_ICONS, DECISION_PATTERNS } from "@/lib/predict-constants";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -42,15 +42,19 @@ export function AvatarForm({ userId, initialData }: AvatarFormProps) {
     personality_tags: (initialData?.personality_tags as string[]) ?? [],
     decision_pattern: initialData?.decision_pattern ?? "",
     sensitive_topics: (initialData?.sensitive_topics as string[]) ?? [],
+    common_phrases: (initialData?.common_phrases as string[]) ?? [],
+    response_style: initialData?.response_style ?? "",
+    emoji_usage: initialData?.emoji_usage ?? "",
     memo: initialData?.memo ?? "",
   });
 
   const [personalityInput, setPersonalityInput] = useState("");
   const [sensitiveInput, setSensitiveInput] = useState("");
+  const [commonPhrasesInput, setCommonPhrasesInput] = useState("");
 
   function handleTagKeyDown(
     e: KeyboardEvent<HTMLInputElement>,
-    field: "personality_tags" | "sensitive_topics",
+    field: "personality_tags" | "sensitive_topics" | "common_phrases",
     inputValue: string,
     setInputValue: (v: string) => void
   ) {
@@ -64,7 +68,7 @@ export function AvatarForm({ userId, initialData }: AvatarFormProps) {
     }
   }
 
-  function removeTag(field: "personality_tags" | "sensitive_topics", tag: string) {
+  function removeTag(field: "personality_tags" | "sensitive_topics" | "common_phrases", tag: string) {
     setForm((p) => ({
       ...p,
       [field]: p[field].filter((t) => t !== tag),
@@ -89,6 +93,9 @@ export function AvatarForm({ userId, initialData }: AvatarFormProps) {
       personality_tags: form.personality_tags,
       decision_pattern: form.decision_pattern || null,
       sensitive_topics: form.sensitive_topics,
+      common_phrases: form.common_phrases,
+      response_style: form.response_style || null,
+      emoji_usage: form.emoji_usage || null,
       memo: form.memo || null,
       created_by: userId,
     };
@@ -181,21 +188,12 @@ export function AvatarForm({ userId, initialData }: AvatarFormProps) {
         <CardContent className="space-y-4">
           <div className="space-y-2">
             <Label>말투 스타일</Label>
-            <Select
+            <Textarea
               value={form.tone_style}
-              onValueChange={(v) => setForm((p) => ({ ...p, tone_style: v }))}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="말투 스타일 선택" />
-              </SelectTrigger>
-              <SelectContent>
-                {TONE_STYLES.map((style) => (
-                  <SelectItem key={style} value={style}>
-                    {style}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+              onChange={(e) => setForm((p) => ({ ...p, tone_style: e.target.value }))}
+              placeholder="말투 스타일을 자유롭게 설명하세요 (예: 격식체, 짧고 간결한 문장, ~합니다 체 사용)"
+              rows={2}
+            />
           </div>
 
           <div className="space-y-2">
@@ -278,6 +276,57 @@ export function AvatarForm({ userId, initialData }: AvatarFormProps) {
                 )
               }
               placeholder="태그 입력 후 Enter"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label>자주 쓰는 표현</Label>
+            <div className="flex flex-wrap gap-1 mb-2">
+              {form.common_phrases.map((tag) => (
+                <Badge key={tag} variant="secondary" className="gap-1">
+                  {tag}
+                  <button
+                    type="button"
+                    onClick={() => removeTag("common_phrases", tag)}
+                    className="ml-1 rounded-full hover:bg-muted-foreground/20"
+                  >
+                    <X className="size-3" />
+                  </button>
+                </Badge>
+              ))}
+            </div>
+            <Input
+              value={commonPhrasesInput}
+              onChange={(e) => setCommonPhrasesInput(e.target.value)}
+              onKeyDown={(e) =>
+                handleTagKeyDown(
+                  e,
+                  "common_phrases",
+                  commonPhrasesInput,
+                  setCommonPhrasesInput
+                )
+              }
+              placeholder="자주 쓰는 표현 입력 후 Enter"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label>응답 스타일</Label>
+            <Textarea
+              value={form.response_style}
+              onChange={(e) => setForm((p) => ({ ...p, response_style: e.target.value }))}
+              placeholder="응답 길이, 형태, 패턴을 설명하세요 (예: 짧은 문장 위주, 질문에 질문으로 답하는 경향)"
+              rows={2}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label>이모지 사용 패턴</Label>
+            <Textarea
+              value={form.emoji_usage}
+              onChange={(e) => setForm((p) => ({ ...p, emoji_usage: e.target.value }))}
+              placeholder="이모지 사용 패턴을 설명하세요 (예: 거의 사용 안함, 문장 끝에 자주 사용)"
+              rows={2}
             />
           </div>
 

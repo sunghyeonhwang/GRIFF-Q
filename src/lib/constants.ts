@@ -4,6 +4,7 @@ import {
   FileText,
   CreditCard,
   Calculator,
+  FolderKanban,
   Brain,
   Settings,
   type LucideIcon,
@@ -33,6 +34,12 @@ export const MENU_ITEMS: MenuItem[] = [
   { title: "회의록", url: "/meetings", icon: FileText, minRole: "normal" },
   { title: "입금/결제", url: "/payments", icon: CreditCard, minRole: "normal" },
   { title: "견적서", url: "/estimates", icon: Calculator, minRole: "normal" },
+  {
+    title: "프로젝트",
+    url: "/projects",
+    icon: FolderKanban,
+    minRole: "normal",
+  },
   {
     title: "클라이언트 예측",
     url: "/predict",
