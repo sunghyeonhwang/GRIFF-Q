@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 import { UploadTrainingData } from "@/components/predict/upload-training-data";
+import { TrainingDataList } from "@/components/predict/training-data-list";
 
 export default async function AvatarUploadPage({
   params,
@@ -23,6 +24,12 @@ export default async function AvatarUploadPage({
 
   if (!avatar) notFound();
 
+  const { data: trainingData } = await supabase
+    .from("avatar_training_data")
+    .select("*")
+    .eq("avatar_id", id)
+    .order("created_at", { ascending: false });
+
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-3">
@@ -39,6 +46,7 @@ export default async function AvatarUploadPage({
         </div>
       </div>
       <UploadTrainingData avatar={avatar} />
+      <TrainingDataList avatarId={id} initialData={trainingData ?? []} />
     </div>
   );
 }
