@@ -12,7 +12,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Plus } from "lucide-react";
+import { Plus, FileSpreadsheet } from "lucide-react";
 import { PaymentStatusActions } from "@/components/payments/payment-status-actions";
 import { CopyButton } from "@/components/payments/copy-button";
 
@@ -43,12 +43,20 @@ export default async function PaymentsPage() {
             결제해야 할 항목을 관리합니다. 계좌번호와 금액을 복사할 수 있습니다.
           </p>
         </div>
-        <Link href="/payments/new">
-          <Button>
-            <Plus className="mr-2 size-4" />
-            결제 등록
-          </Button>
-        </Link>
+        <div className="flex items-center gap-2">
+          <a href="/api/payments/export" target="_blank" rel="noopener noreferrer">
+            <Button variant="outline">
+              <FileSpreadsheet className="mr-2 size-4" />
+              Excel
+            </Button>
+          </a>
+          <Link href="/payments/new">
+            <Button>
+              <Plus className="mr-2 size-4" />
+              결제 등록
+            </Button>
+          </Link>
+        </div>
       </div>
 
       {/* 요약 카드 */}
@@ -144,6 +152,8 @@ export default async function PaymentsPage() {
                       <PaymentStatusActions
                         paymentId={p.id}
                         userId={user.id}
+                        paymentName={p.name}
+                        paymentAmount={Number(p.amount)}
                       />
                     </TableCell>
                   </TableRow>

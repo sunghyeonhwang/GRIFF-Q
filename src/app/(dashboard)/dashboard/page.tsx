@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { requireAuth } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
+import { checkDeadlineNotifications } from "@/lib/notifications";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -21,6 +22,9 @@ import {
 export default async function DashboardPage() {
   const user = await requireAuth();
   const supabase = await createClient();
+
+  // 마감 임박 알림 자동 생성 (3일 이내)
+  checkDeadlineNotifications(supabase, user.id).catch(() => {});
 
   // 마감 임박 액션아이템 (7일 이내, 미완료)
   const sevenDaysLater = new Date();

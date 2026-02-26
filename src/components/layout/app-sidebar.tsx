@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { LogOut, ChevronRight } from "lucide-react";
@@ -44,9 +45,16 @@ export function AppSidebar({ user }: AppSidebarProps) {
 
   return (
     <Sidebar>
-      <SidebarHeader className="border-b px-4 py-3">
-        <Link href="/dashboard" className="text-lg font-bold">
-          GRIFF-Q
+      <SidebarHeader className="border-b px-6 py-4">
+        <Link href="/dashboard" className="flex items-center justify-center">
+          <Image
+            src="/logo.svg"
+            alt="GRIFF-Q"
+            width={96}
+            height={18}
+            className="dark:invert"
+            priority
+          />
         </Link>
       </SidebarHeader>
 
