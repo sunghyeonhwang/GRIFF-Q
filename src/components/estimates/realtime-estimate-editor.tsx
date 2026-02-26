@@ -27,10 +27,8 @@ interface EstimateItem {
   id: string;
   estimate_id: string;
   item_name: string;
-  specification: string;
   quantity: number;
   unit_price: number;
-  unit: string;
   highlight: string;
   note: string;
   sort_order: number;
@@ -234,10 +232,8 @@ export function RealtimeEstimateEditor({
       .insert({
         estimate_id: estimateId,
         item_name: "",
-        specification: "",
         quantity: 1,
         unit_price: 0,
-        unit: "식",
         highlight: "",
         note: "",
         sort_order: maxOrder + 1,
@@ -335,9 +331,7 @@ export function RealtimeEstimateEditor({
             <TableRow>
               <TableHead className="w-[40px]">#</TableHead>
               <TableHead>항목명</TableHead>
-              <TableHead className="w-[150px]">규격/설명</TableHead>
               <TableHead className="w-[90px]">수량</TableHead>
-              <TableHead className="w-[80px]">단위</TableHead>
               <TableHead className="w-[140px]">단가</TableHead>
               <TableHead className="w-[130px]">금액</TableHead>
               <TableHead className="w-[140px]">비고</TableHead>
@@ -366,26 +360,6 @@ export function RealtimeEstimateEditor({
                       className="border-0 shadow-none focus-visible:ring-0 px-1"
                     />
                   </TableCell>
-                  <TableCell
-                    className={getCellBorderClass(item.id, "specification")}
-                  >
-                    <Input
-                      value={item.specification ?? ""}
-                      onChange={(e) =>
-                        updateItemLocal(
-                          item.id,
-                          "specification",
-                          e.target.value
-                        )
-                      }
-                      onFocus={() =>
-                        trackEditingCell(`${item.id}:specification`)
-                      }
-                      onBlur={() => trackEditingCell(null)}
-                      placeholder="규격"
-                      className="border-0 shadow-none focus-visible:ring-0 px-1"
-                    />
-                  </TableCell>
                   <TableCell className={getCellBorderClass(item.id, "quantity")}>
                     <Input
                       value={String(item.quantity)}
@@ -397,18 +371,6 @@ export function RealtimeEstimateEditor({
                       onBlur={() => trackEditingCell(null)}
                       placeholder="0"
                       className="border-0 shadow-none focus-visible:ring-0 px-1 text-right"
-                    />
-                  </TableCell>
-                  <TableCell className={getCellBorderClass(item.id, "unit")}>
-                    <Input
-                      value={item.unit ?? ""}
-                      onChange={(e) =>
-                        updateItemLocal(item.id, "unit", e.target.value)
-                      }
-                      onFocus={() => trackEditingCell(`${item.id}:unit`)}
-                      onBlur={() => trackEditingCell(null)}
-                      placeholder="식"
-                      className="border-0 shadow-none focus-visible:ring-0 px-1"
                     />
                   </TableCell>
                   <TableCell
@@ -483,7 +445,7 @@ export function RealtimeEstimateEditor({
             {items.length === 0 && (
               <TableRow>
                 <TableCell
-                  colSpan={10}
+                  colSpan={8}
                   className="text-center text-muted-foreground py-6"
                 >
                   항목이 없습니다. 아래 버튼으로 추가하세요.
