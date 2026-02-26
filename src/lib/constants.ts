@@ -14,13 +14,19 @@ import {
 } from "lucide-react";
 import { type UserRole, hasMinimumRole } from "@/types/auth.types";
 
+export interface MenuChild {
+  title: string;
+  url: string;
+  disabled?: boolean;
+}
+
 export interface MenuItem {
   title: string;
   url: string;
   icon: LucideIcon;
   minRole: UserRole;
   disabled?: boolean;
-  children?: { title: string; url: string }[];
+  children?: MenuChild[];
 }
 
 export const MENU_ITEMS: MenuItem[] = [
@@ -42,7 +48,17 @@ export const MENU_ITEMS: MenuItem[] = [
     ],
   },
   { title: "회의록", url: "/meetings", icon: FileText, minRole: "normal" },
-  { title: "입금/결제", url: "/payments", icon: CreditCard, minRole: "normal" },
+  {
+    title: "입금/결제",
+    url: "/payments",
+    icon: CreditCard,
+    minRole: "normal",
+    children: [
+      { title: "결제", url: "/payments" },
+      { title: "대량전송", url: "/payments/bulk-download", disabled: true },
+      { title: "계산서", url: "/payments/invoice", disabled: true },
+    ],
+  },
   { title: "견적서", url: "/estimates", icon: Calculator, minRole: "normal" },
   {
     title: "프로젝트",

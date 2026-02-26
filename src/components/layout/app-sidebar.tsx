@@ -76,14 +76,23 @@ export function AppSidebar({ user }: AppSidebarProps) {
                         <SidebarMenuSub>
                           {item.children.map((child) => (
                             <SidebarMenuSubItem key={child.url}>
-                              <SidebarMenuSubButton
-                                asChild
-                                isActive={pathname === child.url || pathname.startsWith(child.url + "/")}
-                              >
-                                <Link href={child.url}>
+                              {child.disabled ? (
+                                <SidebarMenuSubButton
+                                  className="opacity-40 pointer-events-none"
+                                >
                                   <span>{child.title}</span>
-                                </Link>
-                              </SidebarMenuSubButton>
+                                  <span className="ml-auto text-[10px] text-muted-foreground">v0.3</span>
+                                </SidebarMenuSubButton>
+                              ) : (
+                                <SidebarMenuSubButton
+                                  asChild
+                                  isActive={pathname === child.url || pathname.startsWith(child.url + "/")}
+                                >
+                                  <Link href={child.url}>
+                                    <span>{child.title}</span>
+                                  </Link>
+                                </SidebarMenuSubButton>
+                              )}
                             </SidebarMenuSubItem>
                           ))}
                         </SidebarMenuSub>

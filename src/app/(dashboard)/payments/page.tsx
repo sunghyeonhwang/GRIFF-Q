@@ -12,8 +12,9 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Plus, FileSpreadsheet } from "lucide-react";
+import { Plus } from "lucide-react";
 import { PaymentStatusActions } from "@/components/payments/payment-status-actions";
+import { CopyButton } from "@/components/payments/copy-button";
 
 export default async function PaymentsPage() {
   const user = await requireAuth();
@@ -26,42 +27,28 @@ export default async function PaymentsPage() {
 
   const items = payments ?? [];
 
-  // 은행별 그룹핑
-  const bankGroups = new Map<string, typeof items>();
-  for (const p of items) {
-    if (!bankGroups.has(p.bank)) bankGroups.set(p.bank, []);
-    bankGroups.get(p.bank)!.push(p);
-  }
-
-  const pendingCount = items.filter((p) => p.status === "pending").length;
-  const completedCount = items.filter((p) => p.status === "completed").length;
-  const totalAmount = items
-    .filter((p) => p.status === "pending")
-    .reduce((sum, p) => sum + Number(p.amount), 0);
+  const pendingItems = items.filter((p) => p.status === "pending");
+  const completedItems = items.filter((p) => p.status === "completed");
+  const totalAmount = pendingItems.reduce(
+    (sum, p) => sum + Number(p.amount),
+    0
+  );
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold">입금/결제 요청</h1>
+          <h1 className="text-2xl font-bold">결제</h1>
           <p className="text-muted-foreground">
-            결제 요청을 등록하고 입금 상태를 관리합니다.
+            결제해야 할 항목을 관리합니다. 계좌번호와 금액을 복사할 수 있습니다.
           </p>
         </div>
-        <div className="flex items-center gap-2">
-          <a href="/api/payments/export" target="_blank" rel="noopener noreferrer">
-            <Button variant="outline">
-              <FileSpreadsheet className="mr-2 size-4" />
-              Excel 내보내기
-            </Button>
-          </a>
-          <Link href="/payments/new">
-            <Button>
-              <Plus className="mr-2 size-4" />
-              요청 등록
-            </Button>
-          </Link>
-        </div>
+        <Link href="/payments/new">
+          <Button>
+            <Plus className="mr-2 size-4" />
+            결제 등록
+          </Button>
+        </Link>
       </div>
 
       {/* 요약 카드 */}
@@ -73,7 +60,7 @@ export default async function PaymentsPage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-bold">{pendingCount}건</p>
+            <p className="text-2xl font-bold">{pendingItems.length}건</p>
           </CardContent>
         </Card>
         <Card>
@@ -95,75 +82,138 @@ export default async function PaymentsPage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-bold">{completedCount}건</p>
+            <p className="text-2xl font-bold">{completedItems.length}건</p>
           </CardContent>
         </Card>
       </div>
 
-      {/* 은행별 그룹 뷰 */}
-      {bankGroups.size > 0 ? (
-        Array.from(bankGroups.entries()).map(([bank, bankItems]) => (
-          <Card key={bank}>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-lg">{bank}</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>이름</TableHead>
-                    <TableHead>금액</TableHead>
-                    <TableHead>계좌번호</TableHead>
-                    <TableHead>마감일</TableHead>
-                    <TableHead>상태</TableHead>
-                    <TableHead></TableHead>
+      {/* 대기 중 결제 목록 */}
+      {pendingItems.length > 0 && (
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-lg">결제 대기</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>품목</TableHead>
+                  <TableHead>은행</TableHead>
+                  <TableHead>계좌번호</TableHead>
+                  <TableHead>금액</TableHead>
+                  <TableHead>마감일</TableHead>
+                  <TableHead></TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {pendingItems.map((p) => (
+                  <TableRow key={p.id}>
+                    <TableCell className="font-medium">
+                      <Link
+                        href={`/payments/${p.id}`}
+                        className="hover:underline"
+                      >
+                        {p.name}
+                      </Link>
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant="outline">{p.bank}</Badge>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-1">
+                        <span className="font-mono text-sm">
+                          {p.account_number}
+                        </span>
+                        <CopyButton value={p.account_number} />
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-1">
+                        <span className="font-semibold">
+                          {Number(p.amount).toLocaleString()}원
+                        </span>
+                        <CopyButton value={String(p.amount)} />
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-sm text-muted-foreground">
+                      {p.due_date
+                        ? new Date(p.due_date).toLocaleDateString("ko-KR")
+                        : "-"}
+                    </TableCell>
+                    <TableCell>
+                      <PaymentStatusActions
+                        paymentId={p.id}
+                        userId={user.id}
+                      />
+                    </TableCell>
                   </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {bankItems.map((p) => (
-                    <TableRow key={p.id}>
-                      <TableCell className="font-medium">
-                        <Link
-                          href={`/payments/${p.id}`}
-                          className="hover:underline"
-                        >
-                          {p.name}
-                        </Link>
-                      </TableCell>
-                      <TableCell>
-                        {Number(p.amount).toLocaleString()}원
-                      </TableCell>
-                      <TableCell className="text-sm">{p.account_number}</TableCell>
-                      <TableCell className="text-sm">
-                        {p.due_date
-                          ? new Date(p.due_date).toLocaleDateString("ko-KR")
-                          : "-"}
-                      </TableCell>
-                      <TableCell>
-                        <Badge
-                          variant={
-                            p.status === "completed" ? "default" : "outline"
-                          }
-                        >
-                          {p.status === "completed" ? "완료" : "대기"}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        {p.status === "pending" && (
-                          <PaymentStatusActions paymentId={p.id} userId={user.id} />
-                        )}
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
-        ))
-      ) : (
+                ))}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* 완료 목록 */}
+      {completedItems.length > 0 && (
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-lg text-muted-foreground">
+              완료된 결제
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>품목</TableHead>
+                  <TableHead>은행</TableHead>
+                  <TableHead>계좌번호</TableHead>
+                  <TableHead>금액</TableHead>
+                  <TableHead>마감일</TableHead>
+                  <TableHead>상태</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {completedItems.map((p) => (
+                  <TableRow key={p.id} className="opacity-60">
+                    <TableCell className="font-medium">
+                      <Link
+                        href={`/payments/${p.id}`}
+                        className="hover:underline"
+                      >
+                        {p.name}
+                      </Link>
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant="outline">{p.bank}</Badge>
+                    </TableCell>
+                    <TableCell className="font-mono text-sm">
+                      {p.account_number}
+                    </TableCell>
+                    <TableCell>
+                      {Number(p.amount).toLocaleString()}원
+                    </TableCell>
+                    <TableCell className="text-sm">
+                      {p.due_date
+                        ? new Date(p.due_date).toLocaleDateString("ko-KR")
+                        : "-"}
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant="default">완료</Badge>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+      )}
+
+      {items.length === 0 && (
         <Card>
           <CardContent className="py-8 text-center text-muted-foreground">
-            아직 등록된 요청이 없습니다.
+            아직 등록된 결제 항목이 없습니다.
           </CardContent>
         </Card>
       )}
