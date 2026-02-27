@@ -159,9 +159,6 @@ export function EstimateForm({
       estimate_date: form.estimate_date,
       valid_until: form.valid_until || null,
       note: form.note,
-      subtotal,
-      vat,
-      total,
       created_by: userId,
     };
 
