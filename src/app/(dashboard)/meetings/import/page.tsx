@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
@@ -330,9 +331,9 @@ export default function MeetingImportPage() {
             ))}
 
             <div className="flex justify-end">
-              <Button onClick={save} disabled={loading}>
-                {loading ? "저장 중..." : "회의록으로 저장"}
-              </Button>
+              <LoadingButton onClick={save} loading={loading} loadingText="저장 중...">
+                회의록으로 저장
+              </LoadingButton>
             </div>
           </CardContent>
         </Card>

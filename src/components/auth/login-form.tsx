@@ -7,7 +7,7 @@ import { z } from "zod";
 import { useFormErrors } from "@/hooks/use-form-errors";
 import { useFormShortcuts } from "@/hooks/use-form-shortcuts";
 import { FieldError } from "@/components/ui/field-error";
-import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -110,9 +110,9 @@ export function LoginForm({ redirectTo, error: initialError }: LoginFormProps) {
             <FieldError message={getError("password")} />
           </div>
           {error && <p className="text-sm text-destructive">{error}</p>}
-          <Button type="submit" className="w-full" disabled={loading}>
-            {loading ? "로그인 중..." : "로그인"}
-          </Button>
+          <LoadingButton type="submit" className="w-full" loading={loading} loadingText="로그인 중...">
+            로그인
+          </LoadingButton>
         </form>
       </CardContent>
     </Card>

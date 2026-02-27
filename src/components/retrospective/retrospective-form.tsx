@@ -16,6 +16,7 @@ import { useUnsavedChanges } from "@/hooks/use-unsaved-changes";
 import { useFormShortcuts } from "@/hooks/use-form-shortcuts";
 import { FieldError } from "@/components/ui/field-error";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -726,13 +727,14 @@ export function RetrospectiveForm({
       {/* 버튼 */}
       {!readOnly && (
         <div className="flex justify-end gap-3">
-          <Button
+          <LoadingButton
             variant="outline"
             onClick={() => save("draft")}
-            disabled={loading}
+            loading={loading}
+            loadingText="저장 중..."
           >
-            {loading ? "저장 중..." : "임시 저장"}
-          </Button>
+            임시 저장
+          </LoadingButton>
           <Button
             onClick={() => setShowSubmitDialog(true)}
             disabled={loading}

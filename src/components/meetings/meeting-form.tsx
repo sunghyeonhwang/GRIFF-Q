@@ -9,6 +9,7 @@ import { useUnsavedChanges } from "@/hooks/use-unsaved-changes";
 import { useFormShortcuts } from "@/hooks/use-form-shortcuts";
 import { FieldError } from "@/components/ui/field-error";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -362,9 +363,9 @@ export function MeetingForm({
 
       {!readOnly && (
         <div className="flex justify-end">
-          <Button onClick={save} disabled={loading}>
-            {loading ? "저장 중..." : "저장"}
-          </Button>
+          <LoadingButton onClick={save} loading={loading} loadingText="저장 중...">
+            저장
+          </LoadingButton>
         </div>
       )}
     </div>

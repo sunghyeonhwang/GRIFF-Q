@@ -23,6 +23,13 @@ import { PaymentTrendChart } from "@/components/dashboard/payment-trend-chart";
 import { EstimateStatusChart } from "@/components/dashboard/estimate-status-chart";
 import { RetroSubmitChart } from "@/components/dashboard/retro-submit-chart";
 import { ActivityTimeline } from "@/components/dashboard/activity-timeline";
+import { CountUp } from "@/components/ui/count-up";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 function getGreeting(): string {
   const hour = new Date().getHours();
@@ -184,10 +191,10 @@ export default async function DashboardPage() {
     <div className="space-y-6">
       {/* B1: 인사말 + 날짜 */}
       <div>
-        <h1 className="text-2xl font-bold tracking-tight">
+        <h1 className="text-page-title">
           {getGreeting()}, {user.name}님
         </h1>
-        <p className="text-muted-foreground">{formatToday()}</p>
+        <p className="text-page-description">{formatToday()}</p>
       </div>
 
       {/* B2: 퀵 액션 */}
@@ -197,52 +204,52 @@ export default async function DashboardPage() {
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
+            <CardTitle className="text-card-title">
               마감 임박
             </CardTitle>
             <CalendarClock className="size-4 text-brand" />
           </CardHeader>
           <CardContent>
-            <p className="text-3xl font-bold">{upcomingCount}<span className="text-lg font-normal text-muted-foreground ml-0.5">건</span></p>
+            <p className="text-stat-number"><CountUp target={upcomingCount} suffix="건" /></p>
             <p className="text-xs text-muted-foreground">7일 이내 마감</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
+            <CardTitle className="text-card-title">
               입금 대기
             </CardTitle>
             <CreditCard className="size-4 text-brand" />
           </CardHeader>
           <CardContent>
-            <p className="text-3xl font-bold">{pendingPaymentCount}<span className="text-lg font-normal text-muted-foreground ml-0.5">건</span></p>
+            <p className="text-stat-number"><CountUp target={pendingPaymentCount} suffix="건" /></p>
             <p className="text-xs text-muted-foreground">미처리 요청</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
+            <CardTitle className="text-card-title">
               최근 회의
             </CardTitle>
             <FileText className="size-4 text-brand" />
           </CardHeader>
           <CardContent>
-            <p className="text-3xl font-bold">{recentMeetingCount}<span className="text-lg font-normal text-muted-foreground ml-0.5">건</span></p>
+            <p className="text-stat-number"><CountUp target={recentMeetingCount} suffix="건" /></p>
             <p className="text-xs text-muted-foreground">최근 회의록</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
+            <CardTitle className="text-card-title">
               프로젝트
             </CardTitle>
             <MessageSquareText className="size-4 text-brand" />
           </CardHeader>
           <CardContent>
-            <p className="text-3xl font-bold">{projects?.length ?? 0}<span className="text-lg font-normal text-muted-foreground ml-0.5">개</span></p>
+            <p className="text-stat-number"><CountUp target={projects?.length ?? 0} suffix="개" /></p>
             <p className="text-xs text-muted-foreground">진행 중</p>
           </CardContent>
         </Card>
@@ -260,7 +267,7 @@ export default async function DashboardPage() {
         {/* 마감 임박 액션아이템 */}
         <Card className="lg:col-span-1">
           <CardHeader className="pb-2">
-            <CardTitle className="text-base">마감 임박</CardTitle>
+            <CardTitle className="text-section-title">마감 임박</CardTitle>
           </CardHeader>
           <CardContent>
             {upcomingActions && upcomingActions.length > 0 ? (
@@ -274,13 +281,25 @@ export default async function DashboardPage() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {upcomingActions.map((ai) => (
+                    {upcomingActions.map((ai) => {
+                      const daysLeft = Math.ceil(
+                        (new Date(ai.due_date).getTime() - Date.now()) / 86400000
+                      );
+                      const dLabel = daysLeft <= 0 ? "D-day" : `D-${daysLeft}`;
+                      return (
                       <TableRow key={ai.id}>
                         <TableCell className="font-medium text-sm">
                           {ai.title}
                         </TableCell>
                         <TableCell className="text-sm whitespace-nowrap">
-                          {new Date(ai.due_date).toLocaleDateString("ko-KR")}
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <span className="cursor-default">{new Date(ai.due_date).toLocaleDateString("ko-KR")}</span>
+                              </TooltipTrigger>
+                              <TooltipContent>{dLabel}</TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
                         </TableCell>
                         <TableCell>
                           <Badge variant="outline" className="text-xs">
@@ -288,7 +307,8 @@ export default async function DashboardPage() {
                           </Badge>
                         </TableCell>
                       </TableRow>
-                    ))}
+                      );
+                    })}
                   </TableBody>
                 </Table>
               </div>
@@ -303,7 +323,7 @@ export default async function DashboardPage() {
         {/* 대기 중인 입금 요청 */}
         <Card className="lg:col-span-1">
           <CardHeader className="pb-2">
-            <CardTitle className="text-base">입금 대기</CardTitle>
+            <CardTitle className="text-section-title">입금 대기</CardTitle>
           </CardHeader>
           <CardContent>
             {pendingPayments && pendingPayments.length > 0 ? (
@@ -356,22 +376,30 @@ export default async function DashboardPage() {
       <div className="grid gap-6 lg:grid-cols-2">
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-base">최근 회의록</CardTitle>
+            <CardTitle className="text-section-title">최근 회의록</CardTitle>
           </CardHeader>
           <CardContent>
             {recentMeetings && recentMeetings.length > 0 ? (
               <div className="space-y-2">
                 {recentMeetings.map((m) => (
-                  <Link
-                    key={m.id}
-                    href={`/meetings/${m.id}`}
-                    className="flex items-center justify-between rounded-md border p-3 transition-colors hover:bg-accent"
-                  >
-                    <span className="text-sm font-medium">{m.title}</span>
-                    <span className="text-xs text-muted-foreground whitespace-nowrap">
-                      {new Date(m.meeting_date).toLocaleDateString("ko-KR")}
-                    </span>
-                  </Link>
+                  <TooltipProvider key={m.id}>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Link
+                          href={`/meetings/${m.id}`}
+                          className="flex items-center justify-between rounded-md border p-3 transition-colors hover:bg-accent"
+                        >
+                          <span className="text-sm font-medium truncate mr-2">{m.title}</span>
+                          <span className="text-xs text-muted-foreground whitespace-nowrap">
+                            {new Date(m.meeting_date).toLocaleDateString("ko-KR")}
+                          </span>
+                        </Link>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        {m.title} — {new Date(m.meeting_date).toLocaleDateString("ko-KR", { year: "numeric", month: "long", day: "numeric", weekday: "long" })}
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
                 ))}
               </div>
             ) : (
@@ -384,7 +412,7 @@ export default async function DashboardPage() {
 
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-base">회고 제출 현황</CardTitle>
+            <CardTitle className="text-section-title">회고 제출 현황</CardTitle>
           </CardHeader>
           <CardContent>
             {projects && projects.length > 0 ? (

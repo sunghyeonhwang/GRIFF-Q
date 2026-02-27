@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -196,9 +197,9 @@ export function ProjectCreateDialog({
             <Button variant="outline" onClick={() => setOpen(false)}>
               취소
             </Button>
-            <Button onClick={handleSubmit} disabled={loading}>
-              {loading ? "생성 중..." : "생성"}
-            </Button>
+            <LoadingButton onClick={handleSubmit} loading={loading} loadingText="생성 중...">
+              생성
+            </LoadingButton>
           </div>
         </div>
       </DialogContent>
