@@ -22,6 +22,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Plus, Trash2, ChevronDown } from "lucide-react";
+import { toast } from "sonner";
 
 /* ─── 타입 ─── */
 
@@ -209,11 +210,11 @@ export function PostmortemForm({
 
   async function handleSave() {
     if (!form.title.trim()) {
-      alert("제목을 입력해주세요.");
+      toast.error("제목을 입력해주세요.");
       return;
     }
     if (!form.incident_date) {
-      alert("발생일을 입력해주세요.");
+      toast.error("발생일을 입력해주세요.");
       return;
     }
 
@@ -255,7 +256,7 @@ export function PostmortemForm({
     setLoading(false);
 
     if (error) {
-      alert("저장 실패: " + error.message);
+      toast.error("저장 실패", { description: error.message });
       return;
     }
 

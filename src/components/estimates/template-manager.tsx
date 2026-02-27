@@ -32,6 +32,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Plus, Trash2, FileText, Copy } from "lucide-react";
+import { toast } from "sonner";
 
 interface TemplateItem {
   id?: string;
@@ -113,12 +114,12 @@ export function TemplateManager({ templates, userId }: TemplateManagerProps) {
 
   async function createTemplate() {
     if (!name.trim()) {
-      alert("템플릿 이름을 입력해주세요.");
+      toast.error("템플릿 이름을 입력해주세요.");
       return;
     }
     const validItems = newItems.filter((item) => item.item_name.trim());
     if (validItems.length === 0) {
-      alert("항목을 최소 1개 이상 입력해주세요.");
+      toast.error("항목을 최소 1개 이상 입력해주세요.");
       return;
     }
 
@@ -131,7 +132,7 @@ export function TemplateManager({ templates, userId }: TemplateManagerProps) {
       .single();
 
     if (error || !template) {
-      alert("템플릿 생성 실패: " + (error?.message ?? "알 수 없는 오류"));
+      toast.error("템플릿 생성 실패", { description: error?.message ?? "알 수 없는 오류" });
       setCreating(false);
       return;
     }
@@ -152,7 +153,7 @@ export function TemplateManager({ templates, userId }: TemplateManagerProps) {
     setCreating(false);
 
     if (itemsError) {
-      alert("항목 저장 실패: " + itemsError.message);
+      toast.error("항목 저장 실패", { description: itemsError.message });
       return;
     }
 
@@ -199,7 +200,7 @@ export function TemplateManager({ templates, userId }: TemplateManagerProps) {
       .single();
 
     if (error || !estimate) {
-      alert("견적서 생성 실패: " + (error?.message ?? "알 수 없는 오류"));
+      toast.error("견적서 생성 실패", { description: error?.message ?? "알 수 없는 오류" });
       setCreating(false);
       return;
     }
@@ -234,7 +235,7 @@ export function TemplateManager({ templates, userId }: TemplateManagerProps) {
       .eq("id", templateId);
 
     if (error) {
-      alert("삭제 실패: " + error.message);
+      toast.error("삭제 실패", { description: error.message });
       return;
     }
 

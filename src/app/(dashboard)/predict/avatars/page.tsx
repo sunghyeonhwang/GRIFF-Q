@@ -10,6 +10,8 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { PageHeader } from "@/components/layout/page-header";
+import { EmptyState } from "@/components/ui/empty-state";
 import {
   Plus,
   User,
@@ -48,20 +50,17 @@ export default async function AvatarsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-2xl font-bold">아바타 목록</h1>
-          <p className="text-muted-foreground">
-            클라이언트 아바타를 생성하고 관리합니다.
-          </p>
-        </div>
+      <PageHeader
+        title="아바타 목록"
+        description="클라이언트 아바타를 생성하고 관리합니다."
+      >
         <Link href="/predict/avatars/new">
           <Button>
             <Plus className="mr-2 size-4" />
             아바타 생성
           </Button>
         </Link>
-      </div>
+      </PageHeader>
 
       {items.length > 0 ? (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
@@ -116,11 +115,18 @@ export default async function AvatarsPage() {
           })}
         </div>
       ) : (
-        <Card>
-          <CardContent className="py-8 text-center text-muted-foreground">
-            아직 생성된 아바타가 없습니다.
-          </CardContent>
-        </Card>
+        <EmptyState
+          icon={User}
+          title="생성된 아바타가 없습니다"
+          description="클라이언트 아바타를 생성하여 AI 대화를 시작하세요."
+        >
+          <Link href="/predict/avatars/new">
+            <Button>
+              <Plus className="mr-2 size-4" />
+              아바타 생성
+            </Button>
+          </Link>
+        </EmptyState>
       )}
     </div>
   );

@@ -30,6 +30,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Plus, Trash2 } from "lucide-react";
+import { toast } from "sonner";
 
 interface EstimateItem {
   item_name: string;
@@ -131,21 +132,21 @@ export function EstimateForm({
 
   async function save() {
     if (!form.project_name.trim()) {
-      alert("프로젝트명을 입력해주세요.");
+      toast.error("프로젝트명을 입력해주세요.");
       return;
     }
     if (!form.client_name.trim()) {
-      alert("고객명을 입력해주세요.");
+      toast.error("고객명을 입력해주세요.");
       return;
     }
     if (!form.estimate_date) {
-      alert("견적일을 입력해주세요.");
+      toast.error("견적일을 입력해주세요.");
       return;
     }
 
     const validItems = items.filter((item) => item.item_name.trim());
     if (validItems.length === 0) {
-      alert("항목을 최소 1개 이상 입력해주세요.");
+      toast.error("항목을 최소 1개 이상 입력해주세요.");
       return;
     }
 
@@ -228,7 +229,7 @@ export function EstimateForm({
     setLoading(false);
 
     if (error) {
-      alert("저장 실패: " + error.message);
+      toast.error("저장 실패", { description: error.message });
       return;
     }
 

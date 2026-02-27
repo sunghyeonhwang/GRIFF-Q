@@ -12,6 +12,9 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { ProjectCreateDialog } from "@/components/projects/project-create-dialog";
+import { PageHeader } from "@/components/layout/page-header";
+import { EmptyState } from "@/components/ui/empty-state";
+import { FolderKanban } from "lucide-react";
 
 const STATUS_LABELS: Record<string, string> = {
   active: "진행 중",
@@ -93,15 +96,12 @@ export default async function ProjectsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold">프로젝트 관리</h1>
-          <p className="text-muted-foreground">
-            프로젝트를 생성하고 관련 데이터를 통합 관리합니다.
-          </p>
-        </div>
+      <PageHeader
+        title="프로젝트 관리"
+        description="프로젝트를 생성하고 관련 데이터를 통합 관리합니다."
+      >
         <ProjectCreateDialog userId={user.id} users={allUsers ?? []} />
-      </div>
+      </PageHeader>
 
       {/* Summary cards */}
       <div className="grid gap-4 md:grid-cols-3">
@@ -203,11 +203,11 @@ export default async function ProjectsPage() {
           </CardContent>
         </Card>
       ) : (
-        <Card>
-          <CardContent className="py-8 text-center text-muted-foreground">
-            아직 등록된 프로젝트가 없습니다.
-          </CardContent>
-        </Card>
+        <EmptyState
+          icon={FolderKanban}
+          title="등록된 프로젝트가 없습니다"
+          description="새 프로젝트를 생성하여 업무를 통합 관리하세요."
+        />
       )}
     </div>
   );

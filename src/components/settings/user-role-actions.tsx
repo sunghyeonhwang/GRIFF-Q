@@ -19,6 +19,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 
 interface UserRoleActionsProps {
   userId: string;
@@ -65,7 +66,7 @@ export function UserRoleActions({
     setIsUpdating(false);
 
     if (error) {
-      alert("역할 변경 실패: " + error.message);
+      toast.error("역할 변경 실패", { description: error.message });
       setPendingRole(null);
       return;
     }

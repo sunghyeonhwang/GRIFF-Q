@@ -22,6 +22,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Plus, Trash2 } from "lucide-react";
+import { toast } from "sonner";
 
 interface User {
   id: string;
@@ -105,11 +106,11 @@ export function MeetingForm({
 
   async function save() {
     if (!form.title.trim()) {
-      alert("회의 제목을 입력해주세요.");
+      toast.error("회의 제목을 입력해주세요.");
       return;
     }
     if (!form.meeting_date) {
-      alert("회의 날짜를 입력해주세요.");
+      toast.error("회의 날짜를 입력해주세요.");
       return;
     }
 
@@ -143,7 +144,7 @@ export function MeetingForm({
     }
 
     if (error) {
-      alert("저장 실패: " + error.message);
+      toast.error("저장 실패", { description: error.message });
       setLoading(false);
       return;
     }
@@ -166,7 +167,7 @@ export function MeetingForm({
         }))
       );
       if (aiError) {
-        alert("액션아이템 저장 실패: " + aiError.message);
+        toast.error("액션아이템 저장 실패", { description: aiError.message });
         setLoading(false);
         return;
       }

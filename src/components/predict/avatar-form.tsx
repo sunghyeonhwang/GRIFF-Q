@@ -23,6 +23,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { X } from "lucide-react";
+import { toast } from "sonner";
 
 interface AvatarFormProps {
   userId: string;
@@ -77,7 +78,7 @@ export function AvatarForm({ userId, initialData }: AvatarFormProps) {
 
   async function save() {
     if (!form.name.trim()) {
-      alert("이름을 입력해주세요.");
+      toast.error("이름을 입력해주세요.");
       return;
     }
 
@@ -113,7 +114,7 @@ export function AvatarForm({ userId, initialData }: AvatarFormProps) {
     setLoading(false);
 
     if (error) {
-      alert("저장 실패: " + error.message);
+      toast.error("저장 실패", { description: error.message });
       return;
     }
 

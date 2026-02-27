@@ -17,6 +17,9 @@ import {
   ESTIMATE_STATUS_LABELS,
   ESTIMATE_STATUS_VARIANTS,
 } from "@/lib/estimate-constants";
+import { PageHeader } from "@/components/layout/page-header";
+import { EmptyState } from "@/components/ui/empty-state";
+import { Calculator } from "lucide-react";
 
 export default async function EstimatesPage() {
   const user = await requireAuth();
@@ -35,20 +38,17 @@ export default async function EstimatesPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-2xl font-bold">견적서 관리</h1>
-          <p className="text-muted-foreground">
-            프로젝트 견적서를 작성하고 관리합니다.
-          </p>
-        </div>
+      <PageHeader
+        title="견적서 관리"
+        description="프로젝트 견적서를 작성하고 관리합니다."
+      >
         <Link href="/estimates/new">
           <Button>
             <Plus className="mr-2 size-4" />
             견적서 생성
           </Button>
         </Link>
-      </div>
+      </PageHeader>
 
       {/* 요약 카드 */}
       <div className="grid gap-4 md:grid-cols-3">
@@ -142,11 +142,18 @@ export default async function EstimatesPage() {
           </CardContent>
         </Card>
       ) : (
-        <Card>
-          <CardContent className="py-8 text-center text-muted-foreground">
-            아직 등록된 견적서가 없습니다.
-          </CardContent>
-        </Card>
+        <EmptyState
+          icon={Calculator}
+          title="등록된 견적서가 없습니다"
+          description="새 견적서를 작성하여 프로젝트 비용을 관리하세요."
+        >
+          <Link href="/estimates/new">
+            <Button>
+              <Plus className="mr-2 size-4" />
+              견적서 생성
+            </Button>
+          </Link>
+        </EmptyState>
       )}
     </div>
   );

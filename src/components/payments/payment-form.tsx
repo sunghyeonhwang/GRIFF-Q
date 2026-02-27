@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { BANKS } from "@/lib/payment-constants";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -58,19 +59,19 @@ export function PaymentForm({
 
   async function save() {
     if (!form.name.trim()) {
-      alert("이름을 입력해주세요.");
+      toast.error("이름을 입력해주세요.");
       return;
     }
     if (!form.amount) {
-      alert("금액을 입력해주세요.");
+      toast.error("금액을 입력해주세요.");
       return;
     }
     if (!form.bank) {
-      alert("은행을 선택해주세요.");
+      toast.error("은행을 선택해주세요.");
       return;
     }
     if (!form.account_number.trim()) {
-      alert("계좌번호를 입력해주세요.");
+      toast.error("계좌번호를 입력해주세요.");
       return;
     }
 
@@ -101,10 +102,11 @@ export function PaymentForm({
     setLoading(false);
 
     if (error) {
-      alert("저장 실패: " + error.message);
+      toast.error("저장 실패", { description: error.message });
       return;
     }
 
+    toast.success(initialData?.id ? "결제 정보가 수정되었습니다" : "결제가 등록되었습니다");
     router.push("/payments");
     router.refresh();
   }

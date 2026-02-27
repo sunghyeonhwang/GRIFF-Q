@@ -12,9 +12,11 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Plus, FileSpreadsheet } from "lucide-react";
+import { Plus, FileSpreadsheet, CreditCard as CreditCardIcon } from "lucide-react";
 import { PaymentStatusActions } from "@/components/payments/payment-status-actions";
 import { CopyButton } from "@/components/payments/copy-button";
+import { PageHeader } from "@/components/layout/page-header";
+import { EmptyState } from "@/components/ui/empty-state";
 
 export default async function PaymentsPage() {
   const user = await requireAuth();
@@ -36,28 +38,23 @@ export default async function PaymentsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-2xl font-bold">결제</h1>
-          <p className="text-muted-foreground">
-            결제해야 할 항목을 관리합니다. 계좌번호와 금액을 복사할 수 있습니다.
-          </p>
-        </div>
-        <div className="flex flex-wrap items-center gap-2">
-          <a href="/api/payments/export" target="_blank" rel="noopener noreferrer">
-            <Button variant="outline">
-              <FileSpreadsheet className="mr-2 size-4" />
-              Excel
-            </Button>
-          </a>
-          <Link href="/payments/new">
-            <Button>
-              <Plus className="mr-2 size-4" />
-              결제 등록
-            </Button>
-          </Link>
-        </div>
-      </div>
+      <PageHeader
+        title="결제"
+        description="결제해야 할 항목을 관리합니다. 계좌번호와 금액을 복사할 수 있습니다."
+      >
+        <a href="/api/payments/export" target="_blank" rel="noopener noreferrer">
+          <Button variant="outline">
+            <FileSpreadsheet className="mr-2 size-4" />
+            Excel
+          </Button>
+        </a>
+        <Link href="/payments/new">
+          <Button>
+            <Plus className="mr-2 size-4" />
+            결제 등록
+          </Button>
+        </Link>
+      </PageHeader>
 
       {/* 요약 카드 */}
       <div className="grid gap-4 md:grid-cols-3">
@@ -225,11 +222,18 @@ export default async function PaymentsPage() {
       )}
 
       {items.length === 0 && (
-        <Card>
-          <CardContent className="py-8 text-center text-muted-foreground">
-            아직 등록된 결제 항목이 없습니다.
-          </CardContent>
-        </Card>
+        <EmptyState
+          icon={CreditCardIcon}
+          title="등록된 결제 항목이 없습니다"
+          description="새 결제를 등록하여 입금 관리를 시작하세요."
+        >
+          <Link href="/payments/new">
+            <Button>
+              <Plus className="mr-2 size-4" />
+              결제 등록
+            </Button>
+          </Link>
+        </EmptyState>
       )}
     </div>
   );

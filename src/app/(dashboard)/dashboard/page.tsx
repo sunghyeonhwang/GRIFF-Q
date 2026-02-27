@@ -18,6 +18,7 @@ import {
   FileText,
   MessageSquareText,
 } from "lucide-react";
+import { PageHeader } from "@/components/layout/page-header";
 
 export default async function DashboardPage() {
   const user = await requireAuth();
@@ -95,12 +96,10 @@ export default async function DashboardPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold">대시보드</h1>
-        <p className="text-muted-foreground">
-          안녕하세요, {user.name}님.
-        </p>
-      </div>
+      <PageHeader
+        title="대시보드"
+        description={`안녕하세요, ${user.name}님.`}
+      />
 
       {/* 요약 카드 */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">

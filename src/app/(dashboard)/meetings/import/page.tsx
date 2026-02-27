@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -142,11 +143,11 @@ export default function MeetingImportPage() {
 
   async function save() {
     if (!meetingTitle.trim()) {
-      alert("회의 제목을 입력해주세요.");
+      toast.error("회의 제목을 입력해주세요.");
       return;
     }
     if (!meetingDate) {
-      alert("회의 날짜를 입력해주세요.");
+      toast.error("회의 날짜를 입력해주세요.");
       return;
     }
 
@@ -182,7 +183,7 @@ export default function MeetingImportPage() {
       .single();
 
     if (error || !meeting) {
-      alert("회의록 생성 실패: " + (error?.message ?? "unknown"));
+      toast.error("회의록 생성 실패", { description: error?.message ?? "unknown" });
       setLoading(false);
       return;
     }

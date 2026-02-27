@@ -13,6 +13,9 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { PostmortemCreateButton } from "@/components/retrospective/postmortem-create-button";
+import { PageHeader } from "@/components/layout/page-header";
+import { EmptyState } from "@/components/ui/empty-state";
+import { AlertTriangle } from "lucide-react";
 
 const SEVERITY_LABELS: Record<string, string> = {
   low: "Low",
@@ -55,15 +58,12 @@ export default async function PostmortemListPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-2xl font-bold">포스트모템</h1>
-          <p className="text-muted-foreground">
-            프로젝트별 장애·이슈 원인 분석과 재발 방지 대책을 기록합니다.
-          </p>
-        </div>
+      <PageHeader
+        title="포스트모템"
+        description="프로젝트별 장애·이슈 원인 분석과 재발 방지 대책을 기록합니다."
+      >
         <PostmortemCreateButton projects={availableProjects} />
-      </div>
+      </PageHeader>
 
       {items.length > 0 ? (
         <div className="rounded-lg border overflow-x-auto">
@@ -117,12 +117,11 @@ export default async function PostmortemListPage() {
           </Table>
         </div>
       ) : (
-        <Card>
-          <CardContent className="py-8 text-center text-muted-foreground">
-            아직 작성된 포스트모템이 없습니다. 위의 &quot;포스트모템 작성&quot;
-            버튼을 클릭하여 작성하세요.
-          </CardContent>
-        </Card>
+        <EmptyState
+          icon={AlertTriangle}
+          title="작성된 포스트모템이 없습니다"
+          description="프로젝트별 장애·이슈 원인 분석과 재발 방지 대책을 기록하세요."
+        />
       )}
     </div>
   );

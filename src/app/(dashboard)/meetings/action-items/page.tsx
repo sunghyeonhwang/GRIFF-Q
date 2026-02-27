@@ -1,9 +1,7 @@
-import Link from "next/link";
 import { requireAuth } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
-import { Button } from "@/components/ui/button";
-import { ArrowLeft } from "lucide-react";
 import { ActionItemsView } from "@/components/meetings/action-items-view";
+import { PageHeader } from "@/components/layout/page-header";
 
 export default async function ActionItemsPage() {
   const user = await requireAuth();
@@ -36,19 +34,10 @@ export default async function ActionItemsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-3">
-        <Link href="/meetings">
-          <Button variant="ghost" size="icon">
-            <ArrowLeft className="size-4" />
-          </Button>
-        </Link>
-        <div>
-          <h1 className="text-2xl font-bold">액션아이템 통합 뷰</h1>
-          <p className="text-muted-foreground">
-            모든 회의록의 액션아이템을 한눈에 확인합니다.
-          </p>
-        </div>
-      </div>
+      <PageHeader
+        title="액션아이템 통합 뷰"
+        description="모든 회의록의 액션아이템을 한눈에 확인합니다."
+      />
       <ActionItemsView actionItems={actionItems} />
     </div>
   );

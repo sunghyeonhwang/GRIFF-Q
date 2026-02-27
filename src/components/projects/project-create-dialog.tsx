@@ -23,6 +23,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Plus } from "lucide-react";
+import { toast } from "sonner";
 
 interface User {
   id: string;
@@ -54,7 +55,7 @@ export function ProjectCreateDialog({
 
   async function handleSubmit() {
     if (!form.name.trim()) {
-      alert("프로젝트명을 입력해주세요.");
+      toast.error("프로젝트명을 입력해주세요.");
       return;
     }
 
@@ -72,7 +73,7 @@ export function ProjectCreateDialog({
     setLoading(false);
 
     if (error) {
-      alert("프로젝트 생성 실패: " + error.message);
+      toast.error("프로젝트 생성 실패", { description: error.message });
       return;
     }
 

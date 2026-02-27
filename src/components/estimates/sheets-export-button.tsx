@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Sheet, Loader2 } from "lucide-react";
+import { toast } from "sonner";
 
 interface SheetsExportButtonProps {
   estimateId: string;
@@ -20,13 +21,13 @@ export function SheetsExportButton({ estimateId }: SheetsExportButtonProps) {
       const data = await res.json();
 
       if (!res.ok) {
-        alert(data.error || "Google Sheets 내보내기에 실패했습니다.");
+        toast.error(data.error || "Google Sheets 내보내기에 실패했습니다.");
         return;
       }
 
       window.open(data.url, "_blank");
     } catch {
-      alert("Google Sheets 내보내기에 실패했습니다.");
+      toast.error("Google Sheets 내보내기에 실패했습니다.");
     } finally {
       setLoading(false);
     }

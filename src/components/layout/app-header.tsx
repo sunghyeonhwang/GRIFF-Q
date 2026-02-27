@@ -3,6 +3,7 @@ import { Separator } from "@/components/ui/separator";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { NotificationBell } from "@/components/layout/notification-bell";
 import { SearchBar } from "@/components/layout/search-bar";
+import { BreadcrumbNav } from "@/components/layout/breadcrumb-nav";
 import { type UserProfile } from "@/types/auth.types";
 
 interface AppHeaderProps {
@@ -14,6 +15,7 @@ export function AppHeader({ user }: AppHeaderProps) {
     <header className="flex h-14 shrink-0 items-center gap-2 border-b px-4">
       <SidebarTrigger className="-ml-1" />
       <Separator orientation="vertical" className="mr-2 h-4" />
+      <BreadcrumbNav />
       <div className="ml-auto flex items-center gap-2">
         <SearchBar />
         <NotificationBell userId={user.id} />

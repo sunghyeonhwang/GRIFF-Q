@@ -1,18 +1,17 @@
 import { requireAuth } from "@/lib/auth";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { PageHeader } from "@/components/layout/page-header";
 
 export default async function RetrospectiveGuidePage() {
   await requireAuth();
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold">회고 사용가이드</h1>
-        <p className="text-muted-foreground">
-          스프린트 회고와 포스트모템 작성 방법을 안내합니다.
-        </p>
-      </div>
+      <PageHeader
+        title="회고 사용가이드"
+        description="스프린트 회고와 포스트모템 작성 방법을 안내합니다."
+      />
 
       {/* 스프린트 회고 가이드 */}
       <Card>

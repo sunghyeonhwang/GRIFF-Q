@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Check } from "lucide-react";
+import { toast } from "sonner";
 
 interface PaymentStatusActionsProps {
   paymentId: string;
@@ -32,7 +33,7 @@ export function PaymentStatusActions({
       .eq("id", paymentId);
 
     if (error) {
-      alert("상태 변경 실패: " + error.message);
+      toast.error("상태 변경 실패", { description: error.message });
       return;
     }
 
@@ -57,6 +58,7 @@ export function PaymentStatusActions({
       await supabase.from("notifications").insert(rows);
     }
 
+    toast.success("결제 완료 처리되었습니다");
     router.refresh();
   }
 

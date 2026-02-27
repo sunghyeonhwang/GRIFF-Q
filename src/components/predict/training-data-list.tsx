@@ -27,6 +27,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Trash2, Eye, RotateCw, FileText, MessageSquare } from "lucide-react";
+import { toast } from "sonner";
 
 interface AnalysisResult {
   tone_style?: string;
@@ -85,7 +86,7 @@ export function TrainingDataList({
     setDeleting(null);
 
     if (error) {
-      alert("삭제 실패: " + error.message);
+      toast.error("삭제 실패", { description: error.message });
       return;
     }
 
@@ -114,7 +115,7 @@ export function TrainingDataList({
       const result = await res.json();
 
       if (!res.ok) {
-        alert("재분석 실패: " + (result.error || "알 수 없는 오류"));
+        toast.error("재분석 실패", { description: result.error || "알 수 없는 오류" });
         return;
       }
 
@@ -129,7 +130,7 @@ export function TrainingDataList({
 
       if (refreshed) setData(refreshed);
     } catch {
-      alert("네트워크 오류가 발생했습니다.");
+      toast.error("네트워크 오류가 발생했습니다.");
     } finally {
       setReanalyzing(null);
     }

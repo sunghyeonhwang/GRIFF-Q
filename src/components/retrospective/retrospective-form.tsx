@@ -45,6 +45,7 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { Plus, Trash2, Star } from "lucide-react";
+import { toast } from "sonner";
 
 interface Project {
   id: string;
@@ -226,7 +227,7 @@ export function RetrospectiveForm({
       .single();
 
     if (error) {
-      alert("프로젝트 생성 실패: " + error.message);
+      toast.error("프로젝트 생성 실패", { description: error.message });
       return;
     }
     if (data) {
@@ -239,15 +240,15 @@ export function RetrospectiveForm({
 
   async function save(status: "draft" | "submitted") {
     if (!form.project_id) {
-      alert("프로젝트를 선택해주세요.");
+      toast.error("프로젝트를 선택해주세요.");
       return;
     }
     if (!form.period_start || !form.period_end) {
-      alert("회고 기간을 입력해주세요.");
+      toast.error("회고 기간을 입력해주세요.");
       return;
     }
     if (form.roles.length === 0) {
-      alert("역할을 하나 이상 선택해주세요.");
+      toast.error("역할을 하나 이상 선택해주세요.");
       return;
     }
 
@@ -294,7 +295,7 @@ export function RetrospectiveForm({
     setLoading(false);
 
     if (error) {
-      alert("저장 실패: " + error.message);
+      toast.error("저장 실패", { description: error.message });
       return;
     }
 

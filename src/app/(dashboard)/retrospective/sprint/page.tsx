@@ -20,6 +20,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Plus, Users, BarChart3 } from "lucide-react";
+import { PageHeader } from "@/components/layout/page-header";
 
 export default async function RetrospectivePage() {
   const user = await requireAuth();
@@ -120,20 +121,17 @@ export default async function RetrospectivePage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-2xl font-bold">스프린트 회고</h1>
-          <p className="text-muted-foreground">
-            프로젝트별 KPT + SSC 스프린트 회고를 작성하고 취합합니다.
-          </p>
-        </div>
+      <PageHeader
+        title="스프린트 회고"
+        description="프로젝트별 KPT + SSC 스프린트 회고를 작성하고 취합합니다."
+      >
         <Link href="/retrospective/new">
           <Button>
             <Plus className="mr-2 size-4" />
             회고 작성
           </Button>
         </Link>
-      </div>
+      </PageHeader>
 
       <Tabs defaultValue="project">
         <TabsList>

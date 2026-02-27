@@ -11,6 +11,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { UserRoleActions } from "@/components/settings/user-role-actions";
+import { PageHeader } from "@/components/layout/page-header";
 
 const ROLE_LABELS: Record<string, string> = {
   super: "슈퍼관리자",
@@ -32,12 +33,10 @@ export default async function UsersPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-lg font-semibold">계정 관리</h2>
-        <p className="text-sm text-muted-foreground">
-          등록된 사용자 목록과 역할을 관리합니다.
-        </p>
-      </div>
+      <PageHeader
+        title="계정 관리"
+        description="등록된 사용자 목록과 역할을 관리합니다."
+      />
 
       <Card>
         <CardContent className="p-0 overflow-x-auto">
