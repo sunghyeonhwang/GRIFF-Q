@@ -1,8 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { z } from "zod";
+import { useFormErrors } from "@/hooks/use-form-errors";
+import { useUnsavedChanges } from "@/hooks/use-unsaved-changes";
+import { useFormShortcuts } from "@/hooks/use-form-shortcuts";
+import { FieldError } from "@/components/ui/field-error";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -21,10 +26,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Plus, Trash2, ChevronDown } from "lucide-react";
+import { Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
-/* ─── 타입 ─── */
+/* --- 타입 --- */
+
+const postmortemSchema = z.object({
+  title: z.string().min(1, "제목을 입력해주세요."),
+  incident_date: z.string().min(1, "발생일을 입력해주세요."),
+  severity: z.string().min(1, "심각도를 선택해주세요."),
+});
 
 interface ActionItem {
   title: string;
@@ -76,7 +87,7 @@ function emptyTimeline(): TimelineEntry {
   };
 }
 
-/* ─── 폼 컴포넌트 ─── */
+/* --- 폼 컴포넌트 --- */
 
 export function PostmortemForm({
   projectId,
@@ -96,7 +107,20 @@ export function PostmortemForm({
       : [emptyTimeline()],
   });
 
-  /* ── 타임라인 CRUD ── */
+  const { validate, clearError, getError, hasError } = useFormErrors(postmortemSchema);
+  const { markSaved } = useUnsavedChanges(form);
+
+  const saveRef = useRef<() => void>(undefined);
+  const cancelRef = useRef<() => void>(undefined);
+  saveRef.current = handleSave;
+  cancelRef.current = () => router.back();
+
+  useFormShortcuts({
+    onSave: useCallback(() => saveRef.current?.(), []),
+    onCancel: useCallback(() => cancelRef.current?.(), []),
+  });
+
+  /* -- 타임라인 CRUD -- */
 
   function addEntry() {
     setForm((p) => ({ ...p, timeline: [...p.timeline, emptyTimeline()] }));
@@ -119,7 +143,7 @@ export function PostmortemForm({
     }));
   }
 
-  /* ── 교훈 (타임라인 내부) ── */
+  /* -- 교훈 (타임라인 내부) -- */
 
   function addLesson(entryIdx: number) {
     setForm((p) => ({
@@ -155,7 +179,7 @@ export function PostmortemForm({
     }));
   }
 
-  /* ── 액션 아이템 (타임라인 내부) ── */
+  /* -- 액션 아이템 (타임라인 내부) -- */
 
   function addAction(entryIdx: number) {
     setForm((p) => ({
@@ -206,17 +230,10 @@ export function PostmortemForm({
     }));
   }
 
-  /* ── 저장 ── */
+  /* -- 저장 -- */
 
   async function handleSave() {
-    if (!form.title.trim()) {
-      toast.error("제목을 입력해주세요.");
-      return;
-    }
-    if (!form.incident_date) {
-      toast.error("발생일을 입력해주세요.");
-      return;
-    }
+    if (!validate(form)) return;
 
     setLoading(true);
 
@@ -235,7 +252,6 @@ export function PostmortemForm({
       incident_date: form.incident_date,
       severity: form.severity,
       timeline: cleanedTimeline,
-      // 하위 호환: 기존 컬럼에도 통합 데이터 저장
       root_cause: cleanedTimeline.map((e) => e.root_cause).filter(Boolean).join("\n\n"),
       lessons_learned: cleanedTimeline.flatMap((e) => e.lessons),
       action_items: cleanedTimeline.flatMap((e) => e.actions),
@@ -260,11 +276,12 @@ export function PostmortemForm({
       return;
     }
 
+    markSaved();
     router.push(`/projects/${projectId}`);
     router.refresh();
   }
 
-  /* ── 렌더링 ── */
+  /* -- 렌더링 -- */
 
   return (
     <div className="space-y-6">
@@ -275,36 +292,43 @@ export function PostmortemForm({
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
-            <Label>제목 *</Label>
+            <Label>제목 <span className="text-destructive">*</span></Label>
             <Input
               value={form.title}
-              onChange={(e) =>
-                setForm((p) => ({ ...p, title: e.target.value }))
-              }
+              onChange={(e) => {
+                setForm((p) => ({ ...p, title: e.target.value }));
+                clearError("title");
+              }}
               placeholder="인시던트 제목을 입력하세요"
+              className={hasError("title") ? "border-destructive" : ""}
             />
+            <FieldError message={getError("title")} />
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label>발생일 *</Label>
+              <Label>발생일 <span className="text-destructive">*</span></Label>
               <Input
                 type="date"
                 value={form.incident_date}
-                onChange={(e) =>
-                  setForm((p) => ({ ...p, incident_date: e.target.value }))
-                }
+                onChange={(e) => {
+                  setForm((p) => ({ ...p, incident_date: e.target.value }));
+                  clearError("incident_date");
+                }}
+                className={hasError("incident_date") ? "border-destructive" : ""}
               />
+              <FieldError message={getError("incident_date")} />
             </div>
             <div className="space-y-2">
-              <Label>심각도</Label>
+              <Label>심각도 <span className="text-destructive">*</span></Label>
               <Select
                 value={form.severity}
-                onValueChange={(v) =>
-                  setForm((p) => ({ ...p, severity: v }))
-                }
+                onValueChange={(v) => {
+                  setForm((p) => ({ ...p, severity: v }));
+                  clearError("severity");
+                }}
               >
-                <SelectTrigger>
+                <SelectTrigger className={hasError("severity") ? "border-destructive" : ""}>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -320,6 +344,7 @@ export function PostmortemForm({
                   ))}
                 </SelectContent>
               </Select>
+              <FieldError message={getError("severity")} />
             </div>
           </div>
         </CardContent>
@@ -385,7 +410,7 @@ export function PostmortemForm({
                       />
                     </div>
                     <div className="space-y-1">
-                      <Label className="text-xs">제목 *</Label>
+                      <Label className="text-xs">제목 <span className="text-destructive">*</span></Label>
                       <Input
                         value={entry.title}
                         onChange={(e) =>

@@ -1,9 +1,14 @@
 "use client";
 
-import { useState, type KeyboardEvent } from "react";
+import { useState, useRef, useCallback, type KeyboardEvent } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { AVATAR_ICONS, DECISION_PATTERNS } from "@/lib/predict-constants";
+import { z } from "zod";
+import { useFormErrors } from "@/hooks/use-form-errors";
+import { useUnsavedChanges } from "@/hooks/use-unsaved-changes";
+import { useFormShortcuts } from "@/hooks/use-form-shortcuts";
+import { FieldError } from "@/components/ui/field-error";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -24,6 +29,10 @@ import {
 } from "@/components/ui/select";
 import { X } from "lucide-react";
 import { toast } from "sonner";
+
+const avatarSchema = z.object({
+  name: z.string().min(1, "이름을 입력해주세요."),
+});
 
 interface AvatarFormProps {
   userId: string;
@@ -53,6 +62,19 @@ export function AvatarForm({ userId, initialData }: AvatarFormProps) {
   const [sensitiveInput, setSensitiveInput] = useState("");
   const [commonPhrasesInput, setCommonPhrasesInput] = useState("");
 
+  const { validate, clearError, getError, hasError } = useFormErrors(avatarSchema);
+  const { markSaved } = useUnsavedChanges(form);
+
+  const saveRef = useRef<() => void>(undefined);
+  const cancelRef = useRef<() => void>(undefined);
+  saveRef.current = save;
+  cancelRef.current = () => router.back();
+
+  useFormShortcuts({
+    onSave: useCallback(() => saveRef.current?.(), []),
+    onCancel: useCallback(() => cancelRef.current?.(), []),
+  });
+
   function handleTagKeyDown(
     e: KeyboardEvent<HTMLInputElement>,
     field: "personality_tags" | "sensitive_topics" | "common_phrases",
@@ -77,10 +99,7 @@ export function AvatarForm({ userId, initialData }: AvatarFormProps) {
   }
 
   async function save() {
-    if (!form.name.trim()) {
-      toast.error("이름을 입력해주세요.");
-      return;
-    }
+    if (!validate({ name: form.name })) return;
 
     setLoading(true);
     const supabase = createClient();
@@ -118,6 +137,7 @@ export function AvatarForm({ userId, initialData }: AvatarFormProps) {
       return;
     }
 
+    markSaved();
     router.push("/predict/avatars");
     router.refresh();
   }
@@ -130,12 +150,17 @@ export function AvatarForm({ userId, initialData }: AvatarFormProps) {
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
-            <Label>이름 *</Label>
+            <Label>이름 <span className="text-destructive">*</span></Label>
             <Input
               value={form.name}
-              onChange={(e) => setForm((p) => ({ ...p, name: e.target.value }))}
+              onChange={(e) => {
+                setForm((p) => ({ ...p, name: e.target.value }));
+                clearError("name");
+              }}
               placeholder="클라이언트 이름"
+              className={hasError("name") ? "border-destructive" : ""}
             />
+            <FieldError message={getError("name")} />
           </div>
 
           <div className="grid grid-cols-2 gap-4">

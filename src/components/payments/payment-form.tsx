@@ -1,9 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { BANKS } from "@/lib/payment-constants";
+import { z } from "zod";
+import { useFormErrors } from "@/hooks/use-form-errors";
+import { useUnsavedChanges } from "@/hooks/use-unsaved-changes";
+import { useFormShortcuts } from "@/hooks/use-form-shortcuts";
+import { FieldError } from "@/components/ui/field-error";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -22,6 +27,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+
+const paymentSchema = z.object({
+  name: z.string().min(1, "이름을 입력해주세요."),
+  amount: z.string().min(1, "금액을 입력해주세요."),
+  bank: z.string().min(1, "은행을 선택해주세요."),
+  account_number: z.string().min(1, "계좌번호를 입력해주세요."),
+});
 
 interface PaymentFormProps {
   userId: string;
@@ -47,6 +59,20 @@ export function PaymentForm({
     note: initialData?.note ?? "",
   });
 
+  const { validate, clearError, getError, hasError } = useFormErrors(paymentSchema);
+  const { markSaved } = useUnsavedChanges(form);
+
+  const saveRef = useRef<() => void>(undefined);
+  const cancelRef = useRef<() => void>(undefined);
+  saveRef.current = save;
+  cancelRef.current = () => router.back();
+
+  useFormShortcuts({
+    onSave: useCallback(() => saveRef.current?.(), []),
+    onCancel: useCallback(() => cancelRef.current?.(), []),
+    disabled: readOnly,
+  });
+
   function formatAmount(value: string) {
     const num = value.replace(/[^0-9]/g, "");
     return num ? Number(num).toLocaleString() : "";
@@ -55,25 +81,11 @@ export function PaymentForm({
   function handleAmountChange(value: string) {
     const raw = value.replace(/[^0-9]/g, "");
     setForm((p) => ({ ...p, amount: raw }));
+    clearError("amount");
   }
 
   async function save() {
-    if (!form.name.trim()) {
-      toast.error("이름을 입력해주세요.");
-      return;
-    }
-    if (!form.amount) {
-      toast.error("금액을 입력해주세요.");
-      return;
-    }
-    if (!form.bank) {
-      toast.error("은행을 선택해주세요.");
-      return;
-    }
-    if (!form.account_number.trim()) {
-      toast.error("계좌번호를 입력해주세요.");
-      return;
-    }
+    if (!validate(form)) return;
 
     setLoading(true);
     const supabase = createClient();
@@ -106,6 +118,7 @@ export function PaymentForm({
       return;
     }
 
+    markSaved();
     toast.success(initialData?.id ? "결제 정보가 수정되었습니다" : "결제가 등록되었습니다");
     router.push("/payments");
     router.refresh();
@@ -119,34 +132,44 @@ export function PaymentForm({
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
-            <Label>이름</Label>
+            <Label>이름 <span className="text-destructive">*</span></Label>
             <Input
               value={form.name}
-              onChange={(e) => setForm((p) => ({ ...p, name: e.target.value }))}
+              onChange={(e) => {
+                setForm((p) => ({ ...p, name: e.target.value }));
+                clearError("name");
+              }}
               placeholder="입금/결제 대상 이름"
               disabled={readOnly}
+              className={hasError("name") ? "border-destructive" : ""}
             />
+            <FieldError message={getError("name")} />
           </div>
 
           <div className="space-y-2">
-            <Label>금액</Label>
+            <Label>금액 <span className="text-destructive">*</span></Label>
             <Input
               value={formatAmount(form.amount)}
               onChange={(e) => handleAmountChange(e.target.value)}
               placeholder="0"
               disabled={readOnly}
+              className={hasError("amount") ? "border-destructive" : ""}
             />
+            <FieldError message={getError("amount")} />
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label>은행</Label>
+              <Label>은행 <span className="text-destructive">*</span></Label>
               <Select
                 value={form.bank}
-                onValueChange={(v) => setForm((p) => ({ ...p, bank: v }))}
+                onValueChange={(v) => {
+                  setForm((p) => ({ ...p, bank: v }));
+                  clearError("bank");
+                }}
                 disabled={readOnly}
               >
-                <SelectTrigger>
+                <SelectTrigger className={hasError("bank") ? "border-destructive" : ""}>
                   <SelectValue placeholder="은행 선택" />
                 </SelectTrigger>
                 <SelectContent>
@@ -157,17 +180,21 @@ export function PaymentForm({
                   ))}
                 </SelectContent>
               </Select>
+              <FieldError message={getError("bank")} />
             </div>
             <div className="space-y-2">
-              <Label>계좌번호</Label>
+              <Label>계좌번호 <span className="text-destructive">*</span></Label>
               <Input
                 value={form.account_number}
-                onChange={(e) =>
-                  setForm((p) => ({ ...p, account_number: e.target.value }))
-                }
+                onChange={(e) => {
+                  setForm((p) => ({ ...p, account_number: e.target.value }));
+                  clearError("account_number");
+                }}
                 placeholder="계좌번호"
                 disabled={readOnly}
+                className={hasError("account_number") ? "border-destructive" : ""}
               />
+              <FieldError message={getError("account_number")} />
             </div>
           </div>
 

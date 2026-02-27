@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import {
@@ -10,6 +10,11 @@ import {
   SCORE_LABELS,
   type PartEvaluation,
 } from "@/lib/retrospective-constants";
+import { z } from "zod";
+import { useFormErrors } from "@/hooks/use-form-errors";
+import { useUnsavedChanges } from "@/hooks/use-unsaved-changes";
+import { useFormShortcuts } from "@/hooks/use-form-shortcuts";
+import { FieldError } from "@/components/ui/field-error";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -47,6 +52,13 @@ import {
 import { Plus, Trash2, Star } from "lucide-react";
 import { toast } from "sonner";
 
+const retrospectiveSchema = z.object({
+  project_id: z.string().min(1, "프로젝트를 선택해주세요."),
+  period_start: z.string().min(1, "시작일을 입력해주세요."),
+  period_end: z.string().min(1, "종료일을 입력해주세요."),
+  roles: z.array(z.string()).min(1, "역할을 하나 이상 선택해주세요."),
+});
+
 interface Project {
   id: string;
   name: string;
@@ -58,24 +70,18 @@ interface RetrospectiveData {
   period_start: string;
   period_end: string;
   roles: string[];
-  // 만족도 점수
   satisfaction_scores: Record<string, number>;
-  // 파트별 평가
   part_evaluations: PartEvaluation[];
-  // KPT
   keep: string[];
   problem: string[];
   try: string[];
-  // SSC
   start_items: string[];
   stop: string[];
   continue_items: string[];
-  // 종합 의견
   overall_best: string;
   overall_worst: string;
   overall_improvement: string;
   overall_message: string;
-  // 공유 메모 (기존 유지)
   team_share_note: string;
   next_action_note: string;
   status: string;
@@ -167,13 +173,29 @@ export function RetrospectiveForm({
     status: initialData?.status ?? "draft",
   });
 
+  const { validate, clearError, getError, hasError } = useFormErrors(retrospectiveSchema);
+  const { markSaved } = useUnsavedChanges(form);
+
+  const saveRef = useRef<(s: "draft" | "submitted") => void>(undefined);
+  const cancelRef = useRef<() => void>(undefined);
+  saveRef.current = save;
+  cancelRef.current = () => router.back();
+
+  useFormShortcuts({
+    onSave: useCallback(() => saveRef.current?.("draft"), []),
+    onSubmit: useCallback(() => setShowSubmitDialog(true), []),
+    onCancel: useCallback(() => cancelRef.current?.(), []),
+    disabled: readOnly,
+  });
+
   function toggleRole(role: string) {
-    setForm((prev) => ({
-      ...prev,
-      roles: prev.roles.includes(role)
+    setForm((prev) => {
+      const newRoles = prev.roles.includes(role)
         ? prev.roles.filter((r) => r !== role)
-        : [...prev.roles, role],
-    }));
+        : [...prev.roles, role];
+      return { ...prev, roles: newRoles };
+    });
+    clearError("roles");
   }
 
   function setSatisfaction(key: string, value: number) {
@@ -232,6 +254,7 @@ export function RetrospectiveForm({
     }
     if (data) {
       setForm((prev) => ({ ...prev, project_id: data.id }));
+      clearError("project_id");
       setNewProjectName("");
       setShowNewProject(false);
       router.refresh();
@@ -239,23 +262,11 @@ export function RetrospectiveForm({
   }
 
   async function save(status: "draft" | "submitted") {
-    if (!form.project_id) {
-      toast.error("프로젝트를 선택해주세요.");
-      return;
-    }
-    if (!form.period_start || !form.period_end) {
-      toast.error("회고 기간을 입력해주세요.");
-      return;
-    }
-    if (form.roles.length === 0) {
-      toast.error("역할을 하나 이상 선택해주세요.");
-      return;
-    }
+    if (!validate(form)) return;
 
     setLoading(true);
     const supabase = createClient();
 
-    // 점수 0인 파트 평가는 빈 값으로 처리
     const filledEvals = form.part_evaluations.filter((e) => e.score > 0);
 
     const payload = {
@@ -299,6 +310,7 @@ export function RetrospectiveForm({
       return;
     }
 
+    markSaved();
     router.push("/retrospective");
     router.refresh();
   }
@@ -376,16 +388,17 @@ export function RetrospectiveForm({
           </div>
 
           <div className="space-y-2">
-            <Label>프로젝트</Label>
+            <Label>프로젝트 <span className="text-destructive">*</span></Label>
             <div className="flex gap-2">
               <Select
                 value={form.project_id}
-                onValueChange={(v) =>
-                  setForm((prev) => ({ ...prev, project_id: v }))
-                }
+                onValueChange={(v) => {
+                  setForm((prev) => ({ ...prev, project_id: v }));
+                  clearError("project_id");
+                }}
                 disabled={readOnly}
               >
-                <SelectTrigger className="flex-1">
+                <SelectTrigger className={`flex-1 ${hasError("project_id") ? "border-destructive" : ""}`}>
                   <SelectValue placeholder="프로젝트 선택" />
                 </SelectTrigger>
                 <SelectContent>
@@ -406,36 +419,43 @@ export function RetrospectiveForm({
                 </Button>
               )}
             </div>
+            <FieldError message={getError("project_id")} />
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label>시작일</Label>
+              <Label>시작일 <span className="text-destructive">*</span></Label>
               <Input
                 type="date"
                 value={form.period_start}
-                onChange={(e) =>
-                  setForm((prev) => ({ ...prev, period_start: e.target.value }))
-                }
+                onChange={(e) => {
+                  setForm((prev) => ({ ...prev, period_start: e.target.value }));
+                  clearError("period_start");
+                }}
                 disabled={readOnly}
+                className={hasError("period_start") ? "border-destructive" : ""}
               />
+              <FieldError message={getError("period_start")} />
             </div>
             <div className="space-y-2">
-              <Label>종료일</Label>
+              <Label>종료일 <span className="text-destructive">*</span></Label>
               <Input
                 type="date"
                 value={form.period_end}
-                onChange={(e) =>
-                  setForm((prev) => ({ ...prev, period_end: e.target.value }))
-                }
+                onChange={(e) => {
+                  setForm((prev) => ({ ...prev, period_end: e.target.value }));
+                  clearError("period_end");
+                }}
                 disabled={readOnly}
+                className={hasError("period_end") ? "border-destructive" : ""}
               />
+              <FieldError message={getError("period_end")} />
             </div>
           </div>
 
           <div className="space-y-2">
-            <Label>담당 역할 (복수 선택)</Label>
-            <div className="flex flex-wrap gap-3">
+            <Label>담당 역할 (복수 선택) <span className="text-destructive">*</span></Label>
+            <div className={`flex flex-wrap gap-3 ${hasError("roles") ? "rounded-md border border-destructive p-2" : ""}`}>
               {ROLES.map((role) => (
                 <label
                   key={role}
@@ -450,6 +470,7 @@ export function RetrospectiveForm({
                 </label>
               ))}
             </div>
+            <FieldError message={getError("roles")} />
           </div>
         </CardContent>
       </Card>

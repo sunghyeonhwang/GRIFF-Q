@@ -1,9 +1,15 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { VAT_RATE } from "@/lib/estimate-constants";
+import { z } from "zod";
+import { useFormErrors } from "@/hooks/use-form-errors";
+import { useUnsavedChanges } from "@/hooks/use-unsaved-changes";
+import { useAutoSaveStatus } from "@/hooks/use-auto-save-status";
+import { useFormShortcuts } from "@/hooks/use-form-shortcuts";
+import { FieldError } from "@/components/ui/field-error";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -31,6 +37,12 @@ import {
 } from "@/components/ui/table";
 import { Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
+
+const estimateSchema = z.object({
+  project_name: z.string().min(1, "프로젝트명을 입력해주세요."),
+  client_name: z.string().min(1, "고객명을 입력해주세요."),
+  estimate_date: z.string().min(1, "견적일을 입력해주세요."),
+});
 
 interface EstimateItem {
   item_name: string;
@@ -103,6 +115,21 @@ export function EstimateForm({
       : [createEmptyItem()]
   );
 
+  const { validate, clearError, getError, hasError } = useFormErrors(estimateSchema);
+  const { markSaved } = useUnsavedChanges({ form, items });
+  const autoSave = useAutoSaveStatus();
+
+  const saveRef = useRef<() => void>(undefined);
+  const cancelRef = useRef<() => void>(undefined);
+  saveRef.current = save;
+  cancelRef.current = () => router.back();
+
+  useFormShortcuts({
+    onSave: useCallback(() => saveRef.current?.(), []),
+    onCancel: useCallback(() => cancelRef.current?.(), []),
+    disabled: readOnly,
+  });
+
   function updateItem(index: number, field: keyof EstimateItem, value: string) {
     setItems((prev) =>
       prev.map((item, i) => (i === index ? { ...item, [field]: value } : item))
@@ -131,18 +158,7 @@ export function EstimateForm({
   const total = subtotal + vat;
 
   async function save() {
-    if (!form.project_name.trim()) {
-      toast.error("프로젝트명을 입력해주세요.");
-      return;
-    }
-    if (!form.client_name.trim()) {
-      toast.error("고객명을 입력해주세요.");
-      return;
-    }
-    if (!form.estimate_date) {
-      toast.error("견적일을 입력해주세요.");
-      return;
-    }
+    if (!validate(form)) return;
 
     const validItems = items.filter((item) => item.item_name.trim());
     if (validItems.length === 0) {
@@ -151,6 +167,7 @@ export function EstimateForm({
     }
 
     setLoading(true);
+    autoSave.setSaving();
     const supabase = createClient();
 
     const estimatePayload = {
@@ -165,14 +182,12 @@ export function EstimateForm({
     let error;
 
     if (initialData?.id) {
-      // Update existing estimate
       ({ error } = await supabase
         .from("estimates")
         .update(estimatePayload)
         .eq("id", initialData.id));
 
       if (!error) {
-        // Delete existing items and re-insert
         ({ error } = await supabase
           .from("estimate_items")
           .delete()
@@ -196,7 +211,6 @@ export function EstimateForm({
         }
       }
     } else {
-      // Insert new estimate
       const { data, error: insertError } = await supabase
         .from("estimates")
         .insert(estimatePayload)
@@ -226,10 +240,13 @@ export function EstimateForm({
     setLoading(false);
 
     if (error) {
+      autoSave.setError();
       toast.error("저장 실패", { description: error.message });
       return;
     }
 
+    autoSave.setSaved();
+    markSaved();
     router.push("/estimates");
     router.refresh();
   }
@@ -243,40 +260,49 @@ export function EstimateForm({
         <CardContent className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label>프로젝트명</Label>
+              <Label>프로젝트명 <span className="text-destructive">*</span></Label>
               <Input
                 value={form.project_name}
-                onChange={(e) =>
-                  setForm((p) => ({ ...p, project_name: e.target.value }))
-                }
+                onChange={(e) => {
+                  setForm((p) => ({ ...p, project_name: e.target.value }));
+                  clearError("project_name");
+                }}
                 placeholder="프로젝트명을 입력하세요"
                 disabled={readOnly}
+                className={hasError("project_name") ? "border-destructive" : ""}
               />
+              <FieldError message={getError("project_name")} />
             </div>
             <div className="space-y-2">
-              <Label>고객명</Label>
+              <Label>고객명 <span className="text-destructive">*</span></Label>
               <Input
                 value={form.client_name}
-                onChange={(e) =>
-                  setForm((p) => ({ ...p, client_name: e.target.value }))
-                }
+                onChange={(e) => {
+                  setForm((p) => ({ ...p, client_name: e.target.value }));
+                  clearError("client_name");
+                }}
                 placeholder="고객명을 입력하세요"
                 disabled={readOnly}
+                className={hasError("client_name") ? "border-destructive" : ""}
               />
+              <FieldError message={getError("client_name")} />
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label>견적일</Label>
+              <Label>견적일 <span className="text-destructive">*</span></Label>
               <Input
                 type="date"
                 value={form.estimate_date}
-                onChange={(e) =>
-                  setForm((p) => ({ ...p, estimate_date: e.target.value }))
-                }
+                onChange={(e) => {
+                  setForm((p) => ({ ...p, estimate_date: e.target.value }));
+                  clearError("estimate_date");
+                }}
                 disabled={readOnly}
+                className={hasError("estimate_date") ? "border-destructive" : ""}
               />
+              <FieldError message={getError("estimate_date")} />
             </div>
             <div className="space-y-2">
               <Label>유효기간</Label>
@@ -452,7 +478,12 @@ export function EstimateForm({
       </Card>
 
       {!readOnly && (
-        <div className="flex justify-end">
+        <div className="flex items-center justify-end gap-3">
+          {autoSave.statusText && (
+            <span className={`text-sm ${autoSave.status === "error" ? "text-destructive" : "text-muted-foreground"}`}>
+              {autoSave.statusText}
+            </span>
+          )}
           <Button onClick={save} disabled={loading}>
             {loading ? "저장 중..." : "저장"}
           </Button>

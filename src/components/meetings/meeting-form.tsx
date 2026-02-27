@@ -1,8 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { z } from "zod";
+import { useFormErrors } from "@/hooks/use-form-errors";
+import { useUnsavedChanges } from "@/hooks/use-unsaved-changes";
+import { useFormShortcuts } from "@/hooks/use-form-shortcuts";
+import { FieldError } from "@/components/ui/field-error";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -23,6 +28,11 @@ import {
 } from "@/components/ui/select";
 import { Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
+
+const meetingSchema = z.object({
+  title: z.string().min(1, "회의 제목을 입력해주세요."),
+  meeting_date: z.string().min(1, "회의 날짜를 입력해주세요."),
+});
 
 interface User {
   id: string;
@@ -76,6 +86,20 @@ export function MeetingForm({
       : []
   );
 
+  const { validate, clearError, getError, hasError } = useFormErrors(meetingSchema);
+  const { markSaved } = useUnsavedChanges({ form, actionItems });
+
+  const saveRef = useRef<() => void>(undefined);
+  const cancelRef = useRef<() => void>(undefined);
+  saveRef.current = save;
+  cancelRef.current = () => router.back();
+
+  useFormShortcuts({
+    onSave: useCallback(() => saveRef.current?.(), []),
+    onCancel: useCallback(() => cancelRef.current?.(), []),
+    disabled: readOnly,
+  });
+
   function toggleAttendee(uid: string) {
     setForm((prev) => ({
       ...prev,
@@ -105,14 +129,7 @@ export function MeetingForm({
   }
 
   async function save() {
-    if (!form.title.trim()) {
-      toast.error("회의 제목을 입력해주세요.");
-      return;
-    }
-    if (!form.meeting_date) {
-      toast.error("회의 날짜를 입력해주세요.");
-      return;
-    }
+    if (!validate(form)) return;
 
     setLoading(true);
     const supabase = createClient();
@@ -174,6 +191,7 @@ export function MeetingForm({
     }
 
     setLoading(false);
+    markSaved();
     router.push("/meetings");
     router.refresh();
   }
@@ -192,23 +210,33 @@ export function MeetingForm({
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
-            <Label>회의 제목</Label>
+            <Label>회의 제목 <span className="text-destructive">*</span></Label>
             <Input
               value={form.title}
-              onChange={(e) => setForm((p) => ({ ...p, title: e.target.value }))}
+              onChange={(e) => {
+                setForm((p) => ({ ...p, title: e.target.value }));
+                clearError("title");
+              }}
               placeholder="회의 제목"
               disabled={readOnly}
+              className={hasError("title") ? "border-destructive" : ""}
             />
+            <FieldError message={getError("title")} />
           </div>
 
           <div className="space-y-2">
-            <Label>회의 날짜</Label>
+            <Label>회의 날짜 <span className="text-destructive">*</span></Label>
             <Input
               type="date"
               value={form.meeting_date}
-              onChange={(e) => setForm((p) => ({ ...p, meeting_date: e.target.value }))}
+              onChange={(e) => {
+                setForm((p) => ({ ...p, meeting_date: e.target.value }));
+                clearError("meeting_date");
+              }}
               disabled={readOnly}
+              className={hasError("meeting_date") ? "border-destructive" : ""}
             />
+            <FieldError message={getError("meeting_date")} />
           </div>
 
           <div className="space-y-2">
