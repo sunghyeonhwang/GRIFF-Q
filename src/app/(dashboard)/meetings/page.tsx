@@ -1,17 +1,31 @@
 import { requireAuth } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { MeetingListClient, type MeetingRow } from "@/components/meetings/meeting-list-client";
+import { parsePaginationParams, parseSortParams, buildPaginationRange } from "@/lib/pagination";
 
-export default async function MeetingsPage() {
+const SORTABLE_COLUMNS = ["meeting_date", "title"];
+
+export default async function MeetingsPage({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
   const user = await requireAuth();
   const supabase = await createClient();
+  const params = await searchParams;
 
-  const { data: meetings } = await supabase
+  const { page, pageSize } = parsePaginationParams(params);
+  const { sortBy, sortOrder } = parseSortParams(params, SORTABLE_COLUMNS, "meeting_date");
+  const { from, to } = buildPaginationRange(page, pageSize);
+
+  // 회의 조회 + 작성자 정보 (페이지네이션 적용)
+  const { data: meetings, count } = await supabase
     .from("meetings")
-    .select("*, users!meetings_created_by_fkey(name)")
-    .order("meeting_date", { ascending: false });
+    .select("*, users!meetings_created_by_fkey(name)", { count: "exact" })
+    .order(sortBy, { ascending: sortOrder === "asc" })
+    .range(from, to);
 
-  // 각 회의의 액션아이템 건수 조회
+  // 액션 아이템 건수 조회
   const meetingIds = (meetings ?? []).map((m) => m.id);
   const { data: actionItems } = meetingIds.length
     ? await supabase
@@ -53,5 +67,16 @@ export default async function MeetingsPage() {
     };
   });
 
-  return <MeetingListClient meetings={rows} userMap={userMap} />;
+  return (
+    <MeetingListClient
+      meetings={rows}
+      userMap={userMap}
+      page={page}
+      pageSize={pageSize}
+      totalCount={count ?? 0}
+      sortBy={sortBy}
+      sortOrder={sortOrder}
+      searchParams={params}
+    />
+  );
 }

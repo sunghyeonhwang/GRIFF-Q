@@ -21,15 +21,26 @@ import {
 } from "@/components/ui/table";
 import { Plus, Users, BarChart3 } from "lucide-react";
 import { PageHeader } from "@/components/layout/page-header";
+import { parsePaginationParams, buildPaginationRange } from "@/lib/pagination";
+import { Pagination } from "@/components/ui/pagination";
 
-export default async function RetrospectivePage() {
+export default async function RetrospectivePage({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
   const user = await requireAuth();
   const supabase = await createClient();
+  const params = await searchParams;
 
-  const { data: retrospectives } = await supabase
+  const { page, pageSize } = parsePaginationParams(params);
+  const { from, to } = buildPaginationRange(page, pageSize);
+
+  const { data: retrospectives, count } = await supabase
     .from("retrospectives")
-    .select("*, projects(name), users!retrospectives_author_id_fkey(name)")
-    .order("created_at", { ascending: false });
+    .select("*, projects(name), users!retrospectives_author_id_fkey(name)", { count: "exact" })
+    .order("created_at", { ascending: false })
+    .range(from, to);
 
   const { data: projects } = await supabase
     .from("projects")
@@ -43,6 +54,7 @@ export default async function RetrospectivePage() {
 
   const totalUsers = allUsers?.length ?? 0;
   const retros = retrospectives ?? [];
+  const totalCount = count ?? 0;
 
   // 내 회고
   const myRetros = retros.filter((r) => r.author_id === user.id);
@@ -288,6 +300,8 @@ export default async function RetrospectivePage() {
           )}
         </TabsContent>
       </Tabs>
+
+      <Pagination page={page} pageSize={pageSize} totalCount={totalCount} searchParams={params} />
     </div>
   );
 }

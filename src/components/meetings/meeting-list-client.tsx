@@ -21,6 +21,8 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Plus, FileSpreadsheet, CheckSquare, Search } from "lucide-react";
+import { Pagination } from "@/components/ui/pagination";
+import { SortableTableHead } from "@/components/ui/sortable-table-head";
 
 export interface MeetingRow {
   id: string;
@@ -37,20 +39,33 @@ export interface MeetingRow {
 interface MeetingListClientProps {
   meetings: MeetingRow[];
   userMap: Record<string, string>;
+  page: number;
+  pageSize: number;
+  totalCount: number;
+  sortBy: string;
+  sortOrder: "asc" | "desc";
+  searchParams: Record<string, string | string[] | undefined>;
 }
 
-type SortOption = "date_desc" | "date_asc" | "action_desc";
 type DateRange = "all" | "7" | "30" | "90";
 
-export function MeetingListClient({ meetings, userMap }: MeetingListClientProps) {
+export function MeetingListClient({
+  meetings,
+  userMap,
+  page,
+  pageSize,
+  totalCount,
+  sortBy,
+  sortOrder,
+  searchParams,
+}: MeetingListClientProps) {
   const [search, setSearch] = useState("");
   const [dateRange, setDateRange] = useState<DateRange>("all");
-  const [sort, setSort] = useState<SortOption>("date_desc");
 
   const filtered = useMemo(() => {
     let result = [...meetings];
 
-    // Keyword search
+    // Keyword search (client-side within current page)
     if (search.trim()) {
       const q = search.trim().toLowerCase();
       result = result.filter(
@@ -60,7 +75,7 @@ export function MeetingListClient({ meetings, userMap }: MeetingListClientProps)
       );
     }
 
-    // Date range filter
+    // Date range filter (client-side within current page)
     if (dateRange !== "all") {
       const days = parseInt(dateRange);
       const cutoff = new Date();
@@ -68,21 +83,8 @@ export function MeetingListClient({ meetings, userMap }: MeetingListClientProps)
       result = result.filter((m) => new Date(m.meeting_date) >= cutoff);
     }
 
-    // Sorting
-    switch (sort) {
-      case "date_desc":
-        result.sort((a, b) => new Date(b.meeting_date).getTime() - new Date(a.meeting_date).getTime());
-        break;
-      case "date_asc":
-        result.sort((a, b) => new Date(a.meeting_date).getTime() - new Date(b.meeting_date).getTime());
-        break;
-      case "action_desc":
-        result.sort((a, b) => b.actionCompleted - a.actionCompleted || b.actionTotal - a.actionTotal);
-        break;
-    }
-
     return result;
-  }, [meetings, search, dateRange, sort]);
+  }, [meetings, search, dateRange]);
 
   return (
     <div className="space-y-6">
@@ -137,24 +139,14 @@ export function MeetingListClient({ meetings, userMap }: MeetingListClientProps)
             <SelectItem value="90">최근 90일</SelectItem>
           </SelectContent>
         </Select>
-        <Select value={sort} onValueChange={(v) => setSort(v as SortOption)}>
-          <SelectTrigger className="w-[160px]">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="date_desc">최신순</SelectItem>
-            <SelectItem value="date_asc">오래된순</SelectItem>
-            <SelectItem value="action_desc">완료 액션아이템순</SelectItem>
-          </SelectContent>
-        </Select>
       </div>
 
       <div className="rounded-lg border overflow-x-auto">
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>제목</TableHead>
-              <TableHead>날짜</TableHead>
+              <SortableTableHead column="title" label="제목" currentSort={sortBy} currentOrder={sortOrder} searchParams={searchParams} />
+              <SortableTableHead column="meeting_date" label="날짜" currentSort={sortBy} currentOrder={sortOrder} searchParams={searchParams} />
               <TableHead>참석자</TableHead>
               <TableHead>액션아이템</TableHead>
               <TableHead>작성자</TableHead>
@@ -217,6 +209,7 @@ export function MeetingListClient({ meetings, userMap }: MeetingListClientProps)
           </TableBody>
         </Table>
       </div>
+      <Pagination page={page} pageSize={pageSize} totalCount={totalCount} searchParams={searchParams} />
     </div>
   );
 }

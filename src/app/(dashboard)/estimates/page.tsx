@@ -8,7 +8,6 @@ import {
   Table,
   TableBody,
   TableCell,
-  TableHead,
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
@@ -20,21 +19,44 @@ import {
 import { PageHeader } from "@/components/layout/page-header";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Calculator } from "lucide-react";
+import { parsePaginationParams, parseSortParams, buildPaginationRange } from "@/lib/pagination";
+import { Pagination } from "@/components/ui/pagination";
+import { SortableTableHead } from "@/components/ui/sortable-table-head";
+import { ViewToggle } from "@/components/ui/view-toggle";
+import { DataCard } from "@/components/ui/data-card";
 
-export default async function EstimatesPage() {
+const SORTABLE_COLUMNS = ["created_at", "project_name", "client_name", "estimate_date", "status"];
+
+export default async function EstimatesPage({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
   const user = await requireAuth();
   const supabase = await createClient();
+  const params = await searchParams;
 
-  const { data: estimates } = await supabase
-    .from("estimates")
-    .select("*, users!estimates_created_by_fkey(name)")
-    .order("created_at", { ascending: false });
+  const { page, pageSize } = parsePaginationParams(params);
+  const { sortBy, sortOrder } = parseSortParams(params, SORTABLE_COLUMNS, "created_at");
+  const { from, to } = buildPaginationRange(page, pageSize);
+  const view = (typeof params.view === "string" && params.view === "card") ? "card" as const : "table" as const;
+
+  const [{ data: estimates, count }, draftRes, confirmedRes, sentRes] = await Promise.all([
+    supabase
+      .from("estimates")
+      .select("*, users!estimates_created_by_fkey(name)", { count: "exact" })
+      .order(sortBy, { ascending: sortOrder === "asc" })
+      .range(from, to),
+    supabase.from("estimates").select("id", { count: "exact", head: true }).eq("status", "draft"),
+    supabase.from("estimates").select("id", { count: "exact", head: true }).eq("status", "confirmed"),
+    supabase.from("estimates").select("id", { count: "exact", head: true }).eq("status", "sent"),
+  ]);
 
   const items = estimates ?? [];
-
-  const draftCount = items.filter((e) => e.status === "draft").length;
-  const confirmedCount = items.filter((e) => e.status === "confirmed").length;
-  const sentCount = items.filter((e) => e.status === "sent").length;
+  const totalCount = count ?? 0;
+  const draftCount = draftRes.count ?? 0;
+  const confirmedCount = confirmedRes.count ?? 0;
+  const sentCount = sentRes.count ?? 0;
 
   return (
     <div className="space-y-6">
@@ -84,63 +106,101 @@ export default async function EstimatesPage() {
         </Card>
       </div>
 
-      {/* 견적서 테이블 */}
-      {items.length > 0 ? (
-        <Card>
-          <CardContent>
-            <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>프로젝트명</TableHead>
-                  <TableHead>클라이언트</TableHead>
-                  <TableHead>견적일</TableHead>
-                  <TableHead>상태</TableHead>
-                  <TableHead>편집 잠금</TableHead>
-                  <TableHead>작성자</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {items.map((e) => (
-                  <TableRow key={e.id}>
-                    <TableCell className="font-medium">
-                      <Link
-                        href={`/estimates/${e.id}`}
-                        className="hover:underline"
-                      >
-                        {e.project_name}
-                      </Link>
-                    </TableCell>
-                    <TableCell>{e.client_name}</TableCell>
-                    <TableCell className="text-sm">
+      {/* 뷰 토글 + 견적서 목록 */}
+      {totalCount > 0 ? (
+        <>
+          <div className="flex justify-end">
+            <ViewToggle currentView={view} searchParams={params} />
+          </div>
+
+          {/* 카드 뷰 (모바일 기본 + 데스크톱 토글) */}
+          <div className={view === "card" ? "block" : "block md:hidden"}>
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {items.map((e) => (
+                <DataCard key={e.id} href={`/estimates/${e.id}`} title={e.project_name}>
+                  <div className="flex items-center gap-2">
+                    <Badge variant={ESTIMATE_STATUS_VARIANTS[e.status] ?? "outline"}>
+                      {ESTIMATE_STATUS_LABELS[e.status] ?? e.status}
+                    </Badge>
+                    {e.locked_by && <Badge variant="destructive">편집 중</Badge>}
+                  </div>
+                  <div className="flex items-center justify-between text-sm text-muted-foreground">
+                    <span>{e.client_name}</span>
+                    <span>
                       {e.estimate_date
                         ? new Date(e.estimate_date).toLocaleDateString("ko-KR")
                         : "-"}
-                    </TableCell>
-                    <TableCell>
-                      <Badge
-                        variant={
-                          ESTIMATE_STATUS_VARIANTS[e.status] ?? "outline"
-                        }
-                      >
-                        {ESTIMATE_STATUS_LABELS[e.status] ?? e.status}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      {e.locked_by ? (
-                        <Badge variant="destructive">편집 중</Badge>
-                      ) : null}
-                    </TableCell>
-                    <TableCell className="text-sm">
-                      {(e as any).users?.name ?? "-"}
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                    </span>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    작성자: {(e as any).users?.name ?? "-"}
+                  </p>
+                </DataCard>
+              ))}
             </div>
-          </CardContent>
-        </Card>
+          </div>
+
+          {/* 테이블 뷰 (데스크톱 기본 + 토글) */}
+          <div className={view === "table" ? "hidden md:block" : "hidden"}>
+            <Card>
+              <CardContent>
+                <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <SortableTableHead column="project_name" label="프로젝트명" currentSort={sortBy} currentOrder={sortOrder} searchParams={params} />
+                      <SortableTableHead column="client_name" label="클라이언트" currentSort={sortBy} currentOrder={sortOrder} searchParams={params} />
+                      <SortableTableHead column="estimate_date" label="견적일" currentSort={sortBy} currentOrder={sortOrder} searchParams={params} />
+                      <SortableTableHead column="status" label="상태" currentSort={sortBy} currentOrder={sortOrder} searchParams={params} />
+                      <th data-slot="table-head" className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap">편집 잠금</th>
+                      <th data-slot="table-head" className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap">작성자</th>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {items.map((e) => (
+                      <TableRow key={e.id}>
+                        <TableCell className="font-medium">
+                          <Link
+                            href={`/estimates/${e.id}`}
+                            className="hover:underline"
+                          >
+                            {e.project_name}
+                          </Link>
+                        </TableCell>
+                        <TableCell>{e.client_name}</TableCell>
+                        <TableCell className="text-sm">
+                          {e.estimate_date
+                            ? new Date(e.estimate_date).toLocaleDateString("ko-KR")
+                            : "-"}
+                        </TableCell>
+                        <TableCell>
+                          <Badge
+                            variant={
+                              ESTIMATE_STATUS_VARIANTS[e.status] ?? "outline"
+                            }
+                          >
+                            {ESTIMATE_STATUS_LABELS[e.status] ?? e.status}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          {e.locked_by ? (
+                            <Badge variant="destructive">편집 중</Badge>
+                          ) : null}
+                        </TableCell>
+                        <TableCell className="text-sm">
+                          {(e as any).users?.name ?? "-"}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          <Pagination page={page} pageSize={pageSize} totalCount={totalCount} searchParams={params} />
+        </>
       ) : (
         <EmptyState
           icon={Calculator}

@@ -253,6 +253,76 @@
 
 ---
 
+## v0.25 Phase C — 테이블/목록 UX 강화
+
+**상태**: ✅ 완료
+**날짜**: 2026-02-28
+
+### 작업 내역
+
+#### C1: 서버사이드 페이지네이션
+- 공통 유틸리티 `src/lib/pagination.ts` — parsePaginationParams, parseSortParams, buildPaginationRange, buildSearchParamsString
+- 공통 Pagination UI `src/components/ui/pagination.tsx` — Link 기반 서버 컴포넌트, "1-20 / 총 64건" 형식, 브랜드 컬러 활성 페이지
+- URL searchParams 기반 Supabase `.range()` + `{ count: 'exact' }` 적용
+- 적용 페이지: 견적서, 결제, 프로젝트, 감사로그, 회의록, 스프린트 회고, 포스트모템 (7개)
+
+#### C2: 컬럼 정렬
+- `src/components/ui/sortable-table-head.tsx` — Link 기반 서버 컴포넌트, ArrowUp/ArrowDown/ArrowUpDown 아이콘, 브랜드 컬러 활성 표시
+- 페이지별 정렬 가능 컬럼:
+  - 견적서: project_name, client_name, estimate_date, status
+  - 결제: name, amount, due_date (기본: due_date asc)
+  - 프로젝트: name, status, start_date
+  - 감사로그: created_at, table_name, action
+  - 회의록: title, meeting_date
+  - 포스트모템: severity, incident_date, created_at
+
+#### C3: 행 호버 효과
+- `src/components/ui/table.tsx` — TableRow 호버 `hover:bg-brand-muted/50`, 선택 `data-[state=selected]:bg-brand-muted`
+
+#### C4: 카드 뷰 토글
+- `src/components/ui/view-toggle.tsx` — LayoutList/LayoutGrid 아이콘 토글, URL `view=table|card`
+- `src/components/ui/data-card.tsx` — 글래스 카드 스타일, 호버 애니메이션
+- 적용 페이지: 견적서, 결제, 프로젝트 (3개)
+- 모바일(< md): 카드 뷰 기본 / 데스크톱: 테이블 기본 + 토글 가능
+
+### 수정 파일
+
+**신규 (5개)**
+- `src/lib/pagination.ts`
+- `src/components/ui/pagination.tsx`
+- `src/components/ui/sortable-table-head.tsx`
+- `src/components/ui/view-toggle.tsx`
+- `src/components/ui/data-card.tsx`
+
+**수정 (10개)**
+- `src/components/ui/table.tsx` — 행 호버 스타일
+- `src/app/(dashboard)/estimates/page.tsx` — C1+C2+C4
+- `src/app/(dashboard)/payments/page.tsx` — C1+C2+C4
+- `src/app/(dashboard)/projects/page.tsx` — C1+C2+C4
+- `src/app/(dashboard)/settings/logs/page.tsx` — C1+C2
+- `src/components/settings/audit-log-viewer.tsx` — C1+C2 연동
+- `src/app/(dashboard)/meetings/page.tsx` — C1+C2
+- `src/components/meetings/meeting-list-client.tsx` — C1+C2 연동
+- `src/app/(dashboard)/retrospective/sprint/page.tsx` — C1
+- `src/app/(dashboard)/retrospective/postmortem/page.tsx` — C1+C2
+
+### 이슈 & 해결
+- **Supabase PromiseLike `.catch()` 미지원**: `supabase.rpc()` 반환값이 `.catch()` 없는 PromiseLike → 별도 `.select("id", { count: "exact", head: true }).eq("status", ...)` 병렬 쿼리로 교체
+
+### 테스트
+- `next build` 에러 0건 ✅
+- Chrome DevTools MCP 브라우저 직접 테스트:
+  - 다크 + 데스크톱(1440px): 전체 7페이지 ✅
+  - 라이트 + 데스크톱: 전체 7페이지 ✅
+  - 다크 + 모바일(375px): 견적서 카드뷰 ✅
+  - 라이트 + 모바일(375px): 견적서/결제/프로젝트 카드뷰 ✅
+  - 페이지네이션: 감사로그 2페이지(21-40/총64건) 정상 이동 ✅
+  - 정렬: 컬럼 클릭 → 방향 토글 → URL searchParams 유지 ✅
+  - 카드/테이블 전환: 데스크톱 토글 정상 ✅
+  - Phase C 관련 콘솔 에러/경고 0건 ✅
+
+---
+
 ## v0.3 로드맵 (예정)
 
 ### 프로젝트 메뉴 리워크

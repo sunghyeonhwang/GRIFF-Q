@@ -40,6 +40,8 @@ import {
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { RotateCcw } from "lucide-react";
 import { restoreAuditLog } from "@/app/(dashboard)/settings/logs/actions";
+import { Pagination } from "@/components/ui/pagination";
+import { SortableTableHead } from "@/components/ui/sortable-table-head";
 
 interface AuditLog {
   id: string;
@@ -55,6 +57,12 @@ interface AuditLog {
 
 interface AuditLogViewerProps {
   logs: AuditLog[];
+  page: number;
+  pageSize: number;
+  totalCount: number;
+  sortBy: string;
+  sortOrder: "asc" | "desc";
+  searchParams: Record<string, string | string[] | undefined>;
 }
 
 const TABLE_NAME_MAP: Record<string, string> = {
@@ -230,7 +238,7 @@ const RESTORE_LABEL: Record<string, string> = {
   delete: "삭제 복원 (재생성)",
 };
 
-export function AuditLogViewer({ logs }: AuditLogViewerProps) {
+export function AuditLogViewer({ logs, page, pageSize, totalCount, sortBy, sortOrder, searchParams }: AuditLogViewerProps) {
   const [tableFilter, setTableFilter] = useState("all");
   const [isPending, startTransition] = useTransition();
   const [restoreResult, setRestoreResult] = useState<{
@@ -277,9 +285,9 @@ export function AuditLogViewer({ logs }: AuditLogViewerProps) {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>날짜</TableHead>
-                <TableHead>테이블</TableHead>
-                <TableHead>액션</TableHead>
+                <SortableTableHead column="created_at" label="날짜" currentSort={sortBy} currentOrder={sortOrder} searchParams={searchParams} />
+                <SortableTableHead column="table_name" label="테이블" currentSort={sortBy} currentOrder={sortOrder} searchParams={searchParams} />
+                <SortableTableHead column="action" label="액션" currentSort={sortBy} currentOrder={sortOrder} searchParams={searchParams} />
                 <TableHead>작업자</TableHead>
                 <TableHead>변경 내용</TableHead>
               </TableRow>
@@ -489,6 +497,7 @@ export function AuditLogViewer({ logs }: AuditLogViewerProps) {
           </Table>
         </CardContent>
       </Card>
+      <Pagination page={page} pageSize={pageSize} totalCount={totalCount} searchParams={searchParams} />
     </div>
   );
 }

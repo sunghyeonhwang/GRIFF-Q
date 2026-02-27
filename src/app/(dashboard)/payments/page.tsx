@@ -8,7 +8,6 @@ import {
   Table,
   TableBody,
   TableCell,
-  TableHead,
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
@@ -17,24 +16,55 @@ import { PaymentStatusActions } from "@/components/payments/payment-status-actio
 import { CopyButton } from "@/components/payments/copy-button";
 import { PageHeader } from "@/components/layout/page-header";
 import { EmptyState } from "@/components/ui/empty-state";
+import { parsePaginationParams, parseSortParams, buildPaginationRange } from "@/lib/pagination";
+import { Pagination } from "@/components/ui/pagination";
+import { SortableTableHead } from "@/components/ui/sortable-table-head";
+import { ViewToggle } from "@/components/ui/view-toggle";
+import { DataCard } from "@/components/ui/data-card";
 
-export default async function PaymentsPage() {
+const SORTABLE_COLUMNS = ["due_date", "name", "amount"];
+
+export default async function PaymentsPage({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
   const user = await requireAuth();
   const supabase = await createClient();
+  const params = await searchParams;
 
-  const { data: payments } = await supabase
-    .from("payments")
-    .select("*, users!payments_created_by_fkey(name)")
-    .order("due_date", { ascending: true, nullsFirst: false });
+  const { page, pageSize } = parsePaginationParams(params);
+  const { sortBy, sortOrder } = parseSortParams(params, SORTABLE_COLUMNS, "due_date", "asc");
+  const { from, to } = buildPaginationRange(page, pageSize);
+
+  // 요약 카드용 count 쿼리 (전체 데이터)
+  const [
+    { data: payments, count },
+    pendingCountRes,
+    completedCountRes,
+    pendingAmountRes,
+  ] = await Promise.all([
+    supabase
+      .from("payments")
+      .select("*, users!payments_created_by_fkey(name)", { count: "exact" })
+      .order(sortBy, { ascending: sortOrder === "asc" })
+      .range(from, to),
+    supabase.from("payments").select("id", { count: "exact", head: true }).eq("status", "pending"),
+    supabase.from("payments").select("id", { count: "exact", head: true }).eq("status", "completed"),
+    supabase.from("payments").select("amount").eq("status", "pending"),
+  ]);
 
   const items = payments ?? [];
+  const totalCount = count ?? 0;
+  const pendingCount = pendingCountRes.count ?? 0;
+  const completedCount = completedCountRes.count ?? 0;
+  const totalAmount = (pendingAmountRes.data ?? []).reduce(
+    (sum, p) => sum + Number(p.amount), 0
+  );
 
+  const view = (typeof params.view === "string" && params.view === "card") ? "card" as const : "table" as const;
   const pendingItems = items.filter((p) => p.status === "pending");
   const completedItems = items.filter((p) => p.status === "completed");
-  const totalAmount = pendingItems.reduce(
-    (sum, p) => sum + Number(p.amount),
-    0
-  );
 
   return (
     <div className="space-y-6">
@@ -65,7 +95,7 @@ export default async function PaymentsPage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-bold">{pendingItems.length}건</p>
+            <p className="text-2xl font-bold">{pendingCount}건</p>
           </CardContent>
         </Card>
         <Card>
@@ -87,10 +117,43 @@ export default async function PaymentsPage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-bold">{completedItems.length}건</p>
+            <p className="text-2xl font-bold">{completedCount}건</p>
           </CardContent>
         </Card>
       </div>
+
+      {totalCount > 0 && (
+        <div className="flex justify-end">
+          <ViewToggle currentView={view} searchParams={params} />
+        </div>
+      )}
+
+      {/* 카드 뷰 */}
+      {totalCount > 0 && (
+        <div className={view === "card" ? "block" : "block md:hidden"}>
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {items.map((p) => (
+              <DataCard key={p.id} href={`/payments/${p.id}`} title={p.name}>
+                <div className="flex items-center gap-2">
+                  <Badge variant={p.status === "completed" ? "default" : "outline"}>
+                    {p.status === "completed" ? "완료" : "대기"}
+                  </Badge>
+                  <Badge variant="outline">{p.bank}</Badge>
+                </div>
+                <div className="flex items-center justify-between text-sm">
+                  <span className="font-semibold">{Number(p.amount).toLocaleString()}원</span>
+                  <span className="text-muted-foreground">
+                    {p.due_date ? new Date(p.due_date).toLocaleDateString("ko-KR") : "-"}
+                  </span>
+                </div>
+              </DataCard>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* 테이블 뷰 */}
+      <div className={view === "table" ? "hidden md:block space-y-6" : "hidden"}>
 
       {/* 대기 중 결제 목록 */}
       {pendingItems.length > 0 && (
@@ -103,12 +166,12 @@ export default async function PaymentsPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>품목</TableHead>
-                  <TableHead>은행</TableHead>
-                  <TableHead>계좌번호</TableHead>
-                  <TableHead>금액</TableHead>
-                  <TableHead>마감일</TableHead>
-                  <TableHead></TableHead>
+                  <SortableTableHead column="name" label="품목" currentSort={sortBy} currentOrder={sortOrder} searchParams={params} />
+                  <th data-slot="table-head" className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap">은행</th>
+                  <th data-slot="table-head" className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap">계좌번호</th>
+                  <SortableTableHead column="amount" label="금액" currentSort={sortBy} currentOrder={sortOrder} searchParams={params} />
+                  <SortableTableHead column="due_date" label="마감일" currentSort={sortBy} currentOrder={sortOrder} searchParams={params} />
+                  <th data-slot="table-head" className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap"></th>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -176,12 +239,12 @@ export default async function PaymentsPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>품목</TableHead>
-                  <TableHead>은행</TableHead>
-                  <TableHead>계좌번호</TableHead>
-                  <TableHead>금액</TableHead>
-                  <TableHead>마감일</TableHead>
-                  <TableHead>상태</TableHead>
+                  <th data-slot="table-head" className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap">품목</th>
+                  <th data-slot="table-head" className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap">은행</th>
+                  <th data-slot="table-head" className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap">계좌번호</th>
+                  <th data-slot="table-head" className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap">금액</th>
+                  <th data-slot="table-head" className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap">마감일</th>
+                  <th data-slot="table-head" className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap">상태</th>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -221,7 +284,13 @@ export default async function PaymentsPage() {
         </Card>
       )}
 
-      {items.length === 0 && (
+      </div>{/* end table view wrapper */}
+
+      {totalCount > 0 && (
+        <Pagination page={page} pageSize={pageSize} totalCount={totalCount} searchParams={params} />
+      )}
+
+      {totalCount === 0 && (
         <EmptyState
           icon={CreditCardIcon}
           title="등록된 결제 항목이 없습니다"

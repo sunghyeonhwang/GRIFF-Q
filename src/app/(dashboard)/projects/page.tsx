@@ -7,7 +7,6 @@ import {
   Table,
   TableBody,
   TableCell,
-  TableHead,
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
@@ -15,6 +14,11 @@ import { ProjectCreateDialog } from "@/components/projects/project-create-dialog
 import { PageHeader } from "@/components/layout/page-header";
 import { EmptyState } from "@/components/ui/empty-state";
 import { FolderKanban } from "lucide-react";
+import { parsePaginationParams, parseSortParams, buildPaginationRange } from "@/lib/pagination";
+import { Pagination } from "@/components/ui/pagination";
+import { SortableTableHead } from "@/components/ui/sortable-table-head";
+import { ViewToggle } from "@/components/ui/view-toggle";
+import { DataCard } from "@/components/ui/data-card";
 
 const STATUS_LABELS: Record<string, string> = {
   active: "진행 중",
@@ -28,16 +32,30 @@ const STATUS_VARIANTS: Record<string, "default" | "secondary" | "outline"> = {
   on_hold: "outline",
 };
 
-export default async function ProjectsPage() {
+const SORTABLE_COLUMNS = ["created_at", "name", "status", "start_date"];
+
+export default async function ProjectsPage({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
   const user = await requireAuth();
   const supabase = await createClient();
+  const params = await searchParams;
 
-  const { data: projects } = await supabase
+  const { page, pageSize } = parsePaginationParams(params);
+  const { sortBy, sortOrder } = parseSortParams(params, SORTABLE_COLUMNS, "created_at");
+  const { from, to } = buildPaginationRange(page, pageSize);
+  const view = (typeof params.view === "string" && params.view === "card") ? "card" as const : "table" as const;
+
+  const { data: projects, count } = await supabase
     .from("projects")
-    .select("*, users!projects_lead_user_id_fkey(name)")
-    .order("created_at", { ascending: false });
+    .select("*, users!projects_lead_user_id_fkey(name)", { count: "exact" })
+    .order(sortBy, { ascending: sortOrder === "asc" })
+    .range(from, to);
 
   const items = projects ?? [];
+  const totalCount = count ?? 0;
   const projectIds = items.map((p) => p.id);
 
   // Count related items
@@ -84,9 +102,15 @@ export default async function ProjectsPage() {
   const retroCounts = countByProject(retrospectivesRes.data);
   const paymentCounts = countByProject(paymentsRes.data);
 
-  const activeCount = items.filter((p) => p.status === "active").length;
-  const completedCount = items.filter((p) => p.status === "completed").length;
-  const onHoldCount = items.filter((p) => p.status === "on_hold").length;
+  // 요약 카드: 전체 데이터 기준 (별도 count 쿼리)
+  const [activeRes, completedRes, onHoldRes] = await Promise.all([
+    supabase.from("projects").select("id", { count: "exact", head: true }).eq("status", "active"),
+    supabase.from("projects").select("id", { count: "exact", head: true }).eq("status", "completed"),
+    supabase.from("projects").select("id", { count: "exact", head: true }).eq("status", "on_hold"),
+  ]);
+  const activeCount = activeRes.count ?? 0;
+  const completedCount = completedRes.count ?? 0;
+  const onHoldCount = onHoldRes.count ?? 0;
 
   // Fetch users for the create dialog
   const { data: allUsers } = await supabase
@@ -137,22 +161,58 @@ export default async function ProjectsPage() {
         </Card>
       </div>
 
-      {/* Projects table */}
-      {items.length > 0 ? (
-        <Card>
+      {/* Projects view toggle + list */}
+      {totalCount > 0 ? (
+        <>
+          <div className="flex justify-end">
+            <ViewToggle currentView={view} searchParams={params} />
+          </div>
+
+          {/* 카드 뷰 */}
+          <div className={view === "card" ? "block" : "block md:hidden"}>
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {items.map((p) => (
+                <DataCard key={p.id} href={`/projects/${p.id}`} title={p.name}>
+                  <div className="flex items-center gap-2">
+                    <Badge variant={STATUS_VARIANTS[p.status] ?? "outline"}>
+                      {STATUS_LABELS[p.status] ?? p.status}
+                    </Badge>
+                  </div>
+                  <div className="flex items-center justify-between text-sm text-muted-foreground">
+                    <span>{(p as any).users?.name ?? "-"}</span>
+                    <span>
+                      {p.start_date
+                        ? new Date(p.start_date).toLocaleDateString("ko-KR")
+                        : "-"}
+                    </span>
+                  </div>
+                  <div className="flex gap-3 text-xs text-muted-foreground">
+                    <span>견적 {estimateCounts.get(p.id) ?? 0}</span>
+                    <span>회의 {meetingCounts.get(p.id) ?? 0}</span>
+                    <span>회고 {retroCounts.get(p.id) ?? 0}</span>
+                    <span>입금 {paymentCounts.get(p.id) ?? 0}</span>
+                  </div>
+                </DataCard>
+              ))}
+            </div>
+          </div>
+
+          {/* 테이블 뷰 */}
+          <div className={view === "table" ? "hidden md:block" : "hidden"}>
+          <Card>
           <CardContent>
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>프로젝트명</TableHead>
-                  <TableHead>상태</TableHead>
-                  <TableHead>담당자</TableHead>
-                  <TableHead>시작일</TableHead>
-                  <TableHead>종료일</TableHead>
-                  <TableHead className="text-center">견적서</TableHead>
-                  <TableHead className="text-center">회의록</TableHead>
-                  <TableHead className="text-center">회고</TableHead>
-                  <TableHead className="text-center">입금</TableHead>
+                  <SortableTableHead column="name" label="프로젝트명" currentSort={sortBy} currentOrder={sortOrder} searchParams={params} />
+                  <SortableTableHead column="status" label="상태" currentSort={sortBy} currentOrder={sortOrder} searchParams={params} />
+                  <th data-slot="table-head" className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap">담당자</th>
+                  <SortableTableHead column="start_date" label="시작일" currentSort={sortBy} currentOrder={sortOrder} searchParams={params} />
+                  <th data-slot="table-head" className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap">종료일</th>
+                  <th data-slot="table-head" className="text-foreground h-10 px-2 text-center align-middle font-medium whitespace-nowrap">견적서</th>
+                  <th data-slot="table-head" className="text-foreground h-10 px-2 text-center align-middle font-medium whitespace-nowrap">회의록</th>
+                  <th data-slot="table-head" className="text-foreground h-10 px-2 text-center align-middle font-medium whitespace-nowrap">회고</th>
+                  <th data-slot="table-head" className="text-foreground h-10 px-2 text-center align-middle font-medium whitespace-nowrap">입금</th>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -202,6 +262,10 @@ export default async function ProjectsPage() {
             </Table>
           </CardContent>
         </Card>
+          </div>
+
+          <Pagination page={page} pageSize={pageSize} totalCount={totalCount} searchParams={params} />
+        </>
       ) : (
         <EmptyState
           icon={FolderKanban}
