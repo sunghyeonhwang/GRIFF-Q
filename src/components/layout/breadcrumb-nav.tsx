@@ -62,7 +62,7 @@ export function BreadcrumbNav() {
   const pathname = usePathname();
   const segments = pathname.split("/").filter(Boolean);
 
-  if (segments.length <= 1) return null;
+  if (segments.length === 0) return null;
 
   const crumbs = segments.map((segment, index) => {
     const href = "/" + segments.slice(0, index + 1).join("/");
