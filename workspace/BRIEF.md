@@ -16,7 +16,7 @@
 ## Constraints
 - 기술 스택: Next.js + Supabase (PostgreSQL) + shadcn/ui + Tailwind CSS
 - 배포: 개발/QA는 Vercel Preview, 프로덕션은 Vultr 서버 (Docker Compose)
-- 팀원 수: 7명 (본인 포함)
+- 팀원 수: 7명 (본인 포함), 비정규 4인 
 - 개발 순서: 로그인/권한 → G(회고) → D(대시보드) → C(회의록) + B(입금) 병렬 → E(견적서) + F(예측) 병렬 → 설정
 
 ## Non-goals

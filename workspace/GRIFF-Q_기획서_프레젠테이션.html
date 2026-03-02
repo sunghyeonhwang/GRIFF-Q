@@ -1,0 +1,900 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GRIFF-Q 사내 업무 관리 시스템 기획서</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --brand:#FEEB00;--bg1:#0f0f1a;--bg2:#1a1a2e;
+  --glass:rgba(255,255,255,0.06);--glass-border:rgba(255,255,255,0.1);--glass-hover:rgba(255,255,255,0.1);
+  --text:#e4e4e7;--text-dim:#8b8b9e;--text-bright:#ffffff;
+  --danger:#ef4444;--success:#22c55e;--info:#3b82f6;--purple:#a855f7;
+}
+html,body{height:100%;overflow:hidden;font-family:-apple-system,"Pretendard","Noto Sans KR",sans-serif;background:linear-gradient(135deg,var(--bg1),var(--bg2));color:var(--text);line-height:1.6;font-size:16px}
+#deck{position:relative;width:100%;height:100vh;overflow:hidden}
+.slide{position:absolute;inset:0;display:flex;flex-direction:column;padding:60px 80px 80px;opacity:0;transform:translateX(40px);transition:opacity .5s ease,transform .5s ease;pointer-events:none;overflow:hidden}
+.slide.active{opacity:1;transform:translateX(0);pointer-events:auto;z-index:2}
+.slide.prev{opacity:0;transform:translateX(-40px)}
+.slide.next{opacity:0;transform:translateX(40px)}
+.slide-inner{flex:1;overflow-y:auto;padding-right:8px;scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.15) transparent}
+.slide-inner::-webkit-scrollbar{width:5px}
+.slide-inner::-webkit-scrollbar-thumb{background:rgba(255,255,255,.15);border-radius:4px}
+h1{font-size:3.2rem;font-weight:800;color:var(--text-bright);margin-bottom:.5rem;letter-spacing:-.02em}
+h2{font-size:2.1rem;font-weight:700;color:var(--text-bright);margin-bottom:1rem}
+h3{font-size:1.35rem;font-weight:600;color:var(--text-bright);margin-bottom:.5rem}
+.brand{color:var(--brand)}
+.subtitle{font-size:1.25rem;color:var(--text-dim);margin-bottom:1.5rem}
+.small{font-size:.9rem;color:var(--text-dim)}
+p{margin-bottom:.75rem}
+strong{color:var(--text-bright);font-weight:600}
+.card{background:var(--glass);border:1px solid var(--glass-border);border-radius:14px;padding:20px 24px;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);transition:background .2s}
+.card:hover{background:var(--glass-hover)}
+.card-sm{padding:14px 18px;border-radius:10px}
+.grid{display:grid;gap:16px}
+.grid-2{grid-template-columns:repeat(2,1fr)}
+.grid-3{grid-template-columns:repeat(3,1fr)}
+.grid-4{grid-template-columns:repeat(4,1fr)}
+@media(max-width:900px){.grid-2,.grid-3,.grid-4{grid-template-columns:1fr}}
+.flex{display:flex;gap:12px;align-items:center}
+.flex-wrap{flex-wrap:wrap}
+.text-center{text-align:center}
+.gap-8{gap:8px}.gap-16{gap:16px}
+.mt-8{margin-top:8px}.mt-12{margin-top:12px}.mt-16{margin-top:16px}.mt-24{margin-top:24px}
+.badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:.8rem;font-weight:600;background:rgba(254,235,0,.15);color:var(--brand)}
+.badge-blue{background:rgba(59,130,246,.15);color:var(--info)}
+.badge-green{background:rgba(34,197,94,.15);color:var(--success)}
+.badge-red{background:rgba(239,68,68,.15);color:var(--danger)}
+.badge-purple{background:rgba(168,85,247,.15);color:var(--purple)}
+.glass-table{width:100%;border-collapse:collapse;font-size:.95rem}
+.glass-table th{text-align:left;padding:10px 14px;background:rgba(255,255,255,.05);color:var(--text-bright);font-weight:600;border-bottom:1px solid var(--glass-border)}
+.glass-table td{padding:8px 14px;border-bottom:1px solid rgba(255,255,255,.04)}
+.glass-table tr:hover td{background:rgba(255,255,255,.03)}
+.check{color:var(--success)}.cross{color:var(--danger)}
+.icon-circle{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.2rem;flex-shrink:0}
+.icon-yellow{background:rgba(254,235,0,.15);color:var(--brand)}
+.icon-blue{background:rgba(59,130,246,.15);color:var(--info)}
+.icon-green{background:rgba(34,197,94,.15);color:var(--success)}
+.icon-red{background:rgba(239,68,68,.15);color:var(--danger)}
+.icon-purple{background:rgba(168,85,247,.15);color:var(--purple)}
+.timeline{position:relative;padding-left:28px}
+.timeline::before{content:'';position:absolute;left:8px;top:4px;bottom:4px;width:2px;background:linear-gradient(180deg,var(--brand),var(--info),var(--purple))}
+.timeline-item{position:relative;margin-bottom:20px}
+.timeline-item::before{content:'';position:absolute;left:-24px;top:6px;width:12px;height:12px;border-radius:50%;background:var(--brand);border:2px solid var(--bg1)}
+.timeline-item:nth-child(2)::before{background:var(--info)}
+.timeline-item:nth-child(3)::before{background:var(--success)}
+.timeline-item:nth-child(4)::before{background:var(--purple)}
+.timeline-item:nth-child(5)::before{background:var(--danger)}
+.steps{display:flex;align-items:center;gap:0;justify-content:center;margin:20px 0}
+.step-node{width:56px;height:56px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:1.25rem;border:2px solid var(--glass-border);background:var(--glass)}
+.step-arrow{font-size:1.2rem;color:var(--text-dim);margin:0 8px}
+.hierarchy{display:flex;align-items:center;gap:0;justify-content:center;flex-wrap:wrap}
+.hier-node{padding:10px 20px;border-radius:10px;font-weight:600;font-size:1rem;text-align:center}
+.hier-arrow{font-size:1.5rem;color:var(--text-dim);margin:0 6px}
+.swatch{width:40px;height:40px;border-radius:8px;border:2px solid rgba(255,255,255,.1)}
+.cover-title{font-size:4.5rem;font-weight:900;letter-spacing:-.04em}
+.cover-q{color:var(--brand);text-shadow:0 0 40px rgba(254,235,0,.3)}
+.cover-sub{font-size:1.45rem;color:var(--text-dim);max-width:600px;line-height:1.7;margin-top:12px}
+.version-badge{display:inline-block;padding:6px 16px;border:1px solid var(--brand);border-radius:20px;font-size:.85rem;color:var(--brand);margin-top:20px}
+.stat-num{font-size:2.5rem;font-weight:800;color:var(--brand);line-height:1}
+.stat-label{font-size:.95rem;color:var(--text-dim);margin-top:4px}
+.wireframe{border:1px dashed rgba(255,255,255,.15);border-radius:8px;padding:12px;font-size:.9rem;color:var(--text-dim);font-family:"SF Mono","Fira Code",monospace;white-space:pre-line;line-height:1.6;background:rgba(0,0,0,.2)}
+.flow{display:flex;align-items:stretch;gap:0;flex-wrap:wrap;justify-content:center}
+.flow-step{flex:1;min-width:100px;max-width:160px;padding:12px;text-align:center;background:var(--glass);border:1px solid var(--glass-border);border-radius:10px;font-size:.9rem}
+.flow-arrow{display:flex;align-items:center;color:var(--text-dim);font-size:1.2rem;padding:0 4px}
+#bottom-bar{position:fixed;bottom:0;left:0;right:0;height:48px;display:flex;align-items:center;justify-content:space-between;padding:0 24px;z-index:100;background:rgba(15,15,26,.8);backdrop-filter:blur(8px);border-top:1px solid rgba(255,255,255,.06)}
+#slide-counter{font-size:.8rem;color:var(--text-dim);font-variant-numeric:tabular-nums}
+#nav-dots{display:flex;gap:6px;align-items:center;flex:1;justify-content:center;overflow-x:auto;padding:0 40px}
+.dot{width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,.2);cursor:pointer;transition:all .3s;flex-shrink:0}
+.dot.active{background:var(--brand);transform:scale(1.3)}
+.dot:hover{background:rgba(255,255,255,.4)}
+#controls{display:flex;gap:8px;align-items:center}
+#controls button{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.1);color:var(--text);padding:6px 10px;border-radius:6px;cursor:pointer;font-size:.75rem;transition:background .2s}
+#controls button:hover{background:rgba(255,255,255,.15)}
+#toc-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;opacity:0;pointer-events:none;transition:opacity .3s}
+#toc-overlay.open{opacity:1;pointer-events:auto}
+#toc{position:fixed;top:0;left:-340px;width:320px;height:100vh;background:rgba(15,15,26,.95);backdrop-filter:blur(20px);border-right:1px solid var(--glass-border);z-index:201;transition:left .35s ease;padding:24px;overflow-y:auto}
+#toc.open{left:0}
+#toc h3{color:var(--brand);margin-bottom:16px;font-size:1rem}
+.toc-item{display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:8px;cursor:pointer;font-size:.9rem;color:var(--text-dim);transition:all .2s}
+.toc-item:hover,.toc-item.active{background:rgba(254,235,0,.08);color:var(--text-bright)}
+.toc-num{width:24px;height:24px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:700;background:rgba(255,255,255,.06);flex-shrink:0}
+.toc-item.active .toc-num{background:rgba(254,235,0,.2);color:var(--brand)}
+@keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+.slide.active .anim{animation:fadeUp .6s ease both}
+.slide.active .anim-d1{animation-delay:.1s}
+.slide.active .anim-d2{animation-delay:.2s}
+.slide.active .anim-d3{animation-delay:.3s}
+.slide.active .anim-d4{animation-delay:.4s}
+.slide.active .anim-d5{animation-delay:.5s}
+</style>
+</head>
+<body>
+<div id="toc-overlay"></div>
+<nav id="toc"><h3>목차</h3></nav>
+<div id="deck">
+
+<!-- SLIDE 1: 표지 -->
+<div class="slide" data-title="표지">
+  <div class="slide-inner" style="display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;height:100%">
+    <div class="anim"><span style="font-size:.85rem;letter-spacing:.3em;color:var(--text-dim);text-transform:uppercase">Enterprise Workflow Platform</span></div>
+    <h1 class="cover-title anim anim-d1">GRIFF-<span class="cover-q">Q</span></h1>
+    <p class="anim anim-d2" style="font-size:1.4rem;color:var(--text-bright);margin-top:8px;font-weight:600">사내 업무 관리 시스템 기획서</p>
+    <p class="cover-sub anim anim-d3">Asana / Slack / Google Sheets로 분산된 업무를<br>하나의 내부 웹 시스템으로 통합</p>
+    <div class="version-badge anim anim-d4">v1.0</div>
+  </div>
+</div>
+
+<!-- SLIDE 2: 프로젝트 개요 -->
+<div class="slide" data-title="프로젝트 개요">
+  <div class="slide-inner">
+    <h2 class="anim">프로젝트 <span class="brand">개요</span></h2>
+    <p class="subtitle anim anim-d1">왜 GRIFF-Q가 필요한가?</p>
+    <div class="card anim anim-d1" style="margin-bottom:20px">
+      <h3>배경</h3>
+      <div class="flex flex-wrap gap-16" style="margin-top:8px">
+        <div class="flex gap-8"><span style="color:var(--danger)">&#9679;</span> 정보 파편화 (Asana + Slack + Sheets)</div>
+        <div class="flex gap-8"><span style="color:var(--danger)">&#9679;</span> 이중 입력으로 인한 시간 낭비</div>
+        <div class="flex gap-8"><span style="color:var(--danger)">&#9679;</span> 현황 파악 지연 &amp; 책임 소재 불명</div>
+      </div>
+    </div>
+    <div class="grid grid-4 anim anim-d2">
+      <div class="card text-center"><div class="icon-circle icon-yellow" style="margin:0 auto 10px">&#x1F517;</div><h3>통합</h3><p class="small">모든 업무를 하나의 플랫폼에서 관리</p></div>
+      <div class="card text-center"><div class="icon-circle icon-blue" style="margin:0 auto 10px">&#x26A1;</div><h3>효율</h3><p class="small">이중 입력 제거, 자동화된 워크플로우</p></div>
+      <div class="card text-center"><div class="icon-circle icon-green" style="margin:0 auto 10px">&#x1F4CA;</div><h3>가시성</h3><p class="small">실시간 대시보드와 진행률 추적</p></div>
+      <div class="card text-center"><div class="icon-circle icon-purple" style="margin:0 auto 10px">&#x1F50D;</div><h3>추적성</h3><p class="small">감사 로그와 변경 이력 완전 기록</p></div>
+    </div>
+    <div class="card anim anim-d3 mt-24">
+      <h3>대상 팀: 7명</h3>
+      <div class="flex flex-wrap gap-8 mt-8">
+        <span class="badge">온라인 디자이너 x2</span><span class="badge badge-blue">오프라인 디자이너 x1</span><span class="badge badge-green">기획자 x2</span><span class="badge badge-purple">영상 x1</span><span class="badge badge-red">올라운더 x1</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 3: 기술 스택 -->
+<div class="slide" data-title="기술 스택">
+  <div class="slide-inner">
+    <h2 class="anim">기술 <span class="brand">스택</span></h2>
+    <p class="subtitle anim anim-d1">모던 풀스택 아키텍처</p>
+    <div class="grid grid-4 anim anim-d2">
+      <div class="card text-center"><div class="icon-circle icon-yellow" style="margin:0 auto 10px">&#9883;</div><strong>Frontend</strong><p class="small mt-8">Next.js + TypeScript<br>Tailwind CSS v4</p></div>
+      <div class="card text-center"><div class="icon-circle icon-blue" style="margin:0 auto 10px">&#9632;</div><strong>UI Components</strong><p class="small mt-8">shadcn/ui<br>Radix UI</p></div>
+      <div class="card text-center"><div class="icon-circle icon-green" style="margin:0 auto 10px">&#9731;</div><strong>Backend</strong><p class="small mt-8">Supabase<br>PostgreSQL / Auth / Realtime</p></div>
+      <div class="card text-center"><div class="icon-circle icon-purple" style="margin:0 auto 10px">&#10024;</div><strong>AI</strong><p class="small mt-8">Gemini 2.0 Flash<br>감정분석 / 예측</p></div>
+    </div>
+    <div class="grid grid-4 anim anim-d3 mt-16">
+      <div class="card text-center"><div class="icon-circle icon-red" style="margin:0 auto 10px">&#128196;</div><strong>퍼블리시</strong><p class="small mt-8">PDF / Excel<br>Google Sheets</p></div>
+      <div class="card text-center"><div class="icon-circle icon-yellow" style="margin:0 auto 10px">&#128225;</div><strong>실시간</strong><p class="small mt-8">Supabase Realtime<br>Presence</p></div>
+      <div class="card text-center"><div class="icon-circle icon-blue" style="margin:0 auto 10px">&#128200;</div><strong>차트</strong><p class="small mt-8">Recharts<br>AreaChart / Pie / Bar</p></div>
+      <div class="card text-center"><div class="icon-circle icon-green" style="margin:0 auto 10px">&#128640;</div><strong>배포</strong><p class="small mt-8">Vercel (개발)<br>Vultr Docker (프로덕션)</p></div>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 4: 권한 체계 -->
+<div class="slide" data-title="권한 체계">
+  <div class="slide-inner">
+    <h2 class="anim">권한 <span class="brand">체계</span></h2>
+    <p class="subtitle anim anim-d1">4단계 역할 기반 접근 제어</p>
+    <div class="hierarchy anim anim-d2" style="margin-bottom:24px">
+      <div class="hier-node" style="background:rgba(254,235,0,.2);color:var(--brand)">super</div><span class="hier-arrow">&#8594;</span>
+      <div class="hier-node" style="background:rgba(59,130,246,.15);color:var(--info)">boss</div><span class="hier-arrow">&#8594;</span>
+      <div class="hier-node" style="background:rgba(34,197,94,.15);color:var(--success)">manager</div><span class="hier-arrow">&#8594;</span>
+      <div class="hier-node" style="background:rgba(168,85,247,.15);color:var(--purple)">normal</div>
+    </div>
+    <div class="grid grid-4 anim anim-d2" style="margin-bottom:20px">
+      <div class="card card-sm"><strong style="color:var(--brand)">super</strong><p class="small mt-8">시스템 전체 관리, 설정 변경, 사용자 관리, 롤백</p></div>
+      <div class="card card-sm"><strong style="color:var(--info)">boss</strong><p class="small mt-8">사용자 관리 가능, 이력 조회, 대부분 기능 접근</p></div>
+      <div class="card card-sm"><strong style="color:var(--success)">manager</strong><p class="small mt-8">업무 CRUD, 이력 읽기만, 설정 접근 불가</p></div>
+      <div class="card card-sm"><strong style="color:var(--purple)">normal</strong><p class="small mt-8">기본 읽기, 개인 회고 작성, 제한된 접근</p></div>
+    </div>
+    <div class="anim anim-d3">
+      <table class="glass-table">
+        <thead><tr><th>페이지</th><th>super</th><th>boss</th><th>manager</th><th>normal</th></tr></thead>
+        <tbody>
+          <tr><td>대시보드</td><td class="check">&#10003;</td><td class="check">&#10003;</td><td class="check">&#10003;</td><td class="check">&#10003;</td></tr>
+          <tr><td>회고 - 개인 작성</td><td class="check">&#10003;</td><td class="check">&#10003;</td><td class="check">&#10003;</td><td class="check">&#10003;</td></tr>
+          <tr><td>회고 - 취합 뷰</td><td class="check">&#10003;</td><td class="check">&#10003;</td><td class="check">&#10003;</td><td style="color:var(--text-dim)">읽기</td></tr>
+          <tr><td>회의록</td><td class="check">&#10003;</td><td class="check">&#10003;</td><td class="check">&#10003;</td><td style="color:var(--text-dim)">읽기</td></tr>
+          <tr><td>입금/결제 요청</td><td class="check">&#10003;</td><td class="check">&#10003;</td><td class="check">&#10003;</td><td style="color:var(--text-dim)">읽기</td></tr>
+          <tr><td>견적서</td><td class="check">&#10003;</td><td class="check">&#10003;</td><td class="check">&#10003;</td><td style="color:var(--text-dim)">읽기</td></tr>
+          <tr><td>클라이언트 예측</td><td class="check">&#10003;</td><td class="check">&#10003;</td><td class="check">&#10003;</td><td class="cross">&#10007;</td></tr>
+          <tr><td>설정 - 계정 관리</td><td class="check">&#10003;</td><td class="check">&#10003;</td><td class="cross">&#10007;</td><td class="cross">&#10007;</td></tr>
+          <tr><td>설정 - 변경 이력</td><td class="check">&#10003;</td><td class="check">&#10003;</td><td style="color:var(--text-dim)">읽기</td><td class="cross">&#10007;</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 5: 사이트맵 -->
+<div class="slide" data-title="사이트맵">
+  <div class="slide-inner">
+    <h2 class="anim">사이트맵 <span class="brand">구조</span></h2>
+    <p class="subtitle anim anim-d1">7개 모듈 + 설정, 39+ 페이지</p>
+    <div class="grid grid-2 anim anim-d2">
+      <div class="card" style="font-family:'SF Mono','Fira Code',monospace;font-size:.8rem;line-height:2">
+        <div><span style="color:var(--brand)">/login</span></div>
+        <div><span style="color:var(--brand)">/dashboard</span></div>
+        <div style="margin-top:8px"><span style="color:var(--info)">/retrospective</span></div>
+        <div style="padding-left:16px">/guide, /sprint, /new, /[id]</div>
+        <div style="padding-left:16px">/summary, /postmortem</div>
+        <div style="margin-top:8px"><span style="color:var(--success)">/meetings</span></div>
+        <div style="padding-left:16px">/new, /[id], /import</div>
+        <div style="padding-left:16px">/action-items</div>
+        <div style="margin-top:8px"><span style="color:var(--danger)">/payments</span></div>
+        <div style="padding-left:16px">/new, /[id]</div>
+      </div>
+      <div class="card" style="font-family:'SF Mono','Fira Code',monospace;font-size:.8rem;line-height:2">
+        <div><span style="color:var(--purple)">/estimates</span></div>
+        <div style="padding-left:16px">/new, /[id], /[id]/edit</div>
+        <div style="padding-left:16px">/[id]/compare, /collab</div>
+        <div style="padding-left:16px">/templates</div>
+        <div style="margin-top:8px"><span style="color:var(--brand)">/predict</span></div>
+        <div style="padding-left:16px">/avatars, /chat</div>
+        <div style="margin-top:8px"><span style="color:var(--info)">/projects</span></div>
+        <div style="margin-top:8px"><span style="color:var(--text-dim)">/settings</span></div>
+        <div style="padding-left:16px">/users, /logs</div>
+      </div>
+    </div>
+    <div class="flex flex-wrap gap-8 mt-16 anim anim-d3">
+      <span class="badge badge-blue">회고</span><span class="badge badge-green">회의록</span><span class="badge badge-red">입금/결제</span><span class="badge badge-purple">견적서</span><span class="badge">클라이언트 예측</span><span class="badge badge-blue">프로젝트</span><span class="badge" style="background:rgba(255,255,255,.08);color:var(--text-dim)">설정</span>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 6: 대시보드 -->
+<div class="slide" data-title="대시보드">
+  <div class="slide-inner">
+    <h2 class="anim">대시보드 <span class="brand">모듈</span></h2>
+    <p class="subtitle anim anim-d1">Bento 그리드 레이아웃 기반 실시간 현황판</p>
+    <div class="card anim anim-d1" style="margin-bottom:16px">
+      <div class="flex" style="justify-content:space-between;flex-wrap:wrap">
+        <div><strong>인사말 영역</strong> <span class="small">"안녕하세요, OOO님!"</span></div>
+        <div class="flex gap-8"><span class="badge">+ 회고 작성</span><span class="badge badge-blue">+ 회의록</span><span class="badge badge-green">+ 견적서</span></div>
+      </div>
+    </div>
+    <div class="grid grid-4 anim anim-d2">
+      <div class="card card-sm text-center"><div class="stat-num">3</div><div class="stat-label">마감 임박 건</div></div>
+      <div class="card card-sm text-center"><div class="stat-num" style="color:var(--info)">&#8361;2.4M</div><div class="stat-label">입금 대기</div></div>
+      <div class="card card-sm text-center"><div class="stat-num" style="color:var(--success)">5</div><div class="stat-label">이번 주 회의</div></div>
+      <div class="card card-sm text-center"><div class="stat-num" style="color:var(--purple)">8</div><div class="stat-label">진행중 프로젝트</div></div>
+    </div>
+    <div class="grid grid-3 mt-16 anim anim-d3">
+      <div class="card card-sm"><h3 style="font-size:.9rem">AreaChart</h3><p class="small">주간 업무 완료 추이</p><div style="height:40px;background:linear-gradient(90deg,rgba(254,235,0,.1),rgba(254,235,0,.3));border-radius:6px;margin-top:8px"></div></div>
+      <div class="card card-sm"><h3 style="font-size:.9rem">PieChart</h3><p class="small">모듈별 업무 분포</p><div style="width:50px;height:50px;border-radius:50%;background:conic-gradient(var(--brand) 0% 30%,var(--info) 30% 55%,var(--success) 55% 75%,var(--purple) 75% 100%);margin:8px auto 0"></div></div>
+      <div class="card card-sm"><h3 style="font-size:.9rem">BarChart</h3><p class="small">팀원별 완료 건수</p><div class="flex gap-8" style="height:40px;margin-top:8px;align-items:flex-end"><div style="width:20%;height:70%;background:var(--brand);border-radius:4px;opacity:.6"></div><div style="width:20%;height:100%;background:var(--info);border-radius:4px;opacity:.6"></div><div style="width:20%;height:50%;background:var(--success);border-radius:4px;opacity:.6"></div></div></div>
+    </div>
+    <div class="card mt-16 anim anim-d4"><h3 style="font-size:.9rem">최근 활동 타임라인</h3><div class="small mt-8">10분 전 - 김OO님이 견적서 #42를 수정했습니다<br>25분 전 - 이OO님이 회의록을 등록했습니다<br>1시간 전 - 박OO님이 입금 요청 #15를 완료 처리했습니다</div></div>
+  </div>
+</div>
+
+<!-- SLIDE 7: 회고 시스템 -->
+<div class="slide" data-title="회고 시스템">
+  <div class="slide-inner">
+    <h2 class="anim">회고 <span class="brand">시스템</span></h2>
+    <p class="subtitle anim anim-d1">KPT + SSC 프레임워크 기반 구조화 회고</p>
+    <div class="grid grid-2 anim anim-d2">
+      <div class="card">
+        <h3 style="color:var(--brand)">KPT 프레임워크</h3>
+        <div class="grid grid-3 mt-8 gap-8">
+          <div class="card card-sm text-center" style="border-color:rgba(34,197,94,.3)"><strong style="color:var(--success)">Keep</strong><p class="small">잘한 점 유지</p></div>
+          <div class="card card-sm text-center" style="border-color:rgba(239,68,68,.3)"><strong style="color:var(--danger)">Problem</strong><p class="small">문제점 도출</p></div>
+          <div class="card card-sm text-center" style="border-color:rgba(59,130,246,.3)"><strong style="color:var(--info)">Try</strong><p class="small">개선 시도</p></div>
+        </div>
+      </div>
+      <div class="card">
+        <h3 style="color:var(--brand)">SSC 프레임워크</h3>
+        <div class="grid grid-3 mt-8 gap-8">
+          <div class="card card-sm text-center" style="border-color:rgba(34,197,94,.3)"><strong style="color:var(--success)">Start</strong><p class="small">새로 시작</p></div>
+          <div class="card card-sm text-center" style="border-color:rgba(239,68,68,.3)"><strong style="color:var(--danger)">Stop</strong><p class="small">중단할 것</p></div>
+          <div class="card card-sm text-center" style="border-color:rgba(59,130,246,.3)"><strong style="color:var(--info)">Continue</strong><p class="small">계속할 것</p></div>
+        </div>
+      </div>
+    </div>
+    <div class="grid grid-3 mt-16 anim anim-d3">
+      <div class="card card-sm"><h3 style="font-size:.9rem">개인 작성</h3><p class="small">프로젝트 선택, 회고 기간, 역할(복수), KPT/SSC 항목 추가, 공유 메모</p></div>
+      <div class="card card-sm"><h3 style="font-size:.9rem">점수 시스템</h3><p class="small">만족도 점수 (1~5), 파트별 기여도 점수, 팀 평균 비교</p></div>
+      <div class="card card-sm"><h3 style="font-size:.9rem">취합 뷰 5탭</h3><p class="small">요약 / KPT / SSC / 점수 / 타임라인</p></div>
+    </div>
+    <div class="card mt-16 anim anim-d4"><h3 style="font-size:.9rem">포스트모템</h3><p class="small">타임라인 회고 + 심각도 배지 + 재발 방지 액션 아이템 도출</p><div class="flex gap-8 mt-8"><span class="badge badge-red">Critical</span><span class="badge" style="background:rgba(251,146,60,.15);color:#fb923c">Major</span><span class="badge badge-blue">Minor</span></div></div>
+  </div>
+</div>
+
+<!-- SLIDE 8: 회의록 관리 -->
+<div class="slide" data-title="회의록 관리">
+  <div class="slide-inner">
+    <h2 class="anim">회의록 <span class="brand">관리</span></h2>
+    <p class="subtitle anim anim-d1">기록부터 추적, 퍼블리시까지 원스톱</p>
+    <div class="grid grid-2 anim anim-d2">
+      <div class="card"><h3 style="font-size:.9rem">목록 &amp; 검색</h3><p class="small">키워드 검색, 날짜/참석자 필터, 최신순/제목순 정렬, 테이블 뷰 + 카드 뷰 전환</p></div>
+      <div class="card"><h3 style="font-size:.9rem">작성 폼</h3><p class="small">제목, 날짜, 참석자 멀티셀렉트, 회의 내용 (리치텍스트), 액션아이템 인라인 테이블 (담당자/마감일/상태)</p></div>
+    </div>
+    <div class="card mt-16 anim anim-d3">
+      <h3 style="font-size:.9rem">Google Sheets 파싱 입력 플로우</h3>
+      <div class="flow mt-12">
+        <div class="flow-step"><strong>1. 붙여넣기</strong><br><span class="small">Sheets 데이터 복사</span></div><div class="flow-arrow">&#8594;</div>
+        <div class="flow-step"><strong>2. 자동 파싱</strong><br><span class="small">행/열 구조 인식</span></div><div class="flow-arrow">&#8594;</div>
+        <div class="flow-step"><strong>3. 미리보기</strong><br><span class="small">매핑 확인/수정</span></div><div class="flow-arrow">&#8594;</div>
+        <div class="flow-step"><strong>4. 저장</strong><br><span class="small">DB 저장 완료</span></div>
+      </div>
+    </div>
+    <div class="grid grid-2 mt-16 anim anim-d4">
+      <div class="card card-sm"><h3 style="font-size:.9rem">액션아이템 대시보드</h3><p class="small">전체 액션아이템 통합 조회, 미완료 건 필터, 담당자별 그룹핑, 마감 임박 알림</p></div>
+      <div class="card card-sm"><h3 style="font-size:.9rem">퍼블리시</h3><div class="flex gap-8 mt-8"><span class="badge badge-green">Excel</span><span class="badge badge-blue">Google Sheets</span><span class="badge badge-purple">인쇄</span></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 9: 입금/결제 요청 -->
+<div class="slide" data-title="입금/결제 요청">
+  <div class="slide-inner">
+    <h2 class="anim">입금/결제 <span class="brand">요청</span></h2>
+    <p class="subtitle anim anim-d1">요청 등록부터 완료까지 추적</p>
+    <div class="grid grid-3 anim anim-d2">
+      <div class="card card-sm text-center"><div class="stat-num" style="color:var(--danger)">7</div><div class="stat-label">대기 건수</div></div>
+      <div class="card card-sm text-center"><div class="stat-num" style="color:var(--brand)">&#8361;5.2M</div><div class="stat-label">대기 총액</div></div>
+      <div class="card card-sm text-center"><div class="stat-num" style="color:var(--success)">23</div><div class="stat-label">완료</div></div>
+    </div>
+    <div class="grid grid-2 mt-16 anim anim-d3">
+      <div class="card"><h3 style="font-size:.9rem">은행별 그룹핑 카드 뷰</h3><p class="small">19개 은행 지원, 은행별 색상 구분 카드, 카드 뷰 / 테이블 뷰 전환</p><div class="flex flex-wrap gap-8 mt-8"><span class="badge badge-blue">국민</span><span class="badge badge-green">신한</span><span class="badge badge-red">하나</span><span class="badge badge-purple">우리</span><span class="badge">카카오뱅크</span></div></div>
+      <div class="card"><h3 style="font-size:.9rem">입력 필드</h3><p class="small"><strong>이름</strong> - 수취인명<br><strong>금액</strong> - 콤마 자동 포맷<br><strong>은행</strong> - 19개 은행 선택<br><strong>계좌번호</strong> - 숫자만 입력<br><strong>마감일</strong> - DatePicker</p></div>
+    </div>
+    <div class="grid grid-2 mt-16 anim anim-d4">
+      <div class="card card-sm"><h3 style="font-size:.9rem">기능</h3><p class="small">계좌정보 원클릭 복사, 완료 처리 (체크 토글), 마감일 임박 알림, 검색/필터</p></div>
+      <div class="card card-sm"><h3 style="font-size:.9rem">향후 확장</h3><p class="small">대량 전송 지원, 세금계산서 발행 연동, 반복 결제 스케줄링</p></div>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 10: 견적서 심플 모드 -->
+<div class="slide" data-title="견적서 - 심플 모드">
+  <div class="slide-inner">
+    <h2 class="anim">견적서 <span class="brand">심플 모드</span></h2>
+    <p class="subtitle anim anim-d1">기본 정보 입력 + 자동 계산 + 비교 + 퍼블리시</p>
+    <div class="card anim anim-d2">
+      <h3 style="font-size:.9rem">항목 테이블</h3>
+      <table class="glass-table mt-8">
+        <thead><tr><th>항목명</th><th>수량</th><th>단가</th><th>금액</th><th>비고</th><th>강조</th></tr></thead>
+        <tbody>
+          <tr><td>디자인 시안 제작</td><td>3</td><td>500,000</td><td style="color:var(--brand)">1,500,000</td><td>3차 시안 포함</td><td style="color:var(--brand)">&#9733;</td></tr>
+          <tr><td>웹 퍼블리싱</td><td>1</td><td>2,000,000</td><td style="color:var(--brand)">2,000,000</td><td>반응형</td><td>-</td></tr>
+          <tr><td colspan="3" style="text-align:right;font-weight:600">소계</td><td>3,500,000</td><td colspan="2"></td></tr>
+          <tr><td colspan="3" style="text-align:right;font-weight:600">부가세 (10%)</td><td>350,000</td><td colspan="2"></td></tr>
+          <tr><td colspan="3" style="text-align:right;font-weight:600;color:var(--brand)">총액</td><td style="color:var(--brand);font-weight:700">3,850,000</td><td colspan="2"></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="grid grid-3 mt-16 anim anim-d3">
+      <div class="card card-sm"><h3 style="font-size:.9rem">편집 잠금</h3><p class="small">5분 타임아웃 기반 순차 편집 잠금, 편집자 표시, 자동 해제</p></div>
+      <div class="card card-sm"><h3 style="font-size:.9rem">작년 비교</h3><p class="small">좌우 분할 뷰, 가격 차이 색상 표시 (상승: 빨강, 하락: 초록)</p></div>
+      <div class="card card-sm"><h3 style="font-size:.9rem">퍼블리시</h3><div class="flex gap-8 mt-8"><span class="badge badge-red">PDF</span><span class="badge badge-green">Excel</span><span class="badge badge-blue">Sheets</span></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 11: 견적서 실시간 편집 -->
+<div class="slide" data-title="견적서 - 실시간 편집">
+  <div class="slide-inner">
+    <h2 class="anim">견적서 <span class="brand">실시간 동시 편집</span></h2>
+    <p class="subtitle anim anim-d1">Supabase Realtime 기반 협업</p>
+    <div class="grid grid-2 anim anim-d2">
+      <div class="card">
+        <h3 style="font-size:.9rem">셀 단위 실시간 동기화</h3>
+        <p class="small mt-8">Supabase Realtime 채널을 통해 각 셀의 변경사항이 즉시 모든 접속자에게 전파됩니다.</p>
+        <div class="wireframe mt-12">| 항목명       | 수량 | 단가          |
+|-------------|------|--------------|
+| 디자인 시안  |  3   | [김OO 편집중]  |
+| 웹 퍼블리싱  | [이OO] | 2,000,000  |</div>
+      </div>
+      <div class="card">
+        <h3 style="font-size:.9rem">Presence UI</h3>
+        <p class="small mt-8">접속자 아바타 목록 + 편집 중 셀 컬러 하이라이트</p>
+        <div class="flex gap-8 mt-12">
+          <div style="width:36px;height:36px;border-radius:50%;background:var(--brand);display:flex;align-items:center;justify-content:center;font-size:.75rem;font-weight:700;color:#000">김</div>
+          <div style="width:36px;height:36px;border-radius:50%;background:var(--info);display:flex;align-items:center;justify-content:center;font-size:.75rem;font-weight:700;color:#fff">이</div>
+          <div style="width:36px;height:36px;border-radius:50%;background:var(--success);display:flex;align-items:center;justify-content:center;font-size:.75rem;font-weight:700;color:#fff">박</div>
+          <span class="small" style="margin-left:8px">3명 접속 중</span>
+        </div>
+        <div class="mt-16"><h3 style="font-size:.9rem">충돌 해결</h3><p class="small mt-8"><strong>Last Writer Wins</strong> 정책 + Toast 알림으로 덮어쓰기 고지</p></div>
+      </div>
+    </div>
+    <div class="card mt-16 anim anim-d3">
+      <h3 style="font-size:.9rem">견적 템플릿 관리</h3>
+      <p class="small">자주 사용하는 견적 구조를 템플릿으로 저장, 신규 견적 생성 시 불러오기</p>
+      <div class="flex gap-8 mt-8"><span class="badge">웹사이트 제작</span><span class="badge badge-blue">브랜딩 패키지</span><span class="badge badge-green">촬영 견적</span><span class="badge badge-purple">연간 계약</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 12: 클라이언트 반응 예측 -->
+<div class="slide" data-title="클라이언트 반응 예측">
+  <div class="slide-inner">
+    <h2 class="anim">클라이언트 반응 <span class="brand">예측</span></h2>
+    <p class="subtitle anim anim-d1">AI 기반 클라이언트 성향 분석 &amp; 시뮬레이션</p>
+    <div class="grid grid-3 anim anim-d2">
+      <div class="card text-center">
+        <div style="width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,var(--brand),#ff9800);margin:0 auto 12px;display:flex;align-items:center;justify-content:center;font-size:1.5rem">&#128100;</div>
+        <strong>아바타 카드 그리드</strong><p class="small mt-8">클라이언트별 아바타 생성 및 관리</p>
+      </div>
+      <div class="card text-center">
+        <div style="width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,var(--info),var(--purple));margin:0 auto 12px;display:flex;align-items:center;justify-content:center;font-size:1.5rem">&#128221;</div>
+        <strong>수동 인격 프로필</strong><p class="small mt-8">말투, 성격, 패턴, 민감 주제 설정</p>
+      </div>
+      <div class="card text-center">
+        <div style="width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,var(--success),#00bcd4);margin:0 auto 12px;display:flex;align-items:center;justify-content:center;font-size:1.5rem">&#128172;</div>
+        <strong>대화 데이터 학습</strong><p class="small mt-8">카톡/이메일 업로드 &rarr; AI 분석</p>
+      </div>
+    </div>
+    <div class="grid grid-2 mt-16 anim anim-d3">
+      <div class="card">
+        <h3 style="font-size:.9rem">Gemini API 채팅 UI</h3>
+        <p class="small">클라이언트 아바타와 대화하며 반응 예측</p>
+        <div class="wireframe mt-12">[클라이언트 A 아바타]
+"이 금액은 예산 대비 조금 높아 보이네요.
+디자인 시안 횟수를 줄여서 단가를
+낮출 수 있을까요?"</div>
+      </div>
+      <div class="card">
+        <h3 style="font-size:.9rem">감정 분석 패널</h3>
+        <div class="mt-12">
+          <div class="flex gap-8" style="margin-bottom:8px;align-items:center"><span class="small" style="width:50px">긍정</span><div style="flex:1;height:12px;background:rgba(255,255,255,.06);border-radius:6px;overflow:hidden"><div style="width:25%;height:100%;background:var(--success);border-radius:6px"></div></div><span class="small">25%</span></div>
+          <div class="flex gap-8" style="margin-bottom:8px;align-items:center"><span class="small" style="width:50px">중립</span><div style="flex:1;height:12px;background:rgba(255,255,255,.06);border-radius:6px;overflow:hidden"><div style="width:55%;height:100%;background:var(--info);border-radius:6px"></div></div><span class="small">55%</span></div>
+          <div class="flex gap-8" style="align-items:center"><span class="small" style="width:50px">부정</span><div style="flex:1;height:12px;background:rgba(255,255,255,.06);border-radius:6px;overflow:hidden"><div style="width:20%;height:100%;background:var(--danger);border-radius:6px"></div></div><span class="small">20%</span></div>
+        </div>
+        <div class="mt-16"><h3 style="font-size:.9rem">상황 시뮬레이션</h3><p class="small mt-8">특정 시나리오(가격 인상, 일정 지연 등) 설정 후 반응 시뮬레이션</p></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 13: 설정 & 공통 기능 -->
+<div class="slide" data-title="설정 & 공통 기능">
+  <div class="slide-inner">
+    <h2 class="anim">설정 &amp; <span class="brand">공통 기능</span></h2>
+    <p class="subtitle anim anim-d1">시스템 전반에 걸친 공통 기능</p>
+    <div class="grid grid-2 anim anim-d2">
+      <div class="card"><div class="flex gap-8"><div class="icon-circle icon-yellow">&#128101;</div><div><strong>계정/권한 관리</strong><p class="small">사용자 목록, 역할 변경, 초대/비활성화, 비밀번호 재설정</p></div></div></div>
+      <div class="card"><div class="flex gap-8"><div class="icon-circle icon-blue">&#128203;</div><div><strong>감사 로그</strong><p class="small">모든 변경 이력 자동 기록, JSON diff 뷰, 롤백 기능 (super 전용)</p></div></div></div>
+    </div>
+    <div class="grid grid-3 mt-16 anim anim-d3">
+      <div class="card"><div class="flex gap-8"><div class="icon-circle icon-red">&#128276;</div><div><strong>인앱 알림</strong><p class="small">벨 아이콘 + 드롭다운, 마감 임박 트리거, 읽음/안읽음</p></div></div></div>
+      <div class="card"><div class="flex gap-8"><div class="icon-circle icon-green">&#128269;</div><div><strong>통합 검색</strong><p class="small">Cmd+K 단축키, 전 모듈 통합, 카테고리별 그룹핑</p></div></div></div>
+      <div class="card"><div class="flex gap-8"><div class="icon-circle icon-purple">&#128241;</div><div><strong>모바일 반응형</strong><p class="small">카드 뷰 자동 전환, 햄버거 메뉴, 터치 최적화</p></div></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 14: UI/UX 디자인 시스템 -->
+<div class="slide" data-title="UI/UX 디자인 시스템">
+  <div class="slide-inner">
+    <h2 class="anim">UI/UX <span class="brand">디자인 시스템</span></h2>
+    <p class="subtitle anim anim-d1">모던 글래스모피즘 + 브랜드 옐로</p>
+    <div class="grid grid-2 anim anim-d2">
+      <div class="card">
+        <h3 style="font-size:.9rem">브랜드 컬러 팔레트</h3>
+        <div class="flex flex-wrap gap-8 mt-12">
+          <div style="text-align:center"><div class="swatch" style="background:#FEEB00"></div><p class="small mt-8">#FEEB00<br>Brand</p></div>
+          <div style="text-align:center"><div class="swatch" style="background:#0f0f1a"></div><p class="small mt-8">#0f0f1a<br>BG Dark</p></div>
+          <div style="text-align:center"><div class="swatch" style="background:#1a1a2e"></div><p class="small mt-8">#1a1a2e<br>BG Light</p></div>
+          <div style="text-align:center"><div class="swatch" style="background:#e4e4e7"></div><p class="small mt-8">#e4e4e7<br>Text</p></div>
+          <div style="text-align:center"><div class="swatch" style="background:#8b8b9e"></div><p class="small mt-8">#8b8b9e<br>Dim</p></div>
+        </div>
+      </div>
+      <div class="card">
+        <h3 style="font-size:.9rem">차트 팔레트 5색</h3>
+        <div class="flex flex-wrap gap-8 mt-12">
+          <div style="text-align:center"><div class="swatch" style="background:#FEEB00"></div><p class="small mt-8">Yellow</p></div>
+          <div style="text-align:center"><div class="swatch" style="background:#3b82f6"></div><p class="small mt-8">Blue</p></div>
+          <div style="text-align:center"><div class="swatch" style="background:#22c55e"></div><p class="small mt-8">Green</p></div>
+          <div style="text-align:center"><div class="swatch" style="background:#a855f7"></div><p class="small mt-8">Purple</p></div>
+          <div style="text-align:center"><div class="swatch" style="background:#ef4444"></div><p class="small mt-8">Red</p></div>
+        </div>
+      </div>
+    </div>
+    <div class="grid grid-3 mt-16 anim anim-d3">
+      <div class="card card-sm"><h3 style="font-size:.9rem">글래스 토큰</h3><p class="small">background: rgba(255,255,255,0.06)<br>border: rgba(255,255,255,0.1)<br>backdrop-filter: blur(12px)</p></div>
+      <div class="card card-sm"><h3 style="font-size:.9rem">접근성 규칙</h3><p class="small"><strong style="color:var(--brand)">#FEEB00</strong> 특수 규칙:<br>- 텍스트 색상 사용 금지<br>- 배경/액센트/아이콘 전용<br>- 다크 배경 위 장식용만</p></div>
+      <div class="card card-sm"><h3 style="font-size:.9rem">마이크로 인터랙션</h3><p class="small">- 버튼 호버 scale(1.02)<br>- 숫자 카운트업 애니메이션<br>- 컴포넌트 fade-in on mount<br>- 스켈레톤 shimmer 효과</p></div>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 15: 공통 레이아웃 & 컴포넌트 -->
+<div class="slide" data-title="공통 레이아웃 & 컴포넌트">
+  <div class="slide-inner">
+    <h2 class="anim">공통 레이아웃 &amp; <span class="brand">컴포넌트</span></h2>
+    <p class="subtitle anim anim-d1">일관된 UX를 위한 공용 컴포넌트 시스템</p>
+    <div class="card anim anim-d2" style="margin-bottom:20px">
+      <h3 style="font-size:.9rem">레이아웃 와이어프레임</h3>
+      <div class="wireframe mt-8">+--------------------------------------------------+
+|  Header  [로고]  [검색 Cmd+K]  [알림]  [아바타]   |
++--------+-----------------------------------------+
+|        |                                         |
+| Sidebar|          Main Content Area              |
+| [메뉴]  |  [Breadcrumb]                           |
+| [메뉴]  |  [PageHeader + 액션 버튼]                 |
+| [메뉴]  |  [콘텐츠 영역]                             |
+| [메뉴]  |                                         |
++--------+-----------------------------------------+</div>
+    </div>
+    <div class="grid grid-4 anim anim-d3">
+      <div class="card card-sm text-center"><div class="icon-circle icon-yellow" style="margin:0 auto 8px">&#128205;</div><strong style="font-size:.85rem">Breadcrumb</strong><p class="small mt-8">경로 네비게이션</p></div>
+      <div class="card card-sm text-center"><div class="icon-circle icon-blue" style="margin:0 auto 8px">&#128196;</div><strong style="font-size:.85rem">PageHeader</strong><p class="small mt-8">제목 + 액션 버튼</p></div>
+      <div class="card card-sm text-center"><div class="icon-circle icon-green" style="margin:0 auto 8px">&#128172;</div><strong style="font-size:.85rem">Toast</strong><p class="small mt-8">알림 메시지</p></div>
+      <div class="card card-sm text-center"><div class="icon-circle icon-purple" style="margin:0 auto 8px">&#9632;</div><strong style="font-size:.85rem">Skeleton</strong><p class="small mt-8">로딩 플레이스홀더</p></div>
+    </div>
+    <div class="grid grid-3 mt-16 anim anim-d4">
+      <div class="card card-sm text-center"><div class="icon-circle icon-red" style="margin:0 auto 8px">&#128196;</div><strong style="font-size:.85rem">EmptyState</strong><p class="small mt-8">빈 데이터 안내</p></div>
+      <div class="card card-sm text-center"><div class="icon-circle icon-yellow" style="margin:0 auto 8px">&#9888;</div><strong style="font-size:.85rem">Error Boundary</strong><p class="small mt-8">에러 복구 UI</p></div>
+      <div class="card card-sm text-center"><div class="icon-circle icon-blue" style="margin:0 auto 8px">&#9881;</div><strong style="font-size:.85rem">LoadingButton</strong><p class="small mt-8">비동기 액션 버튼</p></div>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 16: 데이터베이스 설계 -->
+<div class="slide" data-title="데이터베이스 설계">
+  <div class="slide-inner">
+    <h2 class="anim">데이터베이스 <span class="brand">설계</span></h2>
+    <p class="subtitle anim anim-d1">PostgreSQL 19개 테이블 + RLS + 감사 트리거</p>
+    <div class="grid grid-3 anim anim-d2">
+      <div class="card card-sm"><h3 style="font-size:.85rem;color:var(--brand)">Auth 모듈</h3><p class="small" style="font-family:monospace">profiles<br>user_roles</p></div>
+      <div class="card card-sm"><h3 style="font-size:.85rem;color:var(--info)">회고 모듈</h3><p class="small" style="font-family:monospace">retrospectives<br>retro_items<br>retro_scores</p></div>
+      <div class="card card-sm"><h3 style="font-size:.85rem;color:var(--success)">회의록 모듈</h3><p class="small" style="font-family:monospace">meetings<br>meeting_attendees<br>action_items</p></div>
+      <div class="card card-sm"><h3 style="font-size:.85rem;color:var(--danger)">결제 모듈</h3><p class="small" style="font-family:monospace">payments</p></div>
+      <div class="card card-sm"><h3 style="font-size:.85rem;color:var(--purple)">견적 모듈</h3><p class="small" style="font-family:monospace">estimates<br>estimate_items<br>estimate_templates</p></div>
+      <div class="card card-sm"><h3 style="font-size:.85rem;color:var(--brand)">예측 모듈</h3><p class="small" style="font-family:monospace">avatars<br>avatar_profiles<br>chat_sessions<br>chat_messages</p></div>
+    </div>
+    <div class="card card-sm anim anim-d2 mt-16"><h3 style="font-size:.85rem;color:var(--text-dim)">시스템</h3><p class="small" style="font-family:monospace">audit_logs &middot; notifications</p></div>
+    <div class="grid grid-2 mt-16 anim anim-d3">
+      <div class="card"><h3 style="font-size:.9rem">RLS 원칙 4가지</h3><div class="small mt-8"><strong>1.</strong> 인증된 사용자만 접근<br><strong>2.</strong> 역할 기반 행 필터링<br><strong>3.</strong> 본인 데이터 수정 우선<br><strong>4.</strong> super/boss 예외 전체 접근</div></div>
+      <div class="card"><h3 style="font-size:.9rem">감사 로그 트리거</h3><p class="small mt-8">모든 INSERT/UPDATE/DELETE 이벤트 자동 기록</p><div class="wireframe mt-8" style="font-size:.75rem">{ table: "estimates",
+  action: "UPDATE",
+  old: { amount: 3000000 },
+  new: { amount: 3500000 },
+  user_id: "abc-123" }</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 17: 로드맵 v0.1 ~ v0.25 -->
+<div class="slide" data-title="로드맵 v0.1 ~ v0.25">
+  <div class="slide-inner">
+    <h2 class="anim">릴리스 로드맵 <span class="brand">v0.1 ~ v0.25</span></h2>
+    <p class="subtitle anim anim-d1">MVP에서 인터페이스 고도화까지</p>
+    <div class="timeline anim anim-d2">
+      <div class="timeline-item">
+        <div class="flex gap-8 flex-wrap"><span class="badge">v0.1 - MVP</span><span class="badge badge-green">완료</span></div>
+        <div class="card card-sm mt-8"><strong>Auth + 7개 모듈 CRUD (39 페이지)</strong><p class="small mt-8">로그인, 대시보드, 회고, 회의록, 입금/결제, 견적서, 클라이언트 예측, 설정</p></div>
+      </div>
+      <div class="timeline-item">
+        <div class="flex gap-8 flex-wrap"><span class="badge badge-blue">v0.2 - 고도화</span><span class="badge" style="background:rgba(251,146,60,.15);color:#fb923c">진행중</span></div>
+        <div class="card card-sm mt-8"><strong>퍼블리시 + 실시간 + AI 학습</strong><p class="small mt-8">PDF/Excel/Sheets 퍼블리시, Supabase Realtime 동시편집, 대화 데이터 AI 학습, 감정분석 패널</p></div>
+      </div>
+      <div class="timeline-item">
+        <div class="flex gap-8 flex-wrap"><span class="badge badge-purple">v0.25 - UI/UX</span><span class="badge" style="background:rgba(251,146,60,.15);color:#fb923c">진행중</span></div>
+        <div class="card card-sm mt-8"><strong>6 Phase 인터페이스 개선 (24개 작업)</strong><p class="small mt-8">Phase A: 네비게이션/검색 | Phase B: 대시보드 UX | Phase C: 테이블/목록 강화<br>Phase D: 폼 UX 개선 | Phase E: 시각 디자인 | Phase F: 마이크로 인터랙션</p></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 18: 로드맵 v0.3 ~ v0.9 -->
+<div class="slide" data-title="로드맵 v0.3 ~ v0.9">
+  <div class="slide-inner">
+    <h2 class="anim">릴리스 로드맵 <span class="brand">v0.3 ~ v0.9</span></h2>
+    <p class="subtitle anim anim-d1">전체 업무 플랫폼으로 확장</p>
+    <div class="timeline anim anim-d2">
+      <div class="timeline-item">
+        <span class="badge badge-blue">v0.3</span>
+        <div class="card card-sm mt-8"><strong>견적서 워크플로우 + 뉴스 큐레이션 + 클라이언트 포털</strong><p class="small mt-8">견적 승인 프로세스, 업계 뉴스 AI 큐레이션, 클라이언트 전용 열람 포털</p></div>
+      </div>
+      <div class="timeline-item">
+        <span class="badge badge-green">v0.4 ~ v0.5</span>
+        <div class="card card-sm mt-8"><strong>데일리 스크럼 + 프로젝트 관리 + Task</strong><p class="small mt-8">AI 대화형 스크럼, 6가지 뷰 모드 프로젝트 관리, Task 통합 관리</p></div>
+      </div>
+      <div class="timeline-item">
+        <span class="badge badge-purple">v0.6 ~ v0.7</span>
+        <div class="card card-sm mt-8"><strong>퍼포먼스 + 스케줄 + 아카이빙 + 장비 관리</strong><p class="small mt-8">워크로드 분석, 회사 캘린더, 프로젝트 아카이브, 창고/장비/QR 시스템</p></div>
+      </div>
+      <div class="timeline-item">
+        <span class="badge badge-red">v0.9</span>
+        <div class="card card-sm mt-8"><strong>인프라 + 외부 연동</strong><p class="small mt-8">Docker 프로덕션 배포, 자동 백업, Slack 알림 연동, 모니터링</p></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 19: 데일리 스크럼 3단계 (핵심) -->
+<div class="slide" data-title="데일리 스크럼 - 3단계">
+  <div class="slide-inner">
+    <h2 class="anim">데일리 스크럼 <span class="brand">3단계 플로우</span></h2>
+    <p class="subtitle anim anim-d1">AI와 함께 오늘 하루를 설계하다</p>
+    <div class="steps anim anim-d2">
+      <div class="step-node" style="border-color:var(--brand);background:rgba(254,235,0,.15);color:var(--brand)">A</div><span class="step-arrow">&#8594;</span>
+      <div class="step-node" style="border-color:var(--info);background:rgba(59,130,246,.15);color:var(--info)">B</div><span class="step-arrow">&#8594;</span>
+      <div class="step-node" style="border-color:var(--success);background:rgba(34,197,94,.15);color:var(--success)">C</div><span class="step-arrow">&#8594;</span>
+      <div class="step-node" style="border-color:var(--purple);background:rgba(168,85,247,.15);color:var(--purple);font-size:.9rem">&#10003;</div>
+    </div>
+    <div class="grid grid-3 anim anim-d3">
+      <div class="card" style="border-left:3px solid var(--brand)">
+        <span class="badge">A. 브레인스토밍</span>
+        <h3 class="mt-8">"오늘 뭘 해야 하지?"</h3>
+        <p class="small mt-8">&#8226; AI 대화로 업무 수집<br>&#8226; 어제 미완료 자동 이월 제안<br>&#8226; 자유 입력 + 음성 입력<br>&#8226; 액션아이템 자동 추출</p>
+      </div>
+      <div class="card" style="border-left:3px solid var(--info)">
+        <span class="badge badge-blue">B. 우선순위 정하기</span>
+        <h3 class="mt-8">"뭐가 더 급하지?"</h3>
+        <p class="small mt-8">&#8226; 드래그 &amp; 드롭 정렬<br>&#8226; AI 우선순위 추천<br>&#8226; 긴급/중요 매트릭스 뷰<br>&#8226; 마감 임박 자동 상위 배치</p>
+      </div>
+      <div class="card" style="border-left:3px solid var(--success)">
+        <span class="badge badge-green">C. 시간 배치하기</span>
+        <h3 class="mt-8">"언제 하지?"</h3>
+        <p class="small mt-8">&#8226; 타임블록 배치 UI<br>&#8226; 소요시간 예측 (AI)<br>&#8226; 과부하 경고 알림<br>&#8226; 캘린더 연동</p>
+      </div>
+    </div>
+    <div class="card mt-16 anim anim-d4" style="border:1px solid rgba(168,85,247,.3);background:rgba(168,85,247,.08)">
+      <h3 style="font-size:.9rem;color:var(--purple)">완성 후 자동화</h3>
+      <div class="flex flex-wrap gap-16 mt-8"><div class="small">&#8226; Task 자동 등록/수정</div><div class="small">&#8226; 대시보드 즉시 반영</div><div class="small">&#8226; 퍼포먼스 데이터 수집</div><div class="small">&#8226; 팀 현황판 업데이트</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 20: 데일리 스크럼 화면 & 자동화 -->
+<div class="slide" data-title="데일리 스크럼 - 화면 & 자동화">
+  <div class="slide-inner">
+    <h2 class="anim">데일리 스크럼 <span class="brand">화면 &amp; 자동화</span></h2>
+    <p class="subtitle anim anim-d1">AI 대화 UI + 운영 정책</p>
+    <div class="grid grid-2 anim anim-d2">
+      <div class="card">
+        <h3 style="font-size:.9rem">AI 대화 UI</h3>
+        <div class="wireframe mt-8" style="font-size:.75rem">+--------------------------------------+
+| 오늘의 데일리 스크럼                  |
+| ------------------------------------ |
+| [AI] 안녕하세요! 오늘 할 일을         |
+|      정리해 볼까요?                   |
+|                                      |
+| [나] 어제 견적서 수정하다 못 끝냈고    |
+|      오늘 클라이언트 미팅이 있어요     |
+|                                      |
+| [AI] 정리해 봤어요:                   |
+|      1. 견적서 #42 수정 완료 (이월)   |
+|      2. 클라이언트 A사 미팅 준비      |
+|      3. 미팅 후 회의록 작성           |
+|      맞나요?                         |
+|                                      |
+| [입력창...              ] [전송]      |
++--------------------------------------+</div>
+      </div>
+      <div class="card">
+        <h3 style="font-size:.9rem">운영 정책</h3>
+        <div class="small mt-8" style="line-height:2">
+          <strong>미응답 처리</strong><br>&#8226; 09:00 시작 알림<br>&#8226; 10:00 리마인드<br>&#8226; 11:00 미응답 &rarr; PM 에스컬레이션<br><br>
+          <strong>미완료 처리</strong><br>&#8226; 18:00 하루 마감 리마인드<br>&#8226; 미완료 Task &rarr; 다음날 자동 이월<br>&#8226; 3일 연속 미완료 &rarr; 경고<br><br>
+          <strong>하루 마감 회고 (선택)</strong><br>&#8226; 오늘 완료한 일 / 블로커<br>&#8226; 내일 중점 사항<br>&#8226; 퍼포먼스 데이터 자동 반영
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 21: 프로젝트 관리 & 임무카드 -->
+<div class="slide" data-title="프로젝트 관리 & 임무카드">
+  <div class="slide-inner">
+    <h2 class="anim">프로젝트 관리 &amp; <span class="brand">임무카드</span></h2>
+    <p class="subtitle anim anim-d1">6가지 뷰 + 자동 카드 발급 시스템</p>
+    <div class="flex flex-wrap gap-8 anim anim-d2" style="margin-bottom:20px">
+      <span class="badge">List</span><span class="badge badge-blue">Board</span><span class="badge badge-green">Kanban</span><span class="badge badge-purple">Calendar</span><span class="badge badge-red">Gantt</span><span class="badge" style="background:rgba(0,188,212,.15);color:#00bcd4">Node</span>
+    </div>
+    <div class="grid grid-2 anim anim-d3">
+      <div class="card"><h3 style="font-size:.9rem">R&amp;R 역할 관리</h3><p class="small mt-8">PM, 기획, 디자인, 영상, 운영, 올라운더 - 역할 템플릿 선택, 권한/체크리스트/보고라인 자동 연결, 대체 담당자(백업) 지정</p></div>
+      <div class="card"><h3 style="font-size:.9rem">공통 카드 필드</h3><p class="small mt-8">임무명, 목적, 담당자, 우선순위, 마감기한, 완료 기준, 체크포인트, 첨부자료</p><div class="flex flex-wrap gap-8 mt-8"><span class="badge" style="background:rgba(255,255,255,.08);color:var(--text-dim)">대기</span><span class="badge badge-blue">진행중</span><span class="badge" style="background:rgba(251,146,60,.15);color:#fb923c">검토중</span><span class="badge badge-green">완료</span><span class="badge badge-red">이슈</span></div></div>
+    </div>
+    <div class="grid grid-4 mt-16 anim anim-d4">
+      <div class="card card-sm"><h3 style="font-size:.8rem;color:var(--brand)">일반 업무형</h3><p class="small mt-8">기획 &rarr; 제작 &rarr; 검수 &rarr; 배포<br>승인 단계 자동 포함</p></div>
+      <div class="card card-sm"><h3 style="font-size:.8rem;color:var(--info)">이벤트/행사형</h3><p class="small mt-8">사전준비 &rarr; 현장운영 &rarr; 철수정리<br>장비/비상대응 체크포인트</p></div>
+      <div class="card card-sm"><h3 style="font-size:.8rem;color:var(--purple)">콘텐츠 제작형</h3><p class="small mt-8">아이디어 &rarr; 스크립트 &rarr; 촬영 &rarr; 편집 &rarr; 검수 &rarr; 게시</p></div>
+      <div class="card card-sm"><h3 style="font-size:.8rem;color:var(--success)">운영/유지보수형</h3><p class="small mt-8">점검 &rarr; 이슈처리 &rarr; 복구 &rarr; 리포트<br>SLA + 에스컬레이션</p></div>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 22: 창고/장비 관리 -->
+<div class="slide" data-title="창고/장비 관리">
+  <div class="slide-inner">
+    <h2 class="anim">창고/장비 <span class="brand">관리</span></h2>
+    <p class="subtitle anim anim-d1">QR 기반 스마트 재고 &amp; 장비 운영</p>
+    <div class="grid grid-2 anim anim-d2">
+      <div class="card"><h3 style="font-size:.9rem">재고 관리</h3><p class="small mt-8">수량 추적, 입고/출고 기록, 재고 부족 알림, 위치별 재고 현황</p></div>
+      <div class="card"><h3 style="font-size:.9rem">장비 예약/상태</h3><p class="small mt-8">시간/담당자/프로젝트별 예약, 상태 체크 (정상/고장/정비중), 정비 이력</p></div>
+    </div>
+    <div class="card mt-16 anim anim-d3">
+      <h3 style="font-size:.9rem">QR 기반 운영</h3>
+      <div class="flow mt-12">
+        <div class="flow-step"><strong>QR 스캔</strong><br><span class="small">즉시 자산 조회</span></div><div class="flow-arrow">&#8594;</div>
+        <div class="flow-step"><strong>멀티 스캔</strong><br><span class="small">일괄 입고/출고</span></div><div class="flow-arrow">&#8594;</div>
+        <div class="flow-step"><strong>세트 체크</strong><br><span class="small">체크인/아웃</span></div><div class="flow-arrow">&#8594;</div>
+        <div class="flow-step"><strong>누락 검출</strong><br><span class="small">자동 탐지</span></div>
+      </div>
+    </div>
+    <div class="grid grid-2 mt-16 anim anim-d4">
+      <div class="card card-sm"><h3 style="font-size:.9rem">보관위치 체계</h3><div class="small mt-8" style="font-family:monospace">센터 &gt; 구역 &gt; 랙 &gt; 선반 &gt; 칸<br><br>예: STUDIO-A &gt; A구역 &gt; R02 &gt; S03 &gt; B04<br>코드: <strong>A-R02-S03-B04</strong></div></div>
+      <div class="card card-sm"><h3 style="font-size:.9rem">충전/정비 자동화</h3><p class="small mt-8">장비별 주기 설정 (예: 30일)<br>D-3, D-1, 당일 알림<br>미처리 에스컬레이션<br>완료 시 다음 주기 자동 갱신</p></div>
+    </div>
+    <div class="card mt-16 anim anim-d5" style="padding:12px 18px"><h3 style="font-size:.85rem">알림 정책</h3><div class="flex flex-wrap gap-16 small mt-8"><span>&#8226; 위치 미확정 24시간 경과 시 알림</span><span>&#8226; 금지 위치 배치 시 즉시 경고</span><span>&#8226; 장기 미이동(60일) 점검 알림</span></div></div>
+  </div>
+</div>
+
+<!-- SLIDE 23: PM 워크플로우 -->
+<div class="slide" data-title="PM 워크플로우 & 일정 대응">
+  <div class="slide-inner">
+    <h2 class="anim">PM 워크플로우 &amp; <span class="brand">일정 대응</span></h2>
+    <p class="subtitle anim anim-d1">8단계 업무 플로우 + 지연 대응 체계</p>
+    <div class="anim anim-d2">
+      <div class="flow" style="gap:4px">
+        <div class="flow-step" style="min-width:70px;font-size:.7rem;padding:8px 4px"><strong>1</strong><br>요청접수</div><div class="flow-arrow" style="font-size:.9rem;padding:0 2px">&#8594;</div>
+        <div class="flow-step" style="min-width:70px;font-size:.7rem;padding:8px 4px"><strong>2</strong><br>기획안</div><div class="flow-arrow" style="font-size:.9rem;padding:0 2px">&#8594;</div>
+        <div class="flow-step" style="min-width:70px;font-size:.7rem;padding:8px 4px"><strong>3</strong><br>PM 1차</div><div class="flow-arrow" style="font-size:.9rem;padding:0 2px">&#8594;</div>
+        <div class="flow-step" style="min-width:70px;font-size:.7rem;padding:8px 4px"><strong>4</strong><br>디자인</div><div class="flow-arrow" style="font-size:.9rem;padding:0 2px">&#8594;</div>
+        <div class="flow-step" style="min-width:70px;font-size:.7rem;padding:8px 4px"><strong>5</strong><br>2차 컨펌</div><div class="flow-arrow" style="font-size:.9rem;padding:0 2px">&#8594;</div>
+        <div class="flow-step" style="min-width:70px;font-size:.7rem;padding:8px 4px"><strong>6</strong><br>클라이언트</div><div class="flow-arrow" style="font-size:.9rem;padding:0 2px">&#8594;</div>
+        <div class="flow-step" style="min-width:70px;font-size:.7rem;padding:8px 4px"><strong>7</strong><br>수정</div><div class="flow-arrow" style="font-size:.9rem;padding:0 2px">&#8594;</div>
+        <div class="flow-step" style="min-width:70px;font-size:.7rem;padding:8px 4px;border-color:rgba(34,197,94,.3)"><strong>8</strong><br>최종게시</div>
+      </div>
+    </div>
+    <div class="grid grid-2 mt-24 anim anim-d3">
+      <div class="card"><h3 style="font-size:.9rem">알림/승인 체계</h3><p class="small mt-8">&#8226; 단계 완료 시 다음 담당자 자동 알림<br>&#8226; 중요 단계는 올라운더 동시 알림<br>&#8226; 단일 승인 / 다중 승인 (PM+기획자)<br>&#8226; 승인 지연 시 리마인드 + 에스컬레이션</p></div>
+      <div class="card"><h3 style="font-size:.9rem">일정 지연 대응</h3><p class="small mt-8">&#8226; 마감 임박/초과 시 자동 알림<br>&#8226; 지연 발생 시 자동 일정 재조정 제안<br>&#8226; 지연 사유 기록 (카테고리 + 메모)<br>&#8226; 반복 원인 분석 리포트</p></div>
+    </div>
+    <div class="grid grid-2 mt-16 anim anim-d4">
+      <div class="card card-sm"><h3 style="font-size:.9rem">워크로드 - 대시보드 요약</h3><p class="small mt-8">팀별 업무량 분포, 과부하 인원 TOP, 재배치 필요 건수</p></div>
+      <div class="card card-sm"><h3 style="font-size:.9rem">퍼포먼스 - 상세 분석</h3><p class="small mt-8">할당 건수, 지연 건수, 평균 처리시간, 재오픈율 - 전체 공개</p></div>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 24: 배포 전략 & 비목표 -->
+<div class="slide" data-title="배포 전략 & 비목표">
+  <div class="slide-inner">
+    <h2 class="anim">배포 전략 &amp; <span class="brand">비목표</span></h2>
+    <p class="subtitle anim anim-d1">3환경 배포 + 프로젝트 경계 설정</p>
+    <div class="anim anim-d2">
+      <div class="flow">
+        <div class="flow-step" style="border-color:rgba(59,130,246,.3)"><span class="badge badge-blue">Preview</span><br><strong class="small">Vercel</strong><br><span class="small">PR별 자동 배포<br>코드 리뷰용</span></div><div class="flow-arrow">&#8594;</div>
+        <div class="flow-step" style="border-color:rgba(254,235,0,.3)"><span class="badge">Staging</span><br><strong class="small">Vercel</strong><br><span class="small">main 브랜치<br>QA/테스트용</span></div><div class="flow-arrow">&#8594;</div>
+        <div class="flow-step" style="border-color:rgba(34,197,94,.3)"><span class="badge badge-green">Production</span><br><strong class="small">Vultr Docker</strong><br><span class="small">안정 버전<br>실서비스</span></div>
+      </div>
+    </div>
+    <div class="grid grid-2 mt-24 anim anim-d3">
+      <div class="card"><h3 style="font-size:.9rem;color:var(--danger)">비목표 4가지</h3><div class="small mt-8" style="line-height:2"><strong>1.</strong> 외부 사용자 대상 서비스 (사내 전용)<br><strong>2.</strong> 모바일 네이티브 앱 (웹 반응형만)<br><strong>3.</strong> 범용 SaaS 제품화<br><strong>4.</strong> 대규모 트래픽 대응 (7명 팀 규모)</div></div>
+      <div class="card"><h3 style="font-size:.9rem;color:var(--success)">확정 사항 6가지</h3><div class="small mt-8" style="line-height:2"><strong>1.</strong> 노드/칸반/캘린더/간트 모두 프로젝트 뷰<br><strong>2.</strong> 워크로드: 대시보드 요약 + 퍼포먼스 상세<br><strong>3.</strong> 진행률: 프로젝트(가중치) vs 달성도(목표) 분리<br><strong>4.</strong> 금융 탭: 추후 직접 정의<br><strong>5.</strong> 퍼포먼스: 전체 공개<br><strong>6.</strong> 온보딩: 정직원 대상</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 25: 마무리 -->
+<div class="slide" data-title="마무리">
+  <div class="slide-inner" style="display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;height:100%">
+    <h1 class="cover-title anim">GRIFF-<span class="cover-q">Q</span></h1>
+    <p class="anim anim-d1" style="font-size:1.3rem;color:var(--text-bright);margin-top:8px;font-weight:600">하나의 시스템으로 통합된 업무 관리</p>
+    <div class="grid grid-4 anim anim-d2" style="margin-top:40px;max-width:700px;width:100%">
+      <div class="card card-sm text-center"><div class="stat-num">39+</div><div class="stat-label">페이지</div></div>
+      <div class="card card-sm text-center"><div class="stat-num" style="color:var(--info)">19</div><div class="stat-label">DB 테이블</div></div>
+      <div class="card card-sm text-center"><div class="stat-num" style="color:var(--success)">7</div><div class="stat-label">사용자</div></div>
+      <div class="card card-sm text-center"><div class="stat-num" style="color:var(--purple)">6</div><div class="stat-label">릴리스 버전</div></div>
+    </div>
+    <p class="anim anim-d3" style="margin-top:48px;font-size:1.8rem;font-weight:300;color:var(--text-dim);letter-spacing:.1em">Thank You</p>
+    <p class="anim anim-d4 small" style="margin-top:16px">GRIFF &middot; 2026</p>
+  </div>
+</div>
+
+</div>
+
+<!-- BOTTOM BAR -->
+<div id="bottom-bar">
+  <div id="slide-counter">1 / 25</div>
+  <div id="nav-dots"></div>
+  <div id="controls">
+    <button id="btn-toc" title="목차 (M)">&#9776; 목차</button>
+    <button id="btn-fs" title="전체화면 (F)">&#9974; 전체화면</button>
+  </div>
+</div>
+
+<script>
+(function(){
+  var current = 0;
+  var slides = document.querySelectorAll('.slide');
+  var total = slides.length;
+  var dotsContainer = document.getElementById('nav-dots');
+  var counter = document.getElementById('slide-counter');
+  var toc = document.getElementById('toc');
+  var tocOverlay = document.getElementById('toc-overlay');
+
+  // Build dots
+  for(var i=0;i<total;i++){
+    var d = document.createElement('div');
+    d.className = 'dot' + (i===0?' active':'');
+    d.setAttribute('data-idx', String(i));
+    (function(idx){d.addEventListener('click',function(){goTo(idx)})})(i);
+    dotsContainer.appendChild(d);
+  }
+
+  // Build TOC via DOM (no innerHTML)
+  var tocH = document.createElement('h3');
+  tocH.textContent = 'Slides';
+  toc.appendChild(tocH);
+  for(var i=0;i<total;i++){
+    var title = slides[i].getAttribute('data-title') || ('Slide '+(i+1));
+    var item = document.createElement('div');
+    item.className = 'toc-item' + (i===0?' active':'');
+    item.setAttribute('data-idx', String(i));
+    var numSpan = document.createElement('span');
+    numSpan.className = 'toc-num';
+    numSpan.textContent = String(i+1);
+    var titleSpan = document.createElement('span');
+    titleSpan.textContent = title;
+    item.appendChild(numSpan);
+    item.appendChild(titleSpan);
+    (function(idx){item.addEventListener('click',function(){goTo(idx)})})(i);
+    toc.appendChild(item);
+  }
+
+  function goTo(idx){
+    if(idx<0||idx>=total||idx===current)return;
+    var direction = idx > current ? 'prev' : 'next';
+    var old = current;
+    slides[old].classList.remove('active');
+    slides[old].classList.add(direction);
+    current = idx;
+    slides[current].classList.remove('prev','next');
+    slides[current].classList.add('active');
+    setTimeout(function(){slides[old].classList.remove('prev','next')},600);
+    updateUI();
+    closeTOC();
+  }
+
+  function updateUI(){
+    counter.textContent = (current+1)+' / '+total;
+    var dots = dotsContainer.querySelectorAll('.dot');
+    for(var i=0;i<dots.length;i++) dots[i].classList.toggle('active',i===current);
+    var tocItems = toc.querySelectorAll('.toc-item');
+    for(var i=0;i<tocItems.length;i++) tocItems[i].classList.toggle('active',i===current);
+  }
+
+  function next(){goTo(current+1)}
+  function prev(){goTo(current-1)}
+
+  slides[0].classList.add('active');
+
+  document.addEventListener('keydown',function(e){
+    if(e.key==='ArrowRight'||e.key===' '){e.preventDefault();next()}
+    else if(e.key==='ArrowLeft'){e.preventDefault();prev()}
+    else if(e.key==='f'||e.key==='F'){e.preventDefault();toggleFS()}
+    else if(e.key==='m'||e.key==='M'){e.preventDefault();toggleTOC()}
+    else if(e.key==='Escape'){closeTOC()}
+  });
+
+  function toggleFS(){
+    if(!document.fullscreenElement) document.documentElement.requestFullscreen().catch(function(){});
+    else document.exitFullscreen();
+  }
+
+  function toggleTOC(){
+    toc.classList.toggle('open');
+    tocOverlay.classList.toggle('open');
+  }
+  function closeTOC(){
+    toc.classList.remove('open');
+    tocOverlay.classList.remove('open');
+  }
+
+  document.getElementById('btn-toc').addEventListener('click', toggleTOC);
+  document.getElementById('btn-fs').addEventListener('click', toggleFS);
+  tocOverlay.addEventListener('click', closeTOC);
+})();
+</script>
+</body>
+</html>
