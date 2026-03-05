@@ -23,37 +23,50 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Plus } from "lucide-react";
+import { Pencil } from "lucide-react";
 import { toast } from "sonner";
-import { generateChecklistItems } from "@/lib/kickoff-templates";
 
-interface User {
-  id: string;
-  name: string;
+interface ProjectEditDialogProps {
+  project: {
+    id: string;
+    name: string;
+    status: string;
+    lead_user_id: string | null;
+    start_date: string | null;
+    end_date: string | null;
+    description: string | null;
+  };
+  users: { id: string; name: string }[];
 }
 
-interface ProjectCreateDialogProps {
-  userId: string;
-  users: User[];
-}
-
-export function ProjectCreateDialog({
-  userId,
-  users,
-}: ProjectCreateDialogProps) {
+export function ProjectEditDialog({ project, users }: ProjectEditDialogProps) {
   const router = useRouter();
   const supabase = createClient();
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const [form, setForm] = useState({
-    name: "",
-    description: "",
-    status: "active",
-    start_date: "",
-    end_date: "",
-    lead_user_id: "",
+    name: project.name,
+    description: project.description ?? "",
+    status: project.status,
+    start_date: project.start_date ?? "",
+    end_date: project.end_date ?? "",
+    lead_user_id: project.lead_user_id ?? "",
   });
+
+  function handleOpen(isOpen: boolean) {
+    if (isOpen) {
+      setForm({
+        name: project.name,
+        description: project.description ?? "",
+        status: project.status,
+        start_date: project.start_date ?? "",
+        end_date: project.end_date ?? "",
+        lead_user_id: project.lead_user_id ?? "",
+      });
+    }
+    setOpen(isOpen);
+  }
 
   async function handleSubmit() {
     if (!form.name.trim()) {
@@ -63,72 +76,43 @@ export function ProjectCreateDialog({
 
     setLoading(true);
 
-    const { data: newProject, error } = await supabase
+    const { error } = await supabase
       .from("projects")
-      .insert({
-        title: form.name,
+      .update({
         name: form.name,
-        description: form.description,
+        title: form.name,
+        description: form.description || null,
         status: form.status,
         start_date: form.start_date || null,
         end_date: form.end_date || null,
         lead_user_id: form.lead_user_id || null,
-        created_by: userId,
       })
-      .select("id")
-      .single();
+      .eq("id", project.id);
 
     setLoading(false);
 
-    if (error || !newProject) {
-      toast.error("프로젝트 생성 실패", { description: error?.message });
+    if (error) {
+      toast.error("프로젝트 수정 실패", { description: error.message });
       return;
     }
 
-    // Auto-create draft kickoff
-    const { data: kickoff } = await supabase
-      .from("project_kickoffs")
-      .insert({
-        project_id: newProject.id,
-        status: "draft",
-        created_by: userId,
-      })
-      .select("id")
-      .single();
-
-    // Auto-generate checklist items from template (general type)
-    if (kickoff) {
-      const items = generateChecklistItems(null, kickoff.id);
-      if (items.length > 0) {
-        await supabase.from("kickoff_checklist_items").insert(items);
-      }
-    }
-
+    toast.success("프로젝트가 수정되었습니다");
     setOpen(false);
-    setForm({
-      name: "",
-      description: "",
-      status: "active",
-      start_date: "",
-      end_date: "",
-      lead_user_id: "",
-    });
     router.refresh();
   }
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={handleOpen}>
       <DialogTrigger asChild>
-        <Button>
-          <Plus className="mr-2 size-4" />
-          새 프로젝트
+        <Button variant="ghost" size="icon" className="size-8">
+          <Pencil className="size-3.5" />
         </Button>
       </DialogTrigger>
       <DialogContent className="max-w-lg">
         <DialogHeader>
-          <DialogTitle>새 프로젝트 만들기</DialogTitle>
+          <DialogTitle>프로젝트 수정</DialogTitle>
           <DialogDescription>
-            프로젝트 정보를 입력하세요.
+            프로젝트 정보를 수정합니다.
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-4 mt-4">
@@ -223,8 +207,8 @@ export function ProjectCreateDialog({
             <Button variant="outline" onClick={() => setOpen(false)}>
               취소
             </Button>
-            <LoadingButton onClick={handleSubmit} loading={loading} loadingText="생성 중...">
-              생성
+            <LoadingButton onClick={handleSubmit} loading={loading} loadingText="저장 중...">
+              저장
             </LoadingButton>
           </div>
         </div>

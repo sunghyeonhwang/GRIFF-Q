@@ -58,34 +58,13 @@ export default async function ProjectsPage({
   const totalCount = count ?? 0;
   const projectIds = items.map((p) => p.id);
 
-  // Count related items
-  const [estimatesRes, meetingsRes, retrospectivesRes, paymentsRes] =
-    await Promise.all([
-      projectIds.length
-        ? supabase
-            .from("estimates")
-            .select("project_id")
-            .in("project_id", projectIds)
-        : { data: [] },
-      projectIds.length
-        ? supabase
-            .from("meetings")
-            .select("project_id")
-            .in("project_id", projectIds)
-        : { data: [] },
-      projectIds.length
-        ? supabase
-            .from("retrospectives")
-            .select("project_id")
-            .in("project_id", projectIds)
-        : { data: [] },
-      projectIds.length
-        ? supabase
-            .from("payments")
-            .select("project_id")
-            .in("project_id", projectIds)
-        : { data: [] },
-    ]);
+  // Count related items (meetings only)
+  const meetingsRes = projectIds.length
+    ? await supabase
+        .from("meetings")
+        .select("project_id")
+        .in("project_id", projectIds)
+    : { data: [] };
 
   function countByProject(data: { project_id: string }[] | null) {
     const map = new Map<string, number>();
@@ -97,10 +76,7 @@ export default async function ProjectsPage({
     return map;
   }
 
-  const estimateCounts = countByProject(estimatesRes.data);
   const meetingCounts = countByProject(meetingsRes.data);
-  const retroCounts = countByProject(retrospectivesRes.data);
-  const paymentCounts = countByProject(paymentsRes.data);
 
   // 요약 카드: 전체 데이터 기준 (별도 count 쿼리)
   const [activeRes, completedRes, onHoldRes] = await Promise.all([
@@ -187,10 +163,7 @@ export default async function ProjectsPage({
                     </span>
                   </div>
                   <div className="flex gap-3 text-xs text-muted-foreground">
-                    <span>견적 {estimateCounts.get(p.id) ?? 0}</span>
                     <span>회의 {meetingCounts.get(p.id) ?? 0}</span>
-                    <span>회고 {retroCounts.get(p.id) ?? 0}</span>
-                    <span>입금 {paymentCounts.get(p.id) ?? 0}</span>
                   </div>
                 </DataCard>
               ))}
@@ -209,10 +182,7 @@ export default async function ProjectsPage({
                   <th data-slot="table-head" className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap">담당자</th>
                   <SortableTableHead column="start_date" label="시작일" currentSort={sortBy} currentOrder={sortOrder} searchParams={params} />
                   <th data-slot="table-head" className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap">종료일</th>
-                  <th data-slot="table-head" className="text-foreground h-10 px-2 text-center align-middle font-medium whitespace-nowrap">견적서</th>
                   <th data-slot="table-head" className="text-foreground h-10 px-2 text-center align-middle font-medium whitespace-nowrap">회의록</th>
-                  <th data-slot="table-head" className="text-foreground h-10 px-2 text-center align-middle font-medium whitespace-nowrap">회고</th>
-                  <th data-slot="table-head" className="text-foreground h-10 px-2 text-center align-middle font-medium whitespace-nowrap">입금</th>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -245,16 +215,7 @@ export default async function ProjectsPage({
                         : "-"}
                     </TableCell>
                     <TableCell className="text-center">
-                      {estimateCounts.get(p.id) ?? 0}
-                    </TableCell>
-                    <TableCell className="text-center">
                       {meetingCounts.get(p.id) ?? 0}
-                    </TableCell>
-                    <TableCell className="text-center">
-                      {retroCounts.get(p.id) ?? 0}
-                    </TableCell>
-                    <TableCell className="text-center">
-                      {paymentCounts.get(p.id) ?? 0}
                     </TableCell>
                   </TableRow>
                 ))}
