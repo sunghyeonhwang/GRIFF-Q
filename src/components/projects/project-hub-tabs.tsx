@@ -23,6 +23,7 @@ import {
   Bot,
   Settings,
   ExternalLink,
+  Rocket,
 } from "lucide-react";
 import { ProjectProgressBar } from "./project-progress-bar";
 import { ProjectMilestoneTimeline } from "./project-milestone-timeline";
@@ -94,8 +95,21 @@ interface LinkTab {
   description: string;
 }
 
-function getLinkTabs(projectId: string): LinkTab[] {
-  return [
+function getLinkTabs(projectId: string, projectType?: string): LinkTab[] {
+  const tabs: LinkTab[] = [];
+
+  // 킥오프 탭 — general(일반 프로젝트) 타입에만 표시
+  if (!projectType || projectType === "general") {
+    tabs.push({
+      key: "kickoff",
+      label: "킥오프",
+      icon: Rocket,
+      path: `/projects/${projectId}/kickoff`,
+      description: "프로젝트 킥오프 체크리스트와 미팅 기록을 관리합니다.",
+    });
+  }
+
+  tabs.push(
     {
       key: "tasks",
       label: "Task",
@@ -131,7 +145,9 @@ function getLinkTabs(projectId: string): LinkTab[] {
       path: `/projects/${projectId}/settings`,
       description: "프로젝트 설정, 멤버 관리, 아카이브 등을 관리합니다.",
     },
-  ];
+  );
+
+  return tabs;
 }
 
 export function ProjectHubTabs({
@@ -144,7 +160,7 @@ export function ProjectHubTabs({
   milestones = [],
   taskCount = 0,
 }: ProjectHubTabsProps) {
-  const linkTabs = getLinkTabs(project.id);
+  const linkTabs = getLinkTabs(project.id, project.project_type);
 
   return (
     <Tabs defaultValue="overview" className="space-y-4">

@@ -100,6 +100,12 @@ export async function createProjectWithTemplate(data: {
     tasks = tasksData as Task[];
   }
 
+  // 4. 킥오프 자동 생성 (general 프로젝트)
+  if (!data.project_type || data.project_type === "general") {
+    const { createKickoff } = await import("@/actions/kickoff");
+    await createKickoff(project.id);
+  }
+
   revalidatePath("/projects");
   return { project: project as Project, tasks, members };
 }

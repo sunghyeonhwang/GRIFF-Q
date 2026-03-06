@@ -6,6 +6,7 @@ import {
   Calculator,
   FolderKanban,
   CheckSquare,
+  CalendarDays,
   Brain,
   Settings,
   type LucideIcon,
@@ -86,6 +87,12 @@ export const MENU_ITEMS: MenuItem[] = [
     title: "TASK",
     url: "/tasks",
     icon: CheckSquare,
+    minRole: "normal",
+  },
+  {
+    title: "일정",
+    url: "/schedule",
+    icon: CalendarDays,
     minRole: "normal",
   },
   {

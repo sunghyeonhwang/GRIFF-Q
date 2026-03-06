@@ -37,6 +37,27 @@ export async function createTask(data: {
   } = await supabase.auth.getUser();
   if (!user) throw new Error("인증이 필요합니다.");
 
+  // 킥오프 완료 필수 체크 (general 프로젝트 타입)
+  if (data.project_id) {
+    const { data: proj } = await supabase
+      .from("projects")
+      .select("project_type")
+      .eq("id", data.project_id)
+      .single();
+
+    if (!proj?.project_type || proj.project_type === "general") {
+      const { data: kickoff } = await supabase
+        .from("project_kickoffs")
+        .select("status")
+        .eq("project_id", data.project_id)
+        .single();
+
+      if (kickoff && kickoff.status !== "completed") {
+        throw new Error("킥오프를 먼저 완료해야 Task를 생성할 수 있습니다.");
+      }
+    }
+  }
+
   // sort_order 자동 계산
   let sortOrder = 0;
   if (data.project_id) {

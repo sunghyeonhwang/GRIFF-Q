@@ -266,3 +266,45 @@
     text-decoration: none !important;
   }
 }
+
+/* FullCalendar dark mode overrides */
+.dark .fc {
+  --fc-border-color: oklch(1 0 0 / 10%);
+  --fc-page-bg-color: transparent;
+  --fc-neutral-bg-color: oklch(0.269 0 0);
+  --fc-neutral-text-color: oklch(0.985 0 0);
+  --fc-today-bg-color: rgba(254, 235, 0, 0.08);
+  --fc-event-text-color: #fff;
+}
+
+.dark .fc .fc-col-header-cell-cushion,
+.dark .fc .fc-daygrid-day-number,
+.dark .fc .fc-timegrid-slot-label {
+  color: oklch(0.985 0 0);
+}
+
+.dark .fc .fc-button {
+  background-color: oklch(0.269 0 0);
+  border-color: oklch(1 0 0 / 10%);
+  color: oklch(0.985 0 0);
+}
+
+.dark .fc .fc-button:hover {
+  background-color: oklch(0.35 0 0);
+}
+
+.dark .fc .fc-button-active {
+  background-color: #FEEB00 !important;
+  color: #1a1a1a !important;
+}
+
+.fc .fc-toolbar-title {
+  font-size: 1.1rem !important;
+  font-weight: 600;
+}
+
+.fc .fc-daygrid-event {
+  border-radius: 4px;
+  font-size: 0.75rem;
+  padding: 1px 4px;
+}
