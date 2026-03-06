@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { z } from "zod";
@@ -113,13 +113,6 @@ export function PostmortemForm({
 
   const saveRef = useRef<() => void>(undefined);
   const cancelRef = useRef<() => void>(undefined);
-  saveRef.current = handleSave;
-  cancelRef.current = () => router.back();
-
-  useFormShortcuts({
-    onSave: useCallback(() => saveRef.current?.(), []),
-    onCancel: useCallback(() => cancelRef.current?.(), []),
-  });
 
   /* -- 타임라인 CRUD -- */
 
@@ -281,6 +274,16 @@ export function PostmortemForm({
     router.push(`/projects/${projectId}`);
     router.refresh();
   }
+
+  useEffect(() => {
+    saveRef.current = handleSave;
+    cancelRef.current = () => router.back();
+  });
+
+  useFormShortcuts({
+    onSave: useCallback(() => saveRef.current?.(), []),
+    onCancel: useCallback(() => cancelRef.current?.(), []),
+  });
 
   /* -- 렌더링 -- */
 

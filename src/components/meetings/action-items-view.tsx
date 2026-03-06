@@ -1,9 +1,19 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useTransition } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import {
   Select,
   SelectContent,
@@ -21,7 +31,11 @@ import {
 } from "@/components/ui/table";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
+import { LoadingButton } from "@/components/ui/loading-button";
+import { promoteActionItemToTask } from "@/actions/task";
+import { toast } from "sonner";
 import {
+  ArrowUpFromLine,
   CheckCircle,
   Circle,
   Clock,
@@ -39,8 +53,14 @@ interface ActionItem {
   assignee_name: string | null;
 }
 
+interface ProjectOption {
+  id: string;
+  name: string;
+}
+
 interface ActionItemsViewProps {
   actionItems: ActionItem[];
+  projects?: ProjectOption[];
 }
 
 const STATUS_LABELS: Record<string, string> = {
@@ -55,9 +75,14 @@ const STATUS_VARIANTS: Record<string, "default" | "secondary" | "outline" | "des
   completed: "default",
 };
 
-export function ActionItemsView({ actionItems }: ActionItemsViewProps) {
+export function ActionItemsView({ actionItems, projects = [] }: ActionItemsViewProps) {
+  const router = useRouter();
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [assigneeFilter, setAssigneeFilter] = useState<string>("all");
+  const [promoteDialogOpen, setPromoteDialogOpen] = useState(false);
+  const [selectedActionItem, setSelectedActionItem] = useState<ActionItem | null>(null);
+  const [selectedProjectId, setSelectedProjectId] = useState<string>("");
+  const [isPromoting, startPromoteTransition] = useTransition();
 
   // Extract unique assignee names for filter dropdown
   const assigneeNames = useMemo(() => {
@@ -84,6 +109,31 @@ export function ActionItemsView({ actionItems }: ActionItemsViewProps) {
   const inProgress = actionItems.filter((ai) => ai.status === "in_progress").length;
   const completed = actionItems.filter((ai) => ai.status === "completed").length;
   const completionRate = total > 0 ? Math.round((completed / total) * 100) : 0;
+
+  function openPromoteDialog(item: ActionItem) {
+    setSelectedActionItem(item);
+    setSelectedProjectId("");
+    setPromoteDialogOpen(true);
+  }
+
+  function handlePromote() {
+    if (!selectedActionItem || !selectedProjectId) {
+      toast.error("프로젝트를 선택해주세요.");
+      return;
+    }
+
+    startPromoteTransition(async () => {
+      try {
+        await promoteActionItemToTask(selectedActionItem.id, selectedProjectId);
+        toast.success(`"${selectedActionItem.title}"이(가) Task로 승격되었습니다.`);
+        setPromoteDialogOpen(false);
+        setSelectedActionItem(null);
+        router.refresh();
+      } catch {
+        toast.error("Task 승격 실패");
+      }
+    });
+  }
 
   return (
     <div className="space-y-6">
@@ -175,13 +225,14 @@ export function ActionItemsView({ actionItems }: ActionItemsViewProps) {
               <TableHead>담당자</TableHead>
               <TableHead>마감일</TableHead>
               <TableHead>상태</TableHead>
+              {projects.length > 0 && <TableHead className="w-[80px]">액션</TableHead>}
             </TableRow>
           </TableHeader>
           <TableBody>
             {filtered.length === 0 ? (
               <TableRow>
                 <TableCell
-                  colSpan={5}
+                  colSpan={projects.length > 0 ? 6 : 5}
                   className="py-8 text-center text-muted-foreground"
                 >
                   해당하는 액션아이템이 없습니다.
@@ -225,6 +276,20 @@ export function ActionItemsView({ actionItems }: ActionItemsViewProps) {
                         {STATUS_LABELS[item.status] ?? item.status}
                       </Badge>
                     </TableCell>
+                    {projects.length > 0 && (
+                      <TableCell>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="gap-1 text-xs h-7"
+                          onClick={() => openPromoteDialog(item)}
+                          title="Task로 승격"
+                        >
+                          <ArrowUpFromLine className="size-3" />
+                          승격
+                        </Button>
+                      </TableCell>
+                    )}
                   </TableRow>
                 );
               })
@@ -232,6 +297,59 @@ export function ActionItemsView({ actionItems }: ActionItemsViewProps) {
           </TableBody>
         </Table>
       </div>
+
+      {/* Promote to Task Dialog */}
+      <Dialog open={promoteDialogOpen} onOpenChange={setPromoteDialogOpen}>
+        <DialogContent className="sm:max-w-[400px]">
+          <DialogHeader>
+            <DialogTitle>Task로 승격</DialogTitle>
+            <DialogDescription>
+              {selectedActionItem && (
+                <>
+                  &quot;{selectedActionItem.title}&quot;을(를) Task로 승격합니다.
+                  <br />
+                  대상 프로젝트를 선택해주세요.
+                </>
+              )}
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="py-4">
+            <Select
+              value={selectedProjectId}
+              onValueChange={setSelectedProjectId}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="프로젝트 선택" />
+              </SelectTrigger>
+              <SelectContent>
+                {projects.map((p) => (
+                  <SelectItem key={p.id} value={p.id}>
+                    {p.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setPromoteDialogOpen(false)}
+              disabled={isPromoting}
+            >
+              취소
+            </Button>
+            <LoadingButton
+              loading={isPromoting}
+              onClick={handlePromote}
+              disabled={!selectedProjectId}
+            >
+              승격
+            </LoadingButton>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

@@ -48,6 +48,11 @@ Object.assign(LABEL_MAP, {
   compare: "비교",
   search: "검색",
   import: "가져오기",
+  // v0.3A: 프로젝트 + TASK 모듈
+  tasks: "TASK",
+  "dependency-map": "의존성 맵",
+  timeline: "타임라인",
+  reports: "보고서",
 });
 
 function isUuid(segment: string): boolean {

@@ -5,11 +5,9 @@ import {
   CreditCard,
   Calculator,
   FolderKanban,
+  CheckSquare,
   Brain,
   Settings,
-  BookOpen,
-  Repeat,
-  AlertTriangle,
   type LucideIcon,
 } from "lucide-react";
 import { type UserRole, hasMinimumRole } from "@/types/auth.types";
@@ -83,7 +81,12 @@ export const MENU_ITEMS: MenuItem[] = [
     url: "/projects",
     icon: FolderKanban,
     minRole: "normal",
-    disabled: true,
+  },
+  {
+    title: "TASK",
+    url: "/tasks",
+    icon: CheckSquare,
+    minRole: "normal",
   },
   {
     title: "클라이언트 예측",

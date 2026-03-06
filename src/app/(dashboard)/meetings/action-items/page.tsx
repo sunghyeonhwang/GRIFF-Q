@@ -13,6 +13,18 @@ export default async function ActionItemsPage() {
     .select("id, title, status, due_date, note, meeting_id, assignee_id, meetings(title)")
     .order("due_date", { ascending: true, nullsFirst: false });
 
+  // Fetch active projects for Task promotion
+  const { data: projectsData } = await supabase
+    .from("projects")
+    .select("id, name")
+    .eq("status", "active")
+    .order("name");
+
+  const projects = (projectsData ?? []).map((p) => ({
+    id: p.id,
+    name: p.name,
+  }));
+
   // Fetch all users for assignee names
   const { data: allUsers } = await supabase
     .from("users")
@@ -38,7 +50,7 @@ export default async function ActionItemsPage() {
         title="액션아이템 통합 뷰"
         description="모든 회의록의 액션아이템을 한눈에 확인합니다."
       />
-      <ActionItemsView actionItems={actionItems} />
+      <ActionItemsView actionItems={actionItems} projects={projects} />
     </div>
   );
 }
