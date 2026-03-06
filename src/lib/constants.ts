@@ -1,5 +1,6 @@
 import {
   LayoutDashboard,
+  Sunrise,
   MessageSquareText,
   FileText,
   CreditCard,
@@ -33,6 +34,12 @@ export const MENU_ITEMS: MenuItem[] = [
     title: "대시보드",
     url: "/dashboard",
     icon: LayoutDashboard,
+    minRole: "normal",
+  },
+  {
+    title: "데일리 스크럼",
+    url: "/scrum",
+    icon: Sunrise,
     minRole: "normal",
   },
   {
