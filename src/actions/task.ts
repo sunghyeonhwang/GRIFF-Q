@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { notifyTaskAssigned, notifyTaskStatusChanged, notifyDependencyBlocked } from "@/lib/notifications";
 import type {
   Task,
   TaskStatus,
@@ -112,6 +113,13 @@ export async function updateTask(
   } = await supabase.auth.getUser();
   if (!user) throw new Error("인증이 필요합니다.");
 
+  // 변경 전 태스크 정보 조회 (알림 비교용)
+  const { data: prevTask } = await supabase
+    .from("tasks")
+    .select("title, status, assignee_id, project_id, created_by")
+    .eq("id", id)
+    .single();
+
   // completed_at 자동 설정
   const updateData: Record<string, unknown> = { ...data };
   if (data.status === "completed") {
@@ -128,6 +136,56 @@ export async function updateTask(
     .single();
 
   if (error) throw new Error(`Task 업데이트 실패: ${error.message}`);
+
+  // 알림 트리거 (비동기, 에러가 메인 흐름에 영향을 주지 않도록)
+  if (prevTask) {
+    const taskLink = `/tasks/${id}`;
+    const taskTitle = task.title as string;
+
+    // 담당자 변경 알림
+    if (
+      data.assignee_id &&
+      data.assignee_id !== prevTask.assignee_id &&
+      data.assignee_id !== user.id
+    ) {
+      const { data: currentUser } = await supabase
+        .from("users")
+        .select("name")
+        .eq("id", user.id)
+        .single();
+      notifyTaskAssigned(
+        supabase,
+        taskTitle,
+        data.assignee_id,
+        (currentUser as any)?.name ?? "담당자",
+        taskLink
+      ).catch(() => {});
+    }
+
+    // 상태 변경 알림 (completed, issue 일 때 PM 및 생성자에게)
+    if (
+      data.status &&
+      data.status !== prevTask.status &&
+      (data.status === "completed" || data.status === "issue")
+    ) {
+      const recipientIds = Array.from(
+        new Set(
+          [prevTask.created_by, prevTask.assignee_id].filter(
+            (uid): uid is string => !!uid && uid !== user.id
+          )
+        )
+      );
+      if (recipientIds.length > 0) {
+        notifyTaskStatusChanged(
+          supabase,
+          taskTitle,
+          data.status,
+          recipientIds,
+          taskLink
+        ).catch(() => {});
+      }
+    }
+  }
 
   if (task.project_id) {
     revalidatePath(`/projects/${task.project_id}`);
@@ -254,6 +312,28 @@ export async function addDependency(
     .single();
 
   if (error) throw new Error(`의존성 추가 실패: ${error.message}`);
+
+  // 의존성 블로커 알림: 블로킹된 태스크 담당자에게 알림
+  const { data: blockedTask } = await supabase
+    .from("tasks")
+    .select("title, assignee_id")
+    .eq("id", taskId)
+    .single();
+  const { data: blockerTask } = await supabase
+    .from("tasks")
+    .select("title")
+    .eq("id", dependsOnId)
+    .single();
+
+  if (blockedTask?.assignee_id && blockerTask) {
+    notifyDependencyBlocked(
+      supabase,
+      blockedTask.title,
+      blockerTask.title,
+      blockedTask.assignee_id,
+      `/tasks/${taskId}`
+    ).catch(() => {});
+  }
 
   revalidatePath("/tasks");
   return dep as TaskDependency;

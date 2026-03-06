@@ -22,13 +22,24 @@ interface SearchResults {
   meetings: SearchResult[];
   payments: SearchResult[];
   retrospectives: SearchResult[];
+  projects: SearchResult[];
+  tasks: SearchResult[];
+  schedules: SearchResult[];
+  users: SearchResult[];
 }
 
-const TYPE_CONFIG: Record<string, { label: string; variant: "default" | "secondary" | "outline" | "destructive" }> = {
-  "견적서": { label: "견적서", variant: "default" },
-  "회의록": { label: "회의록", variant: "secondary" },
+const TYPE_CONFIG: Record<
+  string,
+  { label: string; variant: "default" | "secondary" | "outline" | "destructive" }
+> = {
+  견적서: { label: "견적서", variant: "default" },
+  회의록: { label: "회의록", variant: "secondary" },
   "입금/결제": { label: "입금/결제", variant: "outline" },
-  "회고": { label: "회고", variant: "destructive" },
+  회고: { label: "회고", variant: "destructive" },
+  프로젝트: { label: "프로젝트", variant: "default" },
+  태스크: { label: "태스크", variant: "secondary" },
+  일정: { label: "일정", variant: "outline" },
+  팀원: { label: "팀원", variant: "default" },
 };
 
 export function SearchBar() {
@@ -103,6 +114,10 @@ export function SearchBar() {
         ...results.meetings,
         ...results.payments,
         ...results.retrospectives,
+        ...results.projects,
+        ...results.tasks,
+        ...results.schedules,
+        ...results.users,
       ]
     : [];
 
@@ -151,7 +166,16 @@ export function SearchBar() {
 
                 {hasResults &&
                   (
-                    ["estimates", "meetings", "payments", "retrospectives"] as const
+                    [
+                      "estimates",
+                      "meetings",
+                      "payments",
+                      "retrospectives",
+                      "projects",
+                      "tasks",
+                      "schedules",
+                      "users",
+                    ] as const
                   ).map((key) => {
                     const items = results![key];
                     if (items.length === 0) return null;

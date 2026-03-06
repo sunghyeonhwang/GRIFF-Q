@@ -45,11 +45,13 @@ import {
   TASK_STATUS_CONFIG,
 } from "@/types/task.types";
 import { toast } from "sonner";
+import Link from "next/link";
 import {
   ArrowLeftFromLine,
   ArrowRightFromLine,
   CalendarDays,
   Clock,
+  FileText,
   Pencil,
   Save,
   Trash2,
@@ -383,6 +385,20 @@ export function TaskDetailPanel({
                       {label}
                     </Badge>
                   ))}
+                </div>
+              )}
+
+              {/* 출처 정보 */}
+              {task.source === "meeting" && task.source_id && (
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <FileText className="h-4 w-4" />
+                  <span>출처:</span>
+                  <Link
+                    href={`/meetings/${task.source_id}`}
+                    className="text-primary hover:underline"
+                  >
+                    회의록에서 생성됨
+                  </Link>
                 </div>
               )}
 

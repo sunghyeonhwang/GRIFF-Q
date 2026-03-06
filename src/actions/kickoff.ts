@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { notifyKickoffCompleted } from "@/lib/notifications";
 import type {
   ProjectKickoff,
   KickoffChecklistItem,
@@ -131,6 +132,17 @@ export async function completeKickoff(id: string): Promise<ProjectKickoff> {
     .single();
 
   if (error) throw new Error(`킥오프 완료 실패: ${error.message}`);
+
+  // 킥오프 완료 알림 (프로젝트 이름 조회 후 전송)
+  const { data: proj } = await supabase
+    .from("projects")
+    .select("name")
+    .eq("id", kickoff.project_id)
+    .single();
+
+  if (proj?.name) {
+    notifyKickoffCompleted(supabase, kickoff.project_id, proj.name).catch(() => {});
+  }
 
   revalidatePath(`/projects/${kickoff.project_id}`);
   revalidatePath(`/projects/${kickoff.project_id}/kickoff`);

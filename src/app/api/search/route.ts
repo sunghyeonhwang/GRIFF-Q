@@ -17,6 +17,10 @@ export async function GET(req: NextRequest) {
       meetings: [],
       payments: [],
       retrospectives: [],
+      projects: [],
+      tasks: [],
+      schedules: [],
+      users: [],
     });
   }
 
@@ -52,6 +56,36 @@ export async function GET(req: NextRequest) {
     )
     .limit(5);
 
+  // 프로젝트 검색
+  const { data: projectResults } = await supabase
+    .from("projects")
+    .select("id, name, status")
+    .is("deleted_at", null)
+    .ilike("name", `%${q}%`)
+    .limit(5);
+
+  // 태스크 검색
+  const { data: taskResults } = await supabase
+    .from("tasks")
+    .select("id, title, status, project_id")
+    .ilike("title", `%${q}%`)
+    .limit(5);
+
+  // 일정 검색
+  const { data: scheduleResults } = await supabase
+    .from("schedules")
+    .select("id, title, schedule_date")
+    .ilike("title", `%${q}%`)
+    .limit(5);
+
+  // 팀원 검색
+  const { data: userResults } = await supabase
+    .from("users")
+    .select("id, name, email, role")
+    .or(`name.ilike.%${q}%,email.ilike.%${q}%`)
+    .eq("is_active", true)
+    .limit(5);
+
   return NextResponse.json({
     estimates: (estimates ?? []).map((e) => ({
       id: e.id,
@@ -82,6 +116,34 @@ export async function GET(req: NextRequest) {
       subtitle: "",
       type: "회고",
       link: `/retrospective/${r.id}`,
+    })),
+    projects: (projectResults ?? []).map((p) => ({
+      id: p.id,
+      title: p.name,
+      subtitle: p.status ?? undefined,
+      type: "프로젝트",
+      link: `/projects/${p.id}`,
+    })),
+    tasks: (taskResults ?? []).map((t) => ({
+      id: t.id,
+      title: t.title,
+      subtitle: t.status ?? undefined,
+      type: "태스크",
+      link: `/tasks/${t.id}`,
+    })),
+    schedules: (scheduleResults ?? []).map((s) => ({
+      id: s.id,
+      title: s.title,
+      subtitle: s.schedule_date ?? undefined,
+      type: "일정",
+      link: "/schedule",
+    })),
+    users: (userResults ?? []).map((u) => ({
+      id: u.id,
+      title: u.name,
+      subtitle: u.email,
+      type: "팀원",
+      link: "/settings",
     })),
   });
 }

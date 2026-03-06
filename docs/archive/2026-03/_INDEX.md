@@ -5,6 +5,7 @@
 | 0.3A | 97.6% | 2026-03-06 | plan, design, analysis, report |
 | 0.3B | 96% | 2026-03-07 | plan, design, analysis, report |
 | v0.3C | 100% | 2026-03-07 | plan, design, analysis, report |
+| v0.3D | 97% | 2026-03-07 | plan, design, analysis, report |
 
 ## 0.3A — 프로젝트 리워크 + TASK 모듈 + 의존성 맵 + AI 리뷰
 
@@ -26,3 +27,11 @@
 - **Iteration Count**: 1
 - **구현 규모**: 11개 컴포넌트, 12개 Server Action, 4개 라우트, 1개 DB 마이그레이션
 - **문서**: `v0.3C/`
+
+## v0.3D — 권한 강화 + UX 통합 (사이드바/검색/알림/연동)
+
+- **Match Rate**: 97% (v1.0: 93.5% → P0 수정 후 97%)
+- **Iteration Count**: 0 (P0 핫픽스만)
+- **구현 규모**: 11개 신규 + 9개 수정, 2개 DB 마이그레이션
+- **에이전트 팀**: 3명 병렬 (sonnet×2 + sonnet×1) + opus 리더
+- **문서**: `v0.3D/`

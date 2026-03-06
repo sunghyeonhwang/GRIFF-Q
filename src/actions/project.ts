@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { notifyProjectStatusChanged } from "@/lib/notifications";
 import type {
   Project,
   ProjectType,
@@ -125,6 +126,13 @@ export async function updateProject(
   } = await supabase.auth.getUser();
   if (!user) throw new Error("인증이 필요합니다.");
 
+  // 변경 전 프로젝트 정보 조회 (알림 비교용)
+  const { data: prevProject } = await supabase
+    .from("projects")
+    .select("status, name")
+    .eq("id", id)
+    .single();
+
   const { data: project, error } = await supabase
     .from("projects")
     .update(data)
@@ -133,6 +141,16 @@ export async function updateProject(
     .single();
 
   if (error) throw new Error(`프로젝트 업데이트 실패: ${error.message}`);
+
+  // 상태 변경 알림
+  if (data.status && prevProject && data.status !== prevProject.status) {
+    notifyProjectStatusChanged(
+      supabase,
+      id,
+      prevProject.name ?? project.name,
+      data.status
+    ).catch(() => {});
+  }
 
   revalidatePath("/projects");
   revalidatePath(`/projects/${id}`);
@@ -225,6 +243,137 @@ export async function removeProjectMember(memberId: string): Promise<void> {
 
 export async function archiveProject(id: string): Promise<Project> {
   return updateProject(id, { archived: true });
+}
+
+// ─────────────────────────────────────────────
+// 프로젝트 완료 (회고 유도 포함)
+// ─────────────────────────────────────────────
+
+export async function completeProject(projectId: string): Promise<{
+  success: boolean;
+  suggestRetrospective?: boolean;
+  projectType?: string;
+  error?: string;
+}> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { success: false, error: "인증 필요" };
+
+  // Get project type
+  const { data: project } = await supabase
+    .from("projects")
+    .select("type, name")
+    .eq("id", projectId)
+    .single();
+
+  if (!project) return { success: false, error: "프로젝트를 찾을 수 없습니다" };
+
+  // Update status
+  const { error } = await supabase
+    .from("projects")
+    .update({ status: "completed", updated_at: new Date().toISOString() })
+    .eq("id", projectId);
+
+  if (error) return { success: false, error: error.message };
+
+  revalidatePath("/projects");
+  revalidatePath(`/projects/${projectId}`);
+
+  return {
+    success: true,
+    suggestRetrospective:
+      project.type === "project" || project.type === "mini",
+    projectType: project.type,
+  };
+}
+
+// ─────────────────────────────────────────────
+// 소프트 삭제 / 복원
+// ─────────────────────────────────────────────
+
+export async function softDeleteProject(projectId: string): Promise<void> {
+  const supabase = await createClient();
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) throw new Error("인증이 필요합니다.");
+
+  // 현재 사용자 프로필 조회
+  const { data: profile } = await supabase
+    .from("users")
+    .select("role")
+    .eq("id", user.id)
+    .single();
+
+  if (!profile) throw new Error("사용자 정보를 찾을 수 없습니다.");
+
+  const isSuperOrBoss =
+    profile.role === "super" || profile.role === "boss";
+
+  if (!isSuperOrBoss) {
+    // manager 이하는 자신이 생성한 프로젝트만 삭제 가능
+    const { data: project, error: projectError } = await supabase
+      .from("projects")
+      .select("created_by")
+      .eq("id", projectId)
+      .single();
+
+    if (projectError) throw new Error(`프로젝트 조회 실패: ${projectError.message}`);
+
+    const isManagerOrAbove = profile.role === "manager";
+    const isOwner = project.created_by === user.id;
+
+    if (!isManagerOrAbove || !isOwner) {
+      throw new Error("권한이 부족합니다. 본인이 생성한 프로젝트만 삭제할 수 있습니다.");
+    }
+  }
+
+  const { error } = await supabase
+    .from("projects")
+    .update({
+      deleted_at: new Date().toISOString(),
+      deleted_by: user.id,
+    })
+    .eq("id", projectId);
+
+  if (error) throw new Error(`프로젝트 삭제 실패: ${error.message}`);
+
+  revalidatePath("/projects");
+}
+
+export async function restoreProject(projectId: string): Promise<void> {
+  const supabase = await createClient();
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) throw new Error("인증이 필요합니다.");
+
+  // 복원은 super 전용
+  const { data: profile } = await supabase
+    .from("users")
+    .select("role")
+    .eq("id", user.id)
+    .single();
+
+  if (!profile || profile.role !== "super") {
+    throw new Error("권한이 부족합니다. 슈퍼 관리자만 복원할 수 있습니다.");
+  }
+
+  const { error } = await supabase
+    .from("projects")
+    .update({
+      deleted_at: null,
+      deleted_by: null,
+    })
+    .eq("id", projectId);
+
+  if (error) throw new Error(`프로젝트 복원 실패: ${error.message}`);
+
+  revalidatePath("/projects");
 }
 
 // ─────────────────────────────────────────────

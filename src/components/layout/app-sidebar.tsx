@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { LogOut, ChevronRight } from "lucide-react";
 import { type UserProfile } from "@/types/auth.types";
-import { getFilteredMenuItems, type MenuItem } from "@/lib/constants";
+import { getFilteredMenuGroups } from "@/lib/constants";
 import { signOut } from "@/actions/auth";
 import {
   Sidebar,
@@ -41,7 +41,7 @@ interface AppSidebarProps {
 
 export function AppSidebar({ user }: AppSidebarProps) {
   const pathname = usePathname();
-  const menuItems = getFilteredMenuItems(user.role);
+  const menuGroups = getFilteredMenuGroups(user.role);
 
   return (
     <Sidebar>
@@ -59,81 +59,95 @@ export function AppSidebar({ user }: AppSidebarProps) {
       </SidebarHeader>
 
       <SidebarContent>
-        <SidebarGroup>
-          <SidebarGroupLabel>메뉴</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {menuItems.map((item) =>
-                item.children ? (
-                  <Collapsible
-                    key={item.url}
-                    defaultOpen={pathname.startsWith(item.url)}
-                    className="group/collapsible"
-                  >
-                    <SidebarMenuItem>
-                      <CollapsibleTrigger asChild>
-                        <SidebarMenuButton
-                          isActive={pathname.startsWith(item.url)}
+        {menuGroups.map((group) => (
+          <Collapsible key={group.label} defaultOpen={true} className="group/group">
+            <SidebarGroup>
+              <SidebarGroupLabel asChild>
+                <CollapsibleTrigger className="flex w-full items-center justify-between hover:text-foreground">
+                  {group.label}
+                  <ChevronRight className="size-3 transition-transform group-data-[state=open]/group:rotate-90" />
+                </CollapsibleTrigger>
+              </SidebarGroupLabel>
+              <CollapsibleContent>
+                <SidebarGroupContent>
+                  <SidebarMenu>
+                    {group.items.map((item) =>
+                      item.children ? (
+                        <Collapsible
+                          key={item.url}
+                          defaultOpen={pathname.startsWith(item.url)}
+                          className="group/collapsible"
                         >
-                          <item.icon className="size-4" />
-                          <span>{item.title}</span>
-                          <ChevronRight className="ml-auto size-4 transition-transform group-data-[state=open]/collapsible:rotate-90" />
-                        </SidebarMenuButton>
-                      </CollapsibleTrigger>
-                      <CollapsibleContent>
-                        <SidebarMenuSub>
-                          {item.children.map((child) => (
-                            <SidebarMenuSubItem key={child.url}>
-                              {child.disabled ? (
-                                <SidebarMenuSubButton
-                                  className="opacity-40 pointer-events-none"
-                                >
-                                  <span>{child.title}</span>
-                                  <span className="ml-auto text-[10px] text-muted-foreground">v0.3</span>
-                                </SidebarMenuSubButton>
-                              ) : (
-                                <SidebarMenuSubButton
-                                  asChild
-                                  isActive={pathname === child.url || pathname.startsWith(child.url + "/")}
-                                >
-                                  <Link href={child.url}>
-                                    <span>{child.title}</span>
-                                  </Link>
-                                </SidebarMenuSubButton>
-                              )}
-                            </SidebarMenuSubItem>
-                          ))}
-                        </SidebarMenuSub>
-                      </CollapsibleContent>
-                    </SidebarMenuItem>
-                  </Collapsible>
-                ) : item.disabled ? (
-                  <SidebarMenuItem key={item.url}>
-                    <SidebarMenuButton
-                      className="opacity-40 pointer-events-none"
-                    >
-                      <item.icon className="size-4" />
-                      <span>{item.title}</span>
-                      <span className="ml-auto text-[10px] text-muted-foreground">v0.3</span>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                ) : (
-                  <SidebarMenuItem key={item.url}>
-                    <SidebarMenuButton
-                      asChild
-                      isActive={pathname.startsWith(item.url)}
-                    >
-                      <Link href={item.url}>
-                        <item.icon className="size-4" />
-                        <span>{item.title}</span>
-                      </Link>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                )
-              )}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
+                          <SidebarMenuItem>
+                            <CollapsibleTrigger asChild>
+                              <SidebarMenuButton
+                                isActive={pathname.startsWith(item.url)}
+                              >
+                                <item.icon className="size-4" />
+                                <span>{item.title}</span>
+                                <ChevronRight className="ml-auto size-4 transition-transform group-data-[state=open]/collapsible:rotate-90" />
+                              </SidebarMenuButton>
+                            </CollapsibleTrigger>
+                            <CollapsibleContent>
+                              <SidebarMenuSub>
+                                {item.children.map((child) => (
+                                  <SidebarMenuSubItem key={child.url}>
+                                    {child.disabled ? (
+                                      <SidebarMenuSubButton className="opacity-40 pointer-events-none">
+                                        <span>{child.title}</span>
+                                        <span className="ml-auto text-[10px] text-muted-foreground">
+                                          v0.3
+                                        </span>
+                                      </SidebarMenuSubButton>
+                                    ) : (
+                                      <SidebarMenuSubButton
+                                        asChild
+                                        isActive={
+                                          pathname === child.url ||
+                                          pathname.startsWith(child.url + "/")
+                                        }
+                                      >
+                                        <Link href={child.url}>
+                                          <span>{child.title}</span>
+                                        </Link>
+                                      </SidebarMenuSubButton>
+                                    )}
+                                  </SidebarMenuSubItem>
+                                ))}
+                              </SidebarMenuSub>
+                            </CollapsibleContent>
+                          </SidebarMenuItem>
+                        </Collapsible>
+                      ) : item.disabled ? (
+                        <SidebarMenuItem key={item.url}>
+                          <SidebarMenuButton className="opacity-40 pointer-events-none">
+                            <item.icon className="size-4" />
+                            <span>{item.title}</span>
+                            <span className="ml-auto text-[10px] text-muted-foreground">
+                              v0.3
+                            </span>
+                          </SidebarMenuButton>
+                        </SidebarMenuItem>
+                      ) : (
+                        <SidebarMenuItem key={item.url}>
+                          <SidebarMenuButton
+                            asChild
+                            isActive={pathname.startsWith(item.url)}
+                          >
+                            <Link href={item.url}>
+                              <item.icon className="size-4" />
+                              <span>{item.title}</span>
+                            </Link>
+                          </SidebarMenuButton>
+                        </SidebarMenuItem>
+                      )
+                    )}
+                  </SidebarMenu>
+                </SidebarGroupContent>
+              </CollapsibleContent>
+            </SidebarGroup>
+          </Collapsible>
+        ))}
       </SidebarContent>
 
       <SidebarFooter className="border-t">

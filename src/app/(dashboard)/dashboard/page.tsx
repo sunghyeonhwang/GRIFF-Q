@@ -19,6 +19,10 @@ import {
   MessageSquareText,
 } from "lucide-react";
 import { QuickActions } from "@/components/dashboard/quick-actions";
+import { DashboardScrumWidget } from "@/components/dashboard/dashboard-scrum-widget";
+import { DashboardTasksWidget } from "@/components/dashboard/dashboard-tasks-widget";
+import { DashboardProjectsWidget } from "@/components/dashboard/dashboard-projects-widget";
+import { DashboardScheduleWidget } from "@/components/dashboard/dashboard-schedule-widget";
 import dynamic from "next/dynamic";
 
 const PaymentTrendChart = dynamic(
@@ -81,6 +85,10 @@ export default async function DashboardPage() {
     { data: allPayments },
     { data: estimates },
     { data: auditLogs },
+    { data: todayScrum },
+    { data: todayTasks },
+    { data: activeProjects },
+    { data: todaySchedules },
   ] = await Promise.all([
     supabase
       .from("action_items")
@@ -118,6 +126,37 @@ export default async function DashboardPage() {
       .select("id, action, table_name, created_at, users!audit_logs_changed_by_fkey(name)")
       .order("created_at", { ascending: false })
       .limit(10),
+    // v0.3D: 오늘 스크럼 상태
+    supabase
+      .from("daily_scrums")
+      .select("status, scrum_items(id)")
+      .eq("user_id", user.id)
+      .eq("scrum_date", new Date().toISOString().split("T")[0])
+      .maybeSingle(),
+    // v0.3D: 오늘 마감 태스크
+    supabase
+      .from("tasks")
+      .select("id, title, status, priority")
+      .or(`assignee_id.eq.${user.id},created_by.eq.${user.id}`)
+      .eq("due_date", new Date().toISOString().split("T")[0])
+      .neq("status", "completed")
+      .order("priority")
+      .limit(5),
+    // v0.3D: 활성 프로젝트
+    supabase
+      .from("projects")
+      .select("id, name, progress, status")
+      .is("deleted_at", null)
+      .in("status", ["planning", "in_progress"])
+      .order("updated_at", { ascending: false })
+      .limit(4),
+    // v0.3D: 오늘 일정
+    supabase
+      .from("schedules")
+      .select("id, title, start_time, end_time, category")
+      .eq("schedule_date", new Date().toISOString().split("T")[0])
+      .order("start_time")
+      .limit(5),
   ]);
 
   const totalUsers = allUsers?.length ?? 0;
@@ -210,6 +249,17 @@ export default async function DashboardPage() {
 
       {/* B2: 퀵 액션 */}
       <QuickActions />
+
+      {/* v0.3D: 모듈 위젯 */}
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <DashboardScrumWidget
+          scrumStatus={todayScrum?.status ?? null}
+          itemCount={(todayScrum as any)?.scrum_items?.length ?? 0}
+        />
+        <DashboardTasksWidget tasks={todayTasks ?? []} />
+        <DashboardProjectsWidget projects={activeProjects ?? []} />
+        <DashboardScheduleWidget schedules={todaySchedules ?? []} />
+      </div>
 
       {/* 요약 카드 (Bento row 1) */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
