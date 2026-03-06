@@ -129,6 +129,7 @@ export function KickoffChecklist({ kickoffId, items, canEdit, users }: KickoffCh
   const [showAddForm, setShowAddForm] = useState(false);
   const [newTitle, setNewTitle] = useState("");
   const [newAssignee, setNewAssignee] = useState("");
+  const [newDueDate, setNewDueDate] = useState("");
   const [isPending, startTransition] = useTransition();
 
   const sensors = useSensors(
@@ -188,10 +189,12 @@ export function KickoffChecklist({ kickoffId, items, canEdit, users }: KickoffCh
         const item = await addChecklistItem(kickoffId, {
           title: newTitle.trim(),
           assignee_id: newAssignee || undefined,
+          due_date: newDueDate || undefined,
         });
         setSortedItems((prev) => [...prev, item]);
         setNewTitle("");
         setNewAssignee("");
+        setNewDueDate("");
         setShowAddForm(false);
         toast.success("항목이 추가되었습니다.");
       } catch (e) {
@@ -253,16 +256,25 @@ export function KickoffChecklist({ kickoffId, items, canEdit, users }: KickoffCh
                 onKeyDown={(e) => e.key === "Enter" && handleAdd()}
                 autoFocus
               />
-              <select
-                className="w-full h-9 rounded-md border bg-background px-3 text-sm"
-                value={newAssignee}
-                onChange={(e) => setNewAssignee(e.target.value)}
-              >
-                <option value="">담당자 선택 (선택)</option>
-                {users.map((u) => (
-                  <option key={u.id} value={u.id}>{u.name}</option>
-                ))}
-              </select>
+              <div className="flex gap-2">
+                <select
+                  className="flex-1 h-9 rounded-md border bg-background px-3 text-sm"
+                  value={newAssignee}
+                  onChange={(e) => setNewAssignee(e.target.value)}
+                >
+                  <option value="">담당자 (선택)</option>
+                  {users.map((u) => (
+                    <option key={u.id} value={u.id}>{u.name}</option>
+                  ))}
+                </select>
+                <input
+                  type="date"
+                  className="h-9 rounded-md border bg-background px-3 text-sm"
+                  value={newDueDate}
+                  onChange={(e) => setNewDueDate(e.target.value)}
+                  placeholder="기한"
+                />
+              </div>
             </div>
             <div className="flex gap-1">
               <Button size="sm" onClick={handleAdd} disabled={isPending || !newTitle.trim()}>

@@ -8,7 +8,8 @@ import interactionPlugin, { type DateClickArg } from "@fullcalendar/interaction"
 import type { EventClickArg } from "@fullcalendar/core";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { Filter, Plus } from "lucide-react";
 import { toast } from "sonner";
 import { ScheduleViewToggle, type ScheduleViewType } from "./schedule-view-toggle";
 import { ScheduleSidebar } from "./schedule-sidebar";
@@ -154,6 +155,30 @@ export function ScheduleCalendar({ schedules, userId, users }: ScheduleCalendarP
             />
           </CardContent>
         </Card>
+      </div>
+
+      {/* 모바일 사이드바 Sheet */}
+      <div className="lg:hidden">
+        <Sheet>
+          <SheetTrigger asChild>
+            <Button variant="outline" size="sm" className="mb-4">
+              <Filter className="size-3.5 mr-1" /> 필터
+            </Button>
+          </SheetTrigger>
+          <SheetContent side="left" className="w-72">
+            <SheetHeader>
+              <SheetTitle>필터</SheetTitle>
+            </SheetHeader>
+            <div className="mt-4">
+              <ScheduleSidebar
+                activeCategories={activeCategories}
+                onToggle={handleCategoryToggle}
+                isMyScheduleOnly={isMyScheduleOnly}
+                onMyScheduleToggle={() => setIsMyScheduleOnly((v) => !v)}
+              />
+            </div>
+          </SheetContent>
+        </Sheet>
       </div>
 
       {/* 캘린더 */}
