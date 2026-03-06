@@ -19,9 +19,20 @@ import {
   MessageSquareText,
 } from "lucide-react";
 import { QuickActions } from "@/components/dashboard/quick-actions";
-import { PaymentTrendChart } from "@/components/dashboard/payment-trend-chart";
-import { EstimateStatusChart } from "@/components/dashboard/estimate-status-chart";
-import { RetroSubmitChart } from "@/components/dashboard/retro-submit-chart";
+import dynamic from "next/dynamic";
+
+const PaymentTrendChart = dynamic(
+  () => import("@/components/dashboard/payment-trend-chart").then((m) => m.PaymentTrendChart),
+  { loading: () => <div className="h-[300px] animate-pulse rounded-lg bg-muted" /> },
+);
+const EstimateStatusChart = dynamic(
+  () => import("@/components/dashboard/estimate-status-chart").then((m) => m.EstimateStatusChart),
+  { loading: () => <div className="h-[300px] animate-pulse rounded-lg bg-muted" /> },
+);
+const RetroSubmitChart = dynamic(
+  () => import("@/components/dashboard/retro-submit-chart").then((m) => m.RetroSubmitChart),
+  { loading: () => <div className="h-[300px] animate-pulse rounded-lg bg-muted" /> },
+);
 import { ActivityTimeline } from "@/components/dashboard/activity-timeline";
 import { CountUp } from "@/components/ui/count-up";
 import {

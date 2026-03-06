@@ -1,35 +1,35 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
-
-interface CalendarProject {
-  id: string;
-  name: string;
-  status: string;
-  end_date: string | null;
-  start_date: string | null;
-  progress?: number | null;
-  color?: string | null;
-}
-
-const STATUS_COLORS: Record<string, string> = {
-  active: "bg-blue-500",
-  completed: "bg-green-500",
-  on_hold: "bg-gray-400",
-};
+import type { Task } from "@/types/task.types";
+import { TASK_STATUS_CONFIG, TASK_PRIORITY_CONFIG } from "@/types/task.types";
 
 const DAY_NAMES = ["일", "월", "화", "수", "목", "금", "토"];
 
-interface ProjectCalendarViewProps {
-  items: CalendarProject[];
+const STATUS_DOT_COLORS: Record<string, string> = {
+  pending: "bg-gray-400",
+  in_progress: "bg-blue-500",
+  review: "bg-yellow-500",
+  completed: "bg-green-500",
+  issue: "bg-red-500",
+};
+
+const PRIORITY_BORDER: Record<string, string> = {
+  urgent: "border-l-red-500",
+  high: "border-l-orange-500",
+  normal: "border-l-blue-500",
+  low: "border-l-gray-400",
+};
+
+interface TaskCalendarViewProps {
+  tasks: Task[];
 }
 
-export function ProjectCalendarView({ items }: ProjectCalendarViewProps) {
+export function TaskCalendarView({ tasks }: TaskCalendarViewProps) {
   const [currentDate, setCurrentDate] = useState(() => new Date());
 
   const year = currentDate.getFullYear();
@@ -41,8 +41,7 @@ export function ProjectCalendarView({ items }: ProjectCalendarViewProps) {
     const startOffset = firstDay.getDay();
     const totalDays = lastDay.getDate();
 
-    const days: { date: number; isCurrentMonth: boolean; dateStr: string }[] =
-      [];
+    const days: { date: number; isCurrentMonth: boolean; dateStr: string }[] = [];
 
     // Previous month padding
     const prevMonthLastDay = new Date(year, month, 0).getDate();
@@ -83,49 +82,47 @@ export function ProjectCalendarView({ items }: ProjectCalendarViewProps) {
     return days;
   }, [year, month]);
 
-  // Map projects by end_date
-  const projectsByDate = useMemo(() => {
-    const map = new Map<string, CalendarProject[]>();
-    for (const item of items) {
-      if (item.end_date) {
-        const dateKey = item.end_date.slice(0, 10);
+  // Map tasks by due_date
+  const tasksByDate = useMemo(() => {
+    const map = new Map<string, Task[]>();
+    for (const task of tasks) {
+      if (task.due_date) {
+        const dateKey = task.due_date.slice(0, 10);
         const existing = map.get(dateKey) ?? [];
-        existing.push(item);
+        existing.push(task);
         map.set(dateKey, existing);
       }
     }
     return map;
-  }, [items]);
+  }, [tasks]);
 
   const today = new Date();
   const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
-
-  function goToPrevMonth() {
-    setCurrentDate(new Date(year, month - 1, 1));
-  }
-
-  function goToNextMonth() {
-    setCurrentDate(new Date(year, month + 1, 1));
-  }
-
-  function goToToday() {
-    setCurrentDate(new Date());
-  }
 
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
         <CardTitle className="text-base font-medium">
-          통합 캘린더 — {year}년 {month + 1}월
+          Task 캘린더 — {year}년 {month + 1}월
         </CardTitle>
         <div className="flex items-center gap-1">
-          <Button variant="outline" size="sm" onClick={goToToday}>
+          <Button variant="outline" size="sm" onClick={() => setCurrentDate(new Date())}>
             오늘
           </Button>
-          <Button variant="ghost" size="icon" className="size-8" onClick={goToPrevMonth}>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="size-8"
+            onClick={() => setCurrentDate(new Date(year, month - 1, 1))}
+          >
             <ChevronLeft className="size-4" />
           </Button>
-          <Button variant="ghost" size="icon" className="size-8" onClick={goToNextMonth}>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="size-8"
+            onClick={() => setCurrentDate(new Date(year, month + 1, 1))}
+          >
             <ChevronRight className="size-4" />
           </Button>
         </div>
@@ -143,7 +140,7 @@ export function ProjectCalendarView({ items }: ProjectCalendarViewProps) {
         {/* Calendar grid */}
         <div className="grid grid-cols-7 border-t border-l">
           {calendarDays.map((day, idx) => {
-            const dayProjects = projectsByDate.get(day.dateStr) ?? [];
+            const dayTasks = tasksByDate.get(day.dateStr) ?? [];
             const isToday = day.dateStr === todayStr;
 
             return (
@@ -164,38 +161,43 @@ export function ProjectCalendarView({ items }: ProjectCalendarViewProps) {
                   {day.date}
                 </div>
                 <div className="space-y-0.5">
-                  {dayProjects.slice(0, 3).map((project) => (
-                    <Link
-                      key={project.id}
-                      href={`/projects/${project.id}`}
-                      className="block"
+                  {dayTasks.slice(0, 3).map((task) => (
+                    <div
+                      key={task.id}
+                      className={cn(
+                        "flex items-center gap-1 rounded px-1 py-0.5 truncate border-l-2",
+                        "hover:bg-muted transition-colors",
+                        PRIORITY_BORDER[task.priority] ?? "border-l-gray-400",
+                      )}
                     >
                       <div
                         className={cn(
-                          "flex items-center gap-1 rounded px-1 py-0.5 truncate",
-                          "hover:bg-muted transition-colors",
+                          "size-1.5 rounded-full shrink-0",
+                          STATUS_DOT_COLORS[task.status] ?? "bg-gray-400",
                         )}
-                      >
-                        <div
-                          className={cn(
-                            "size-1.5 rounded-full shrink-0",
-                            !project.color && (STATUS_COLORS[project.status] ?? "bg-gray-400"),
-                          )}
-                          style={project.color ? { backgroundColor: project.color } : undefined}
-                        />
-                        <span className="truncate">{project.name}</span>
-                      </div>
-                    </Link>
+                      />
+                      <span className="truncate">{task.title}</span>
+                    </div>
                   ))}
-                  {dayProjects.length > 3 && (
+                  {dayTasks.length > 3 && (
                     <div className="text-muted-foreground px-1">
-                      +{dayProjects.length - 3}개
+                      +{dayTasks.length - 3}건
                     </div>
                   )}
                 </div>
               </div>
             );
           })}
+        </div>
+
+        {/* Legend */}
+        <div className="flex flex-wrap gap-3 mt-4 text-xs text-muted-foreground">
+          {Object.entries(TASK_STATUS_CONFIG).map(([key, cfg]) => (
+            <div key={key} className="flex items-center gap-1">
+              <div className={cn("size-2 rounded-full", STATUS_DOT_COLORS[key])} />
+              {cfg.label}
+            </div>
+          ))}
         </div>
       </CardContent>
     </Card>

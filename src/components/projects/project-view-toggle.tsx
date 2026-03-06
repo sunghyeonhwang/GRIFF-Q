@@ -7,11 +7,10 @@ import {
   List,
   LayoutGrid,
   Calendar,
-  GanttChart,
 } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
-export type ProjectViewType = "list" | "board" | "calendar" | "gantt";
+export type ProjectViewType = "list" | "board" | "calendar";
 
 const VIEW_OPTIONS: {
   value: ProjectViewType;
@@ -20,8 +19,7 @@ const VIEW_OPTIONS: {
 }[] = [
   { value: "list", label: "리스트", icon: List },
   { value: "board", label: "보드", icon: LayoutGrid },
-  { value: "calendar", label: "캘린더", icon: Calendar },
-  { value: "gantt", label: "간트", icon: GanttChart },
+  { value: "calendar", label: "통합 캘린더", icon: Calendar },
 ];
 
 interface ProjectViewToggleProps {

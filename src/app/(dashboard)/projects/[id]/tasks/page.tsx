@@ -7,12 +7,15 @@ import { TaskFilterTabs, type TaskFilter } from "@/components/tasks/task-filter-
 import { TaskViewToggle, type TaskViewType } from "@/components/tasks/task-view-toggle";
 import { TaskList } from "@/components/tasks/task-list";
 import { TaskBoard } from "@/components/tasks/task-board";
+import { TaskCalendarView } from "@/components/tasks/task-calendar-view";
+import { TaskGanttView } from "@/components/tasks/task-gantt-view";
+import { TaskNodeView } from "@/components/tasks/task-node-view";
 import { ClipboardList } from "lucide-react";
 import { notFound } from "next/navigation";
-import type { Task } from "@/types/task.types";
+import type { Task, TaskDependency } from "@/types/task.types";
 
 const VALID_FILTERS: TaskFilter[] = ["all", "today", "upcoming", "completed", "my"];
-const VALID_VIEWS: TaskViewType[] = ["list", "board"];
+const VALID_VIEWS: TaskViewType[] = ["list", "board", "calendar", "gantt", "node"];
 
 export default async function ProjectTasksPage({
   params,
@@ -87,6 +90,19 @@ export default async function ProjectTasksPage({
     .eq("project_id", projectId)
     .is("parent_task_id", null);
 
+  // Fetch dependencies for node view
+  let dependencies: TaskDependency[] = [];
+  if (view === "node") {
+    const taskIds = items.map((t) => t.id);
+    if (taskIds.length > 0) {
+      const { data: depsData } = await supabase
+        .from("task_dependencies")
+        .select("*")
+        .in("task_id", taskIds);
+      dependencies = (depsData ?? []) as TaskDependency[];
+    }
+  }
+
   return (
     <div className="space-y-6">
       <PageHeader
@@ -104,11 +120,20 @@ export default async function ProjectTasksPage({
 
       {/* Content */}
       {items.length > 0 ? (
-        view === "list" ? (
-          <TaskList tasks={items} users={users} />
-        ) : (
-          <TaskBoard tasks={items} users={users} />
-        )
+        <>
+          {view === "list" && <TaskList tasks={items} users={users} />}
+          {view === "board" && <TaskBoard tasks={items} users={users} />}
+          {view === "calendar" && <TaskCalendarView tasks={items} />}
+          {view === "gantt" && <TaskGanttView tasks={items} />}
+          {view === "node" && (
+            <TaskNodeView
+              tasks={items}
+              dependencies={dependencies}
+              projectId={projectId}
+              users={users}
+            />
+          )}
+        </>
       ) : (
         <EmptyState
           icon={ClipboardList}

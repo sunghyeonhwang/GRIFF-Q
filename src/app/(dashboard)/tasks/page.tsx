@@ -6,7 +6,12 @@ import { TaskCreateDialog } from "@/components/tasks/task-create-dialog";
 import { TaskFilterTabs, type TaskFilter } from "@/components/tasks/task-filter-tabs";
 import { TaskViewToggle, type TaskViewType } from "@/components/tasks/task-view-toggle";
 import { TaskList } from "@/components/tasks/task-list";
-import { TaskBoard } from "@/components/tasks/task-board";
+import dynamic from "next/dynamic";
+
+const TaskBoard = dynamic(
+  () => import("@/components/tasks/task-board").then((m) => m.TaskBoard),
+  { loading: () => <div className="h-64 animate-pulse rounded-lg bg-muted" /> },
+);
 import { ClipboardList } from "lucide-react";
 import type { Task } from "@/types/task.types";
 
@@ -67,28 +72,15 @@ export default async function TasksPage({
 
   const users = allUsers ?? [];
 
-  // Summary counts
-  const [totalRes, todayRes, myRes] = await Promise.all([
-    supabase
-      .from("tasks")
-      .select("id", { count: "exact", head: true })
-      .is("parent_task_id", null),
-    supabase
-      .from("tasks")
-      .select("id", { count: "exact", head: true })
-      .is("parent_task_id", null)
-      .eq("due_date", today),
-    supabase
-      .from("tasks")
-      .select("id", { count: "exact", head: true })
-      .is("parent_task_id", null)
-      .eq("assignee_id", user.id)
-      .neq("status", "completed"),
-  ]);
-
-  const totalCount = totalRes.count ?? 0;
-  const todayCount = todayRes.count ?? 0;
-  const myCount = myRes.count ?? 0;
+  // Summary counts — single query instead of 3
+  const { data: summaryTasks } = await supabase
+    .from("tasks")
+    .select("due_date, assignee_id, status")
+    .is("parent_task_id", null);
+  const allTasks = summaryTasks ?? [];
+  const totalCount = allTasks.length;
+  const todayCount = allTasks.filter((t) => t.due_date === today).length;
+  const myCount = allTasks.filter((t) => t.assignee_id === user.id && t.status !== "completed").length;
 
   return (
     <div className="space-y-6">

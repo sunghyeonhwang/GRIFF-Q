@@ -4,7 +4,12 @@ import { requireAuth } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, GitBranch } from "lucide-react";
-import { DependencyMapCanvas } from "@/components/tasks/dependency-map/dependency-map-canvas";
+import dynamic from "next/dynamic";
+
+const DependencyMapCanvas = dynamic(
+  () => import("@/components/tasks/dependency-map/dependency-map-canvas").then((m) => m.DependencyMapCanvas),
+  { loading: () => <div className="flex-1 flex items-center justify-center"><p className="text-muted-foreground">의존성 맵 로딩 중...</p></div> },
+);
 import type { Task, TaskDependency } from "@/types/task.types";
 
 export default async function DependencyMapPage({

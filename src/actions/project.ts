@@ -33,23 +33,32 @@ export async function createProjectWithTemplate(data: {
   } = await supabase.auth.getUser();
   if (!user) throw new Error("인증이 필요합니다.");
 
-  // 1. 프로젝트 생성
+  // 1. 프로젝트 생성 (기본 컬럼만 INSERT 후 확장 컬럼 UPDATE)
   const { data: project, error: projectError } = await supabase
     .from("projects")
     .insert({
       name: data.name,
-      project_type: data.project_type,
+      title: data.name,
       description: data.description || "",
       start_date: data.start_date || null,
       end_date: data.end_date || null,
-      color: data.color || "#3B82F6",
-      priority: data.priority || 3,
       lead_user_id: user.id,
+      created_by: user.id,
     })
     .select()
     .single();
 
   if (projectError) throw new Error(`프로젝트 생성 실패: ${projectError.message}`);
+
+  // 1-b. 확장 컬럼 UPDATE (v0.3A 신규 컬럼)
+  const extendedFields: Record<string, unknown> = {};
+  if (data.project_type) extendedFields.project_type = data.project_type;
+  if (data.color) extendedFields.color = data.color;
+  if (data.priority) extendedFields.priority = data.priority;
+
+  if (Object.keys(extendedFields).length > 0) {
+    await supabase.from("projects").update(extendedFields).eq("id", project.id);
+  }
 
   // 2. 멤버 등록
   const memberInserts = (data.members || []).map((m) => ({
@@ -156,6 +165,31 @@ export async function addProjectMember(
   return member as ProjectMember;
 }
 
+export async function updateProjectMemberRole(
+  memberId: string,
+  role: ProjectRole
+): Promise<ProjectMember> {
+  const supabase = await createClient();
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) throw new Error("인증이 필요합니다.");
+
+  const { data: member, error } = await supabase
+    .from("project_members")
+    .update({ role })
+    .eq("id", memberId)
+    .select()
+    .single();
+
+  if (error) throw new Error(`멤버 역할 변경 실패: ${error.message}`);
+
+  revalidatePath(`/projects/${member.project_id}`);
+  revalidatePath(`/projects/${member.project_id}/settings`);
+  return member as ProjectMember;
+}
+
 export async function removeProjectMember(memberId: string): Promise<void> {
   const supabase = await createClient();
 
@@ -181,6 +215,10 @@ export async function removeProjectMember(memberId: string): Promise<void> {
   if (error) throw new Error(`멤버 삭제 실패: ${error.message}`);
 
   revalidatePath(`/projects/${member.project_id}`);
+}
+
+export async function archiveProject(id: string): Promise<Project> {
+  return updateProject(id, { archived: true });
 }
 
 // ─────────────────────────────────────────────

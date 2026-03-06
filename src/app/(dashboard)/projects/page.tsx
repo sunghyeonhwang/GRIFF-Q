@@ -16,12 +16,18 @@ import {
   type ProjectViewType,
 } from "@/components/projects/project-view-toggle";
 import { ProjectListView } from "@/components/projects/project-list-view";
-import { ProjectBoardView } from "@/components/projects/project-board-view";
-import { ProjectCalendarView } from "@/components/projects/project-calendar-view";
-import { ProjectGanttView } from "@/components/projects/project-gantt-view";
+import dynamic from "next/dynamic";
 
+const ProjectBoardView = dynamic(
+  () => import("@/components/projects/project-board-view").then((m) => m.ProjectBoardView),
+  { loading: () => <div className="h-64 animate-pulse rounded-lg bg-muted" /> },
+);
+const ProjectCalendarView = dynamic(
+  () => import("@/components/projects/project-calendar-view").then((m) => m.ProjectCalendarView),
+  { loading: () => <div className="h-64 animate-pulse rounded-lg bg-muted" /> },
+);
 const SORTABLE_COLUMNS = ["created_at", "name", "status", "start_date"];
-const VALID_VIEWS: ProjectViewType[] = ["list", "board", "calendar", "gantt"];
+const VALID_VIEWS: ProjectViewType[] = ["list", "board", "calendar"];
 
 export default async function ProjectsPage({
   searchParams,
@@ -63,24 +69,13 @@ export default async function ProjectsPage({
   const items = projects ?? [];
   const totalCount = count ?? 0;
 
-  // Summary card counts
-  const [activeRes, completedRes, onHoldRes] = await Promise.all([
-    supabase
-      .from("projects")
-      .select("id", { count: "exact", head: true })
-      .eq("status", "active"),
-    supabase
-      .from("projects")
-      .select("id", { count: "exact", head: true })
-      .eq("status", "completed"),
-    supabase
-      .from("projects")
-      .select("id", { count: "exact", head: true })
-      .eq("status", "on_hold"),
-  ]);
-  const activeCount = activeRes.count ?? 0;
-  const completedCount = completedRes.count ?? 0;
-  const onHoldCount = onHoldRes.count ?? 0;
+  // Summary card counts — single query instead of 3
+  const { data: statusCounts } = await supabase
+    .from("projects")
+    .select("status");
+  const activeCount = (statusCounts ?? []).filter((p) => p.status === "active").length;
+  const completedCount = (statusCounts ?? []).filter((p) => p.status === "completed").length;
+  const onHoldCount = (statusCounts ?? []).filter((p) => p.status === "on_hold").length;
 
   // Fetch users for the create dialog
   const { data: allUsers } = await supabase
@@ -151,11 +146,8 @@ export default async function ProjectsPage({
           {/* Board view */}
           {view === "board" && <ProjectBoardView items={items} />}
 
-          {/* Calendar view */}
+          {/* Calendar view (통합 캘린더) */}
           {view === "calendar" && <ProjectCalendarView items={items} />}
-
-          {/* Gantt view */}
-          {view === "gantt" && <ProjectGanttView items={items} />}
 
           {/* Pagination (list view only) */}
           {view === "list" && (
